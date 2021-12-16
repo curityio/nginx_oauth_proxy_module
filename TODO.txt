@@ -2,19 +2,24 @@ Update docs after each area of work and as I consolidate my understanding:
 
 STAGE 1
 -------
-1. Write an initial failure test to enable productive development
+1. Validate configuration and deal with arrays
 
-2. Do some reading on NGINX development
+2. Get a partial end-to-end flow working with null decryption
+   Handle a couple of failure conditions
 
-3. Get calls to openssl libraries working both locally and within NGINX
+3. Write an initial test to understand the test setup
 
-4. Deploy to Docker and use a built lib as a customer
+4. Do some reading on NGINX module development
+
+5. Get calls to openssl libraries basically working, eg just to create some random bytes
+
+6. Deploy to Docker and run like a customer would, building for a specific Linux platform
 
 STAGE 2
 -------
-1. Inform people this is coming and have a chat with Nikos
+1. Inform people this is coming and post on the oss channel
 
-2. Get decryption properly working and test scenarios written
+2. Get decryption properly working and test scenarios similarly to LUA
 
 3. Completion of application level test scenarios
 

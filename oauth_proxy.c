@@ -23,7 +23,9 @@
 typedef struct
 {
     ngx_flag_t enable;
+    ngx_str_t cookie_prefix;
     ngx_str_t hex_encryption_key;
+    ngx_str_t trusted_web_origins;
 } oauth_proxy_configuration_t;
 
 typedef struct
@@ -50,11 +52,27 @@ static ngx_command_t oauth_proxy_module_directives[] =
           NULL
     },
     {
+        ngx_string("oauth_proxy_cookie_prefix"),
+        NGX_HTTP_LOC_CONF | NGX_CONF_TAKE1,
+        ngx_conf_set_str_slot,
+        NGX_HTTP_LOC_CONF_OFFSET,
+        offsetof(oauth_proxy_configuration_t, cookie_prefix),
+        NULL
+    },
+    {
         ngx_string("oauth_proxy_hex_encryption_key"),
         NGX_HTTP_LOC_CONF | NGX_CONF_TAKE1,
         ngx_conf_set_str_slot,
         NGX_HTTP_LOC_CONF_OFFSET,
         offsetof(oauth_proxy_configuration_t, hex_encryption_key),
+        NULL
+    },
+    {
+        ngx_string("oauth_proxy_trusted_web_origins"),
+        NGX_HTTP_LOC_CONF | NGX_CONF_TAKE1,
+        ngx_conf_set_str_slot,
+        NGX_HTTP_LOC_CONF_OFFSET,
+        offsetof(oauth_proxy_configuration_t, trusted_web_origins),
         NULL
     },
     ngx_null_command /* command termination */
@@ -93,11 +111,45 @@ ngx_module_t ngx_curity_http_oauth_proxy_module =
 };
 
 /*
+ * Called when NGINX starts up and finds a location that uses the plugin
+ */
+static void *create_location_configuration(ngx_conf_t *config)
+{
+    ngx_conf_log_error(NGX_LOG_WARN, config, 0, "*** OAUTH PROXY: create_location_configuration called");
+    oauth_proxy_configuration_t *location_config = ngx_pcalloc(config->pool, sizeof(oauth_proxy_configuration_t));
+
+    if (location_config == NULL)
+    {
+        return NGX_CONF_ERROR;
+    }
+
+    location_config->enable = NGX_CONF_UNSET_UINT;
+    return location_config;
+}
+
+/*
+ * Called when NGINX starts up and finds a parent location that uses the plugin
+ */
+static char *merge_location_configuration(ngx_conf_t *main_config, void *parent, void *child)
+{
+    ngx_conf_log_error(NGX_LOG_WARN, main_config, 0, "*** OAUTH PROXY: merge_location_configuration called");
+    oauth_proxy_configuration_t *parent_config = parent, *child_config = child;
+
+    // This shows the input value
+    ngx_conf_log_error(NGX_LOG_WARN, main_config, 0, "*** OAUTH PROXY: child encryption key is %V", &child_config->hex_encryption_key);
+
+    ngx_conf_merge_off_value(child_config->enable, parent_config->enable, 0)
+    ngx_conf_merge_str_value(child_config->hex_encryption_key, parent_config->hex_encryption_key, "")
+
+    return NGX_CONF_OK;
+}
+
+/*
  * Receive and validate the configuration data
  */
 static ngx_int_t post_configuration(ngx_conf_t *config)
 {
-    ngx_log_error(NGX_LOG_WARN, config, 0, "*** OAUTH PROXY: post configuration");
+    ngx_conf_log_error(NGX_LOG_WARN, config, 0, "*** OAUTH PROXY: post_configuration called");
     ngx_http_core_main_conf_t *main_config = ngx_http_conf_get_module_main_conf(config, ngx_http_core_module);
     ngx_http_handler_pt *h = ngx_array_push(&main_config->phases[NGX_HTTP_ACCESS_PHASE].handlers);
 
@@ -112,41 +164,21 @@ static ngx_int_t post_configuration(ngx_conf_t *config)
 }
 
 /*
- * Run the handler to decrypt cookies and make CSRF related checks
+ * Called during HTTP requests to make cookie related checks and then to decrypt the cookie to get an access token
  */
 static ngx_int_t handler(ngx_http_request_t *request)
 {
-    ngx_log_error(NGX_LOG_WARN, request->connection->log, 0, "*** OAUTH PROXY: handler called");
-    return NGX_OK;
-}
+    oauth_proxy_configuration_t *module_location_config = ngx_http_get_module_loc_conf(
+            request, ngx_curity_http_oauth_proxy_module);
 
-/*
- * Called when an NGINX location containing the plugin is initialized
- */
-static void *create_location_configuration(ngx_conf_t *config)
-{
-    // ngx_log_error(NGX_LOG_WARN, request->connection->log, 0, "*** OAUTH PROXY: create_location_configuration called");
-    oauth_proxy_configuration_t *location_config = ngx_pcalloc(config->pool, sizeof(oauth_proxy_configuration_t));
-
-    if (location_config == NULL)
+    if (!module_location_config->enable)
     {
-        return NGX_CONF_ERROR;
+        ngx_log_error(NGX_LOG_WARN, request->connection->log, 0, "Module disabled");
+        return NGX_DECLINED;
     }
 
-    location_config->enable = NGX_CONF_UNSET_UINT;
-    return location_config;
-}
-
-/*
- * Called when an NGINX child location inherits the plugin from its parent section
- */
-static char *merge_location_configuration(ngx_conf_t *main_config, void *parent, void *child)
-{
-    // ngx_log_error(NGX_LOG_WARN, request->connection->log, 0, "*** OAUTH PROXY: merge_location_configuration called");
-    oauth_proxy_configuration_t *parent_config = parent, *child_config = child;
-
-    ngx_conf_merge_off_value(child_config->enable, parent_config->enable, 0)
-    ngx_conf_merge_str_value(child_config->hex_encryption_key, parent_config->hex_encryption_key, "")
-
-    return NGX_CONF_OK;
+    ngx_log_error(NGX_LOG_WARN, request->connection->log, 0, "*** OAUTH PROXY HANDLER: cookie_prefix: %V", &module_location_config->cookie_prefix);
+    ngx_log_error(NGX_LOG_WARN, request->connection->log, 0, "*** OAUTH PROXY HANDLER: hex_encryption_key: %V", &module_location_config->hex_encryption_key);
+    ngx_log_error(NGX_LOG_WARN, request->connection->log, 0, "*** OAUTH PROXY HANDLER: trusted_web_origins: %V", &module_location_config->trusted_web_origins);
+    return NGX_OK;
 }
