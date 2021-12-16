@@ -2,14 +2,13 @@ Update docs after each area of work and as I consolidate my understanding:
 
 STAGE 1
 -------
-1. Get environment basically working and outputting logs
-   Use the module as a customer
+1. Write an initial failure test to enable productive development
 
-2. Write an initial failure test to enable productive development
+2. Do some reading on NGINX development
 
-3. Do some reading on NGINX development
+3. Get calls to openssl libraries working both locally and within NGINX
 
-4. Get calls to openssl libraries working both locally and within NGINX
+4. Deploy to Docker and use a built lib as a customer
 
 STAGE 2
 -------
@@ -30,3 +29,5 @@ STAGE 3
 3. Releases in the GitHub repo
 
 4. NGINX online
+
+5. Future upgrades

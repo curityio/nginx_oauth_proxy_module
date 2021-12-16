@@ -97,6 +97,7 @@ ngx_module_t ngx_curity_http_oauth_proxy_module =
  */
 static ngx_int_t post_configuration(ngx_conf_t *config)
 {
+    ngx_log_error(NGX_LOG_WARN, config, 0, "*** OAUTH PROXY: post configuration");
     ngx_http_core_main_conf_t *main_config = ngx_http_conf_get_module_main_conf(config, ngx_http_core_module);
     ngx_http_handler_pt *h = ngx_array_push(&main_config->phases[NGX_HTTP_ACCESS_PHASE].handlers);
 
