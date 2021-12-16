@@ -50,3 +50,13 @@ modules.order
 Module.symvers
 Mkfile.old
 dkms.conf
+
+# macOS files
+.DS_Store
+
+# Downloaded NGINX files
+nginx-*.tar.gz*
+nginx-*/
+
+# Build files
+.build.info
