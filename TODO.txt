@@ -1,11 +1,5 @@
 Update docs after each area of work and as I consolidate my understanding:
 
-MINOR
------
-1. sprintf
-
-2. method to upper
-
 STAGE 1
 -------
 1. Validate configuration and deal with arrays
