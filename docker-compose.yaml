@@ -12,8 +12,3 @@ services:
       - ADMIN_PASSWORD=${ADMIN_PASSWORD:?err}
     volumes:
       - ./curity-test-config.xml:/opt/idsvr/etc/init/curity-test-config.xml
-
-  httpbin-service:
-    image: kennethreitz/httpbin
-    ports:
-      - 8080:80

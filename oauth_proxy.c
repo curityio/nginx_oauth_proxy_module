@@ -39,6 +39,7 @@ static ngx_int_t post_configuration(ngx_conf_t *config);
 static ngx_int_t handler(ngx_http_request_t *request);
 static void *create_location_configuration(ngx_conf_t *config);
 static char *merge_location_configuration(ngx_conf_t *main_config, void *parent, void *child);
+static ngx_int_t get_cookie(ngx_http_request_t *request, ngx_str_t* cookie_value, ngx_str_t* cookie_prefix, const char *cookie_suffix);
 
 /* Configuration data */
 static ngx_command_t oauth_proxy_module_directives[] =
@@ -173,12 +174,49 @@ static ngx_int_t handler(ngx_http_request_t *request)
 
     if (!module_location_config->enable)
     {
-        ngx_log_error(NGX_LOG_WARN, request->connection->log, 0, "Module disabled");
+        ngx_log_error(NGX_LOG_WARN, request->connection->log, 0, "OAuth proxy module is disabled");
         return NGX_DECLINED;
     }
 
-    ngx_log_error(NGX_LOG_WARN, request->connection->log, 0, "*** OAUTH PROXY HANDLER: cookie_prefix: %V", &module_location_config->cookie_prefix);
-    ngx_log_error(NGX_LOG_WARN, request->connection->log, 0, "*** OAUTH PROXY HANDLER: hex_encryption_key: %V", &module_location_config->hex_encryption_key);
-    ngx_log_error(NGX_LOG_WARN, request->connection->log, 0, "*** OAUTH PROXY HANDLER: trusted_web_origins: %V", &module_location_config->trusted_web_origins);
+    if (ngx_strncasecmp(request->method_name.data, (u_char*)"OPTIONS", 7) == 0)
+    {
+        return NGX_DECLINED;
+    }
+
+    ngx_str_t at_cookie_value;
+    ngx_int_t at_cookie_result = get_cookie(request, &at_cookie_value, &module_location_config->cookie_prefix, "-at");
+    if (at_cookie_result == NGX_HTTP_INTERNAL_SERVER_ERROR)
+    {
+        return at_cookie_result;
+    }
+
+    if (at_cookie_result == NGX_DECLINED)
+    {
+        ngx_log_error(NGX_LOG_WARN, request->connection->log, 0, "*** OAUTH PROXY HANDLER: cookie not found");
+    }
+    else
+    {
+        ngx_log_error(NGX_LOG_WARN, request->connection->log, 0, "*** OAUTH PROXY HANDLER: cookie found: %V", &at_cookie_value);
+    }
+
     return NGX_OK;
+}
+
+/*
+ * A utility method to get a cookie and deal with strings
+ */
+static ngx_int_t get_cookie(ngx_http_request_t *request, ngx_str_t* cookie_value, ngx_str_t* cookie_prefix, const char *cookie_suffix)
+{
+    size_t cookie_name_len = cookie_prefix->len + ngx_strlen(cookie_suffix);
+    u_char *cookie_name = ngx_pcalloc(request->pool, cookie_name_len);
+    if (cookie_name == NULL)
+    {
+        return NGX_HTTP_INTERNAL_SERVER_ERROR;
+    }
+
+    ngx_snprintf(cookie_name, cookie_name_len, "%V%s", cookie_prefix, cookie_suffix);
+    ngx_str_t cookie_name_str = (ngx_str_t)ngx_string(cookie_name);
+    cookie_name_str.len = cookie_name_len;
+
+    return ngx_http_parse_multi_header_lines(&request->headers_in.cookies, &cookie_name_str, cookie_value);
 }
