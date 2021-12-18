@@ -40,6 +40,7 @@ static ngx_int_t handler(ngx_http_request_t *request);
 static void *create_location_configuration(ngx_conf_t *config);
 static char *merge_location_configuration(ngx_conf_t *main_config, void *parent, void *child);
 static ngx_int_t get_cookie(ngx_http_request_t *request, ngx_str_t* cookie_value, ngx_str_t* cookie_prefix, const char *cookie_suffix);
+static ngx_int_t add_authorization_header(ngx_http_request_t *request, ngx_str_t* token_value);
 
 /* Configuration data */
 static ngx_command_t oauth_proxy_module_directives[] =
@@ -178,9 +179,16 @@ static ngx_int_t handler(ngx_http_request_t *request)
         return NGX_DECLINED;
     }
 
+    // Do not perform handling for pre-flight requests from SPAs
     if (ngx_strncasecmp(request->method_name.data, (u_char*)"OPTIONS", 7) == 0)
     {
-        return NGX_DECLINED;
+        return NGX_OK;
+    }
+
+    // Pass the request through if it has an Authorization header, eg from a mobile client that uses the same route as an SPA
+    if (request->headers_in.authorization && request->headers_in.authorization->value.len > 0)
+    {
+        return NGX_OK;
     }
 
     ngx_str_t at_cookie_value;
@@ -190,20 +198,25 @@ static ngx_int_t handler(ngx_http_request_t *request)
         return at_cookie_result;
     }
 
+    // When no cookie is provided we return an unauthorized status code
     if (at_cookie_result == NGX_DECLINED)
     {
-        ngx_log_error(NGX_LOG_WARN, request->connection->log, 0, "*** OAUTH PROXY HANDLER: cookie not found");
-    }
-    else
-    {
-        ngx_log_error(NGX_LOG_WARN, request->connection->log, 0, "*** OAUTH PROXY HANDLER: cookie found: %V", &at_cookie_value);
+        /* Currently this returns an HTML response body, so fix that */
+        return NGX_HTTP_UNAUTHORIZED;
     }
 
+    ngx_int_t auth_header_result = add_authorization_header(request, &at_cookie_value);
+    if (at_cookie_result == NGX_HTTP_INTERNAL_SERVER_ERROR)
+    {
+        return auth_header_result;
+    }
+
+    ngx_log_error(NGX_LOG_WARN, request->connection->log, 0, "*** OAUTH PROXY: auth header value is %V", &request->headers_in.authorization->value);
     return NGX_OK;
 }
 
 /*
- * A utility method to get a cookie and deal with strings
+ * Get a cookie and deal with string manipulation
  */
 static ngx_int_t get_cookie(ngx_http_request_t *request, ngx_str_t* cookie_value, ngx_str_t* cookie_prefix, const char *cookie_suffix)
 {
@@ -211,6 +224,7 @@ static ngx_int_t get_cookie(ngx_http_request_t *request, ngx_str_t* cookie_value
     u_char *cookie_name = ngx_pcalloc(request->pool, cookie_name_len);
     if (cookie_name == NULL)
     {
+        ngx_log_error(NGX_LOG_WARN, request->connection->log, 0, "OAuth proxy failed to allocate memory for the call to allocate memory for cookie %V%s", cookie_prefix, cookie_suffix);
         return NGX_HTTP_INTERNAL_SERVER_ERROR;
     }
 
@@ -219,4 +233,31 @@ static ngx_int_t get_cookie(ngx_http_request_t *request, ngx_str_t* cookie_value
     cookie_name_str.len = cookie_name_len;
 
     return ngx_http_parse_multi_header_lines(&request->headers_in.cookies, &cookie_name_str, cookie_value);
+}
+
+/*
+ * Set the authorization header and deal with string manipulation
+ */
+static ngx_int_t add_authorization_header(ngx_http_request_t *request, ngx_str_t* token_value)
+{
+    request->headers_in.authorization = ngx_list_push(&request->headers_in.headers);
+    if (request->headers_in.authorization == NULL)
+    {
+        ngx_log_error(NGX_LOG_WARN, request->connection->log, 0, "OAuth proxy failed to allocate memory for the authorization header");
+        return NGX_HTTP_INTERNAL_SERVER_ERROR;
+    }
+
+    size_t header_value_len = ngx_strlen("Bearer ") + token_value->len;
+    u_char *header_value = ngx_pcalloc(request->pool, header_value_len);
+    if (header_value == NULL)
+    {
+        ngx_log_error(NGX_LOG_WARN, request->connection->log, 0, "OAuth proxy failed to allocate memory for the authorization header value");
+        return NGX_HTTP_INTERNAL_SERVER_ERROR;
+    }
+    ngx_snprintf(header_value, header_value_len, "Bearer %V", token_value);
+
+    ngx_str_set(&request->headers_in.authorization->key, "Authorization");
+    request->headers_in.authorization->value = (ngx_str_t)ngx_string(header_value);
+    request->headers_in.authorization->value.len = header_value_len;
+    return NGX_OK;
 }
