@@ -1,0 +1,51 @@
+RISK AREA - DEPLOYMENT BASICS
+-----------------------------
+- Get OpenSSL crypto working locally and understand deployment concerns
+
+RISK AREA - CRYPTO
+------------------
+- Get the algorithm working in the other project, then port here
+
+RISK AREA - LINUX DEPLOYMENT
+----------------------------
+- Build for a Linux distro
+- See if deploying the .so module alone is sufficient
+
+Follow the approach here otherwise - requiring the openssl library as a prerequisite:
+- https://github.com/zmartzone/liboauth2#dependencies
+
+RISK AREA - TESTS
+-----------------
+- Write an initial test to get familiar with the setup
+- Create a test folder
+
+CODE AND TEST COMPLETION
+------------------------
+Test driven completion, to include scenatios tests from the 
+Add some assert statements in sensible places.
+
+CHANNEL COMMS
+-------------
+On the OSS channel, tell people this is coming, but not finished yet and raise interesting points:
+
+- Set the scene that customers put 2 plugins in front of APIs and use them from SPAs
+  There is a high level angle of a simple experience for customers, along with some low level details from us
+
+- Use of authenticated AES256 meaning if a man in the middle tampers with bytes there is a decryption error and message rejected
+  OpenSSL and how best to deal with it from a deployment viewpoint: link to Zmartzone example
+
+- Phantom Token Plugin update for SPAs (eg OPTIONS / response headers)
+  https://stackoverflow.com/questions/33672689/javascript-jquery-can%C2%B4t-get-www-authenticate-response-header
+
+- End-to-End error experience for SPAs
+  It feels a bit cludgy asking SPAs to read a header for some error responses and not others
+  My thoughts are to follow standards but also return a JSON body with a code and message payload
+
+DOC TIDY UP
+-----------
+- Get repo docs completed
+- Ensure review state for other people is good
+
+OPEN QUESTIONS
+--------------
+Review all resources carefully and make a list of any code / build instructions I don't understand

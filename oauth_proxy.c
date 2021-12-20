@@ -14,6 +14,7 @@
  *  limitations under the License.
  */
 
+#include <openssl/rand.h>
 #include <ngx_config.h>
 #include <ngx_core.h>
 #include <ngx_http.h>
@@ -184,6 +185,15 @@ static ngx_int_t handler(ngx_http_request_t *request)
     {
         return NGX_OK;
     }
+
+    ngx_log_error(NGX_LOG_WARN, request->connection->log, 0, "*** BEFORE USING OPENSSL");
+    unsigned char key[16];
+    int r = RAND_bytes(key, sizeof(key));
+    if (r == 1)
+    {
+        printf("*** OPENSSL CALL SUCCEEDED");
+    }
+    ngx_log_error(NGX_LOG_WARN, request->connection->log, 0, "*** AFTER USING OPENSSL");
 
     // Pass the request through if it has an Authorization header, eg from a mobile client that uses the same route as an SPA
     if (request->headers_in.authorization && request->headers_in.authorization->value.len > 0)

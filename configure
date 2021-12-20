@@ -49,6 +49,17 @@ else
   CONFIG_OPTS+=(--with-cc-opt="-DNDEBUG")
 fi
 
+# We build OpenSSL from source to avoid requiring it as a deployment dependency for customers
+if [ ! -d openssl-1.1.1m ]; then
+  git clone https://github.com/openssl/openssl.git openssl-1.1.1m
+  cd openssl-1.1.1m
+  git checkout OpenSSL_1_1_1m
+  ./config
+  cd ..
+fi
+
+CONFIG_OPTS+=(--with-openssl=openssl-1.1.1m)
+
 if [[ -z "$DYNAMIC_MODULE" ]]; then
   read -t 10 -p "Do you want to create a dynamic module (required for use with NGINX+) [Y/n]: " DYNAMIC_MODULE || :
 fi
