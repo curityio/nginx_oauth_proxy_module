@@ -2,7 +2,23 @@
 
 # There is no `all` target in the NGINX Makefile, but it's a common default, so we add it. When this is used though,
 # we always pass on `default` since `all` is unknown to the NGINX Makefile
-default all: .build.info
+default all: .build.info make_openssl install_openssl make_nginx
+
+# Build OpenSSL before the NGINX make, so that headers are available to compile against
+make_openssl:
+	@echo "make_openssl"
+	@if [ ! -f '/usr/local/bin/openssl' ]; then \
+	  echo "NOT EXISTS" && cd $(OPENSSL_SRC_DIR) && $(MAKE) && cd ..; \
+	fi
+
+# Install OpenSSL before the NGINX make, so that libs are available to link with
+install_openssl:
+	@echo "install_openssl"
+	@if [ ! -f '/usr/local/bin/openssl' ]; then \
+	  echo "NOT EXISTS2" && cd $(OPENSSL_SRC_DIR) && $(MAKE) install_sw && cd ..; \
+	fi
+
+make_nginx:
 	cd $(NGINX_SRC_DIR) && $(MAKE) -e default
 
 module modules: .build.info $(NGINX_SRC_DIR)/Makefile

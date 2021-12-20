@@ -57,7 +57,7 @@ dkms.conf
 # Downloaded NGINX and OpenSSL files
 nginx-*.tar.gz*
 nginx-*/
-openssl-1.1.1m
+OpenSSL*
 
 # Build files
 .build.info

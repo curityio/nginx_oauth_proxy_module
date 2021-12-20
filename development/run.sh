@@ -10,12 +10,11 @@ cd ..
 
 #
 # Build the C code into a library at ./nginx-1.21.3/objs/ngx_curity_http_oauth_proxy_module.so
-# This is currently around 51K and OpenSSL perhaps needs to be deployed separately
 #
 make
 
 #
-# Deploy a complete nginx system, to /usr/local/nginx, with the module in the modules subfolder
+# Deploy a complete nginx system, to /usr/local/nginx, with the module contained in the modules subfolder
 #
 sudo make install
 

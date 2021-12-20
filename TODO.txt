@@ -1,10 +1,6 @@
-RISK AREA - DEPLOYMENT BASICS
------------------------------
-- Get OpenSSL crypto working locally and understand deployment concerns
-
 RISK AREA - CRYPTO
 ------------------
-- Get the algorithm working in the other project, then port here
+- Get the algorithm working in an interoperable manner
 
 RISK AREA - LINUX DEPLOYMENT
 ----------------------------
@@ -24,8 +20,8 @@ CODE AND TEST COMPLETION
 Test driven completion, to include scenatios tests from the 
 Add some assert statements in sensible places.
 
-CHANNEL COMMS
--------------
+PEOPLE COMMUNICATION
+--------------------
 On the OSS channel, tell people this is coming, but not finished yet and raise interesting points:
 
 - Set the scene that customers put 2 plugins in front of APIs and use them from SPAs
