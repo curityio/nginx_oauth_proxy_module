@@ -5,6 +5,7 @@ set -e
 SRC_DIR=$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)
 
 NGINX_VERSION=${NGINX_VERSION:-1.21.3}
+OPENSSL_VERSION=${OPENSSL_VERSION:-1.1.1m}
 BUILD_INFO_FILE="$SRC_DIR/.build.info"
 test -f "$BUILD_INFO_FILE" && . "$BUILD_INFO_FILE"
 
@@ -49,17 +50,6 @@ else
   CONFIG_OPTS+=(--with-cc-opt="-DNDEBUG")
 fi
 
-# We build OpenSSL from source to avoid requiring it as a deployment dependency for customers
-if [ ! -d openssl-1.1.1m ]; then
-  git clone https://github.com/openssl/openssl.git openssl-1.1.1m
-  cd openssl-1.1.1m
-  git checkout OpenSSL_1_1_1m
-  ./config
-  cd ..
-fi
-
-CONFIG_OPTS+=(--with-openssl=openssl-1.1.1m)
-
 if [[ -z "$DYNAMIC_MODULE" ]]; then
   read -t 10 -p "Do you want to create a dynamic module (required for use with NGINX+) [Y/n]: " DYNAMIC_MODULE || :
 fi
@@ -71,8 +61,29 @@ else
   CONFIG_OPTS+=(--add-module=$SRC_DIR)
 fi
 
-BUILD_INFO=("NGINX_SRC_DIR=$NGINX_SRC_DIR" "NGINX_VERSION=$NGINX_VERSION" "NGINX_DEBUG=$NGINX_DEBUG" "DYNAMIC_MODULE=$DYNAMIC_MODULE")
+#
+# This will make headers and libs available for the latest OpenSSL, so that the module code builds correctly.
+# https://wiki.openssl.org/index.php/Compilation_and_Installation
+#
+# These are the important updates and we use install_sw to avoid deploying man pages and other docs:
+# /usr/local/include/openssl
+# /usr/local/lib/libcrypto.1.1.dylib
+# /usr/local/lib/libssl.1.1.dylib
+# /usr/local/bin/openssl
+#
+if [ ! -d "openssl-$OPENSSL_VERSION" ]; then
+  git clone https://github.com/openssl/openssl.git "openssl-$OPENSSL_VERSION"
+fi
+cd "openssl-$OPENSSL_VERSION"
+git checkout OpenSSL_1_1_1m
+./Configure darwin64-x86_64-cc
+if [ ! -f "/usr/local/bin/openssl-$OPENSSL_VERSION" ]; then
+  make depend
+  make
+  sudo make install_sw
+fi
+CONFIG_OPTS+=(--with-http_ssl_module --with-openssl=../openssl-$OPENSSL_VERSION)
 
+BUILD_INFO=("NGINX_SRC_DIR=$NGINX_SRC_DIR" "NGINX_VERSION=$NGINX_VERSION" "OPENSSL_VERSION=$OPENSSL_VERSION" "NGINX_DEBUG=$NGINX_DEBUG" "DYNAMIC_MODULE=$DYNAMIC_MODULE")
 printf '%s\n' "${BUILD_INFO[@]}" >$BUILD_INFO_FILE
-
 cd $NGINX_SRC_DIR && ./configure "${CONFIG_OPTS[@]}" $*

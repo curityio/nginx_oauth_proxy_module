@@ -17,7 +17,7 @@ build install upgrade: .build.info $(NGINX_SRC_DIR)/Makefile
 
 clean:
 	test -d "$(NGINX_SRC_DIR)" && $(MAKE) -C $(NGINX_SRC_DIR) $@ || true
-	rm -rf .build.info nginx-$(NGINX_VERSION) nginx-$(NGINX_VERSION).tar.gz* t/servroot
+	rm -rf .build.info nginx-$(NGINX_VERSION) nginx-$(NGINX_VERSION).tar.gz* openssl-${OPENSSL_VERSION} t/servroot
 
 test: all
 	docker-compose up -d
