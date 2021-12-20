@@ -78,7 +78,7 @@ fi
 
 # NGINX needs to build OpenSSL from source so that the plugin itself can be released in a standalone manner
 cd $OPENSSL_SRC_DIR
-./Configure darwin64-x86_64-cc
+./config
 CONFIG_OPTS+=(--with-http_ssl_module --with-openssl=../$OPENSSL_VERSION_TAG)
 cd $SRC_DIR
 

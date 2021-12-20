@@ -2,7 +2,8 @@
 
 ## 1. Configure
 
-Run the base configure script, which will download both NGINX and OpenSSL source code:
+Run the base configure script, and accept all defaults.\
+This will download both NGINX and OpenSSL source code:
 
 ```bash
 ./configure
@@ -19,7 +20,8 @@ The following locations will be updated with the latest OpenSSL:
 /usr/local/bin/openssl
 ```
 
-The following location will be updated with a working NGINX:
+The following location will be updated with a built from source NGINX installation.\
+The nginx.conf file and built module will then be deployed under this root folder:
 
 ```text
 /usr/local/nginx
