@@ -1,24 +1,21 @@
-RISK AREA - CRYPTO
-------------------
-- Get the algorithm working in an interoperable manner
+RISK AREA - TESTS
+-----------------
+Get an initial test running to get familiar with the setup and anything specific in Docker compose
+
+TIDY UP
+-------
+Folder structure and developer setup to improve, along with READMEs
 
 RISK AREA - LINUX DEPLOYMENT
 ----------------------------
-- Build for a Linux distro
-- See if deploying the .so module alone is sufficient
+Build for a Linux distro and deploy a .so library
 
-Follow the approach here otherwise - requiring the openssl library as a prerequisite:
+Bear in mind the approach here, which expects the openssl library as a prerequisite:
 - https://github.com/zmartzone/liboauth2#dependencies
-
-RISK AREA - TESTS
------------------
-- Write an initial test to get familiar with the setup
-- Create a test folder
 
 CODE AND TEST COMPLETION
 ------------------------
-Test driven completion, to include scenatios tests from the 
-Add some assert statements in sensible places.
+Test driven completion, to include scenarios from current curl tests, with asserts
 
 PEOPLE COMMUNICATION
 --------------------
@@ -36,11 +33,6 @@ On the OSS channel, tell people this is coming, but not finished yet and raise i
 - End-to-End error experience for SPAs
   It feels a bit cludgy asking SPAs to read a header for some error responses and not others
   My thoughts are to follow standards but also return a JSON body with a code and message payload
-
-DOC TIDY UP
------------
-- Get repo docs completed
-- Ensure review state for other people is good
 
 OPEN QUESTIONS
 --------------
