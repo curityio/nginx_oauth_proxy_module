@@ -1,8 +1,8 @@
-# OAuth Proxy macOS Development Setup
+# OAuth Proxy Module - macOS Development Setup
 
 ## 1. Configure
 
-Run the base configure script, and accept all defaults.\
+Run the base configure script, and accept all defaults, but set `DYNAMIC_MODULE=n`.\
 This will download both NGINX and OpenSSL source code:
 
 ```bash
@@ -54,18 +54,25 @@ Then run curl commands such as this, which runs the plugin, then routes the requ
 The internet API echoes headers so that we can see the token extracted from the secure cookie:
 
 ```bash
+ENCRYPTED_ACCESS_TOKEN=$(cat ./development/encrypted_access_token.txt)
 curl -X GET http://localhost:8080/api \
 -H "origin: https://www.example.com" \
--H "cookie: example-at=xxx"
+-H "cookie: example-at=$ENCRYPTED_ACCESS_TOKEN"
 ```
 
-## 6. Make Test
+## 6. Test Setup
 
 Add the path to `/usr/local/nginx/sbin` to the system PATH in the .zprofile file.\
-Then run the following command to execute NGINX tests, and to develop in a test driven manner:
+Then run the following command to add macOS support for NGINX testing:
 
 ```bash
-export ADMIN_PASSWORD=Password1
-export LICENSE_KEY=$(cat ~/.curity/raw_license_key.json)
+cpan Test::Nginx
+```
+
+## 7. Run Tests
+
+Then run this command from the root folder to execute all NGINX tests from the `t` folder:
+
+```bash
 make test
 ```

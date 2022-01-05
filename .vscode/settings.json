@@ -1,0 +1,8 @@
+{
+    "files.associations": {
+        "ngx_http.h": "c",
+        "ngx_http_variables.h": "c",
+        "__node_handle": "c",
+        "ios": "c"
+    }
+}

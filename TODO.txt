@@ -1,13 +1,14 @@
-RISK AREA - TESTS
------------------
-Get an initial test running to get familiar with the setup and anything specific in Docker compose
+ENCRYPTION
+----------
+Get first steps integrated and basically working:
+- Run a helper script during tests to encrypt data
 
-TIDY UP
--------
-Folder structure and developer setup to improve, along with READMEs
+README
+------
+Update READMEs
 
-RISK AREA - LINUX DEPLOYMENT
-----------------------------
+LINUX DEPLOYMENT
+----------------
 Build for a Linux distro and deploy a .so library
 
 Bear in mind the approach here, which expects the openssl library as a prerequisite:
@@ -15,7 +16,9 @@ Bear in mind the approach here, which expects the openssl library as a prerequis
 
 CODE AND TEST COMPLETION
 ------------------------
-Test driven completion, to include scenarios from current curl tests, with asserts
+Test driven completion, to include scenarios from current curl tests, with asserts:
+- CLion
+- arrays for trusted web origins
 
 PEOPLE COMMUNICATION
 --------------------

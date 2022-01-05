@@ -54,10 +54,10 @@ dkms.conf
 # macOS files
 .DS_Store
 
-# Downloaded NGINX and OpenSSL files
+# Project specific files that are downloaded or built
 nginx-*.tar.gz*
 nginx-*/
 OpenSSL*
-
-# Build files
+t/servroot
 .build.info
+

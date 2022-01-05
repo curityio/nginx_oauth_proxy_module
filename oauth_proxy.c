@@ -1,5 +1,5 @@
 /*
- *  Copyright 2021 Curity AB
+ *  Copyright 2022 Curity AB
  *
  *  Licensed under the Apache License, Version 2.0 (the "License");
  *  you may not use this file except in compliance with the License.
@@ -14,7 +14,6 @@
  *  limitations under the License.
  */
 
-#include <openssl/rand.h>
 #include <ngx_config.h>
 #include <ngx_core.h>
 #include <ngx_http.h>
@@ -35,13 +34,16 @@ typedef struct
     ngx_uint_t status;
 } oauth_proxy_module_context_t;
 
-/* Forward declarations */
+/* Forward declarations of local functions */
 static ngx_int_t post_configuration(ngx_conf_t *config);
 static ngx_int_t handler(ngx_http_request_t *request);
 static void *create_location_configuration(ngx_conf_t *config);
 static char *merge_location_configuration(ngx_conf_t *main_config, void *parent, void *child);
 static ngx_int_t get_cookie(ngx_http_request_t *request, ngx_str_t* cookie_value, ngx_str_t* cookie_prefix, const char *cookie_suffix);
 static ngx_int_t add_authorization_header(ngx_http_request_t *request, ngx_str_t* token_value);
+
+/* Imports from the decryption source file */
+extern ngx_int_t oauth_proxy_decrypt(ngx_http_request_t *request, ngx_str_t *output, const ngx_str_t* input);
 
 /* Configuration data */
 static ngx_command_t oauth_proxy_module_directives[] =
@@ -118,7 +120,7 @@ ngx_module_t ngx_curity_http_oauth_proxy_module =
  */
 static void *create_location_configuration(ngx_conf_t *config)
 {
-    ngx_conf_log_error(NGX_LOG_WARN, config, 0, "*** OAUTH PROXY: create_location_configuration called");
+    // ngx_conf_log_error(NGX_LOG_WARN, config, 0, "*** OAUTH PROXY: create_location_configuration called");
     oauth_proxy_configuration_t *location_config = ngx_pcalloc(config->pool, sizeof(oauth_proxy_configuration_t));
 
     if (location_config == NULL)
@@ -135,11 +137,11 @@ static void *create_location_configuration(ngx_conf_t *config)
  */
 static char *merge_location_configuration(ngx_conf_t *main_config, void *parent, void *child)
 {
-    ngx_conf_log_error(NGX_LOG_WARN, main_config, 0, "*** OAUTH PROXY: merge_location_configuration called");
+    // ngx_conf_log_error(NGX_LOG_WARN, main_config, 0, "*** OAUTH PROXY: merge_location_configuration called");
     oauth_proxy_configuration_t *parent_config = parent, *child_config = child;
 
     // This shows the input value
-    ngx_conf_log_error(NGX_LOG_WARN, main_config, 0, "*** OAUTH PROXY: child encryption key is %V", &child_config->hex_encryption_key);
+    // ngx_conf_log_error(NGX_LOG_WARN, main_config, 0, "*** OAUTH PROXY: child encryption key is %V", &child_config->hex_encryption_key);
 
     ngx_conf_merge_off_value(child_config->enable, parent_config->enable, 0)
     ngx_conf_merge_str_value(child_config->hex_encryption_key, parent_config->hex_encryption_key, "")
@@ -152,7 +154,7 @@ static char *merge_location_configuration(ngx_conf_t *main_config, void *parent,
  */
 static ngx_int_t post_configuration(ngx_conf_t *config)
 {
-    ngx_conf_log_error(NGX_LOG_WARN, config, 0, "*** OAUTH PROXY: post_configuration called");
+    // ngx_conf_log_error(NGX_LOG_WARN, config, 0, "*** OAUTH PROXY: post_configuration called");
     ngx_http_core_main_conf_t *main_config = ngx_http_conf_get_module_main_conf(config, ngx_http_core_module);
     ngx_http_handler_pt *h = ngx_array_push(&main_config->phases[NGX_HTTP_ACCESS_PHASE].handlers);
 
@@ -174,6 +176,7 @@ static ngx_int_t handler(ngx_http_request_t *request)
     oauth_proxy_configuration_t *module_location_config = ngx_http_get_module_loc_conf(
             request, ngx_curity_http_oauth_proxy_module);
 
+    // Return immediately when the module is disabled
     if (!module_location_config->enable)
     {
         ngx_log_error(NGX_LOG_WARN, request->connection->log, 0, "OAuth proxy module is disabled");
@@ -186,39 +189,45 @@ static ngx_int_t handler(ngx_http_request_t *request)
         return NGX_OK;
     }
 
-    ngx_log_error(NGX_LOG_WARN, request->connection->log, 0, "*** BEFORE USING OPENSSL");
-    unsigned char key[16];
-    int r = RAND_bytes(key, sizeof(key));
-    ngx_log_error(NGX_LOG_WARN, request->connection->log, 0, "*** OPENSSL RESULT WAS: %d", r);
-    ngx_log_error(NGX_LOG_WARN, request->connection->log, 0, "*** AFTER USING OPENSSL");
-
     // Pass the request through if it has an Authorization header, eg from a mobile client that uses the same route as an SPA
     if (request->headers_in.authorization && request->headers_in.authorization->value.len > 0)
     {
         return NGX_OK;
     }
 
-    ngx_str_t at_cookie_value;
-    ngx_int_t at_cookie_result = get_cookie(request, &at_cookie_value, &module_location_config->cookie_prefix, "-at");
+    // Try to get the access token cookie
+    ngx_str_t at_cookie_encrypted_hex;
+    ngx_int_t at_cookie_result = get_cookie(request, &at_cookie_encrypted_hex, &module_location_config->cookie_prefix, "-at");
     if (at_cookie_result == NGX_HTTP_INTERNAL_SERVER_ERROR)
     {
         return at_cookie_result;
     }
 
     // When no cookie is provided we return an unauthorized status code
+    /* Currently this returns an HTML response body, so fix that */
     if (at_cookie_result == NGX_DECLINED)
     {
-        /* Currently this returns an HTML response body, so fix that */
         return NGX_HTTP_UNAUTHORIZED;
     }
 
-    ngx_int_t auth_header_result = add_authorization_header(request, &at_cookie_value);
-    if (at_cookie_result == NGX_HTTP_INTERNAL_SERVER_ERROR)
+    // Allocate enough memory to store the token, which is less than half of the cookie payload
+    ngx_str_t access_token;
+    ngx_int_t decryption_result = oauth_proxy_decrypt(request, &access_token, &at_cookie_encrypted_hex);
+    if (decryption_result != NGX_OK)
     {
-        return auth_header_result;
+        
+        return decryption_result;
     }
 
-    ngx_log_error(NGX_LOG_WARN, request->connection->log, 0, "*** OAUTH PROXY: auth header value is %V", &request->headers_in.authorization->value);
+    // Add the cookie to the authorization header
+    ngx_int_t add_header_result = add_authorization_header(request, &access_token);
+    if (add_header_result != NGX_OK)
+    {
+        return add_header_result;
+    }
+
+    ngx_log_error(NGX_LOG_WARN, request->connection->log, 0, "*** INCOMING COOKIE: %V", &at_cookie_encrypted_hex);
+    ngx_log_error(NGX_LOG_WARN, request->connection->log, 0, "*** OUTGOING ACCESS TOKEN: %V", &request->headers_in.authorization->value);
     return NGX_OK;
 }
 

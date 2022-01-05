@@ -6,15 +6,14 @@ run_tests();
 
 __DATA__
 
-=== TEST 1: Client ID configured without secret fails
+=== TEST 1: Plugin not active
 
 --- config
-location = /t {
-    phantom_token on;
-    phantom_token_client_credential "client_id"; # Missing secret as 2nd arg
+location tt {
+    oauth_proxy off;
 }
 
---- must_die
+--- request
+GET /
 
---- error_log
-invalid number of arguments in "phantom_token_client_credential" directive
+--- error_code: 200
