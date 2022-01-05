@@ -43,7 +43,7 @@ static ngx_int_t get_cookie(ngx_http_request_t *request, ngx_str_t* cookie_value
 static ngx_int_t add_authorization_header(ngx_http_request_t *request, ngx_str_t* token_value);
 
 /* Imports from the decryption source file */
-extern ngx_int_t oauth_proxy_decrypt(ngx_http_request_t *request, ngx_str_t *output, const ngx_str_t* input);
+extern ngx_int_t oauth_proxy_decrypt(ngx_http_request_t *request, const ngx_str_t* encryption_key_hex, const ngx_str_t* encrypted_hex, ngx_str_t *plain_text);
 
 /* Configuration data */
 static ngx_command_t oauth_proxy_module_directives[] =
@@ -204,22 +204,21 @@ static ngx_int_t handler(ngx_http_request_t *request)
     }
 
     // When no cookie is provided we return an unauthorized status code
-    /* Currently this returns an HTML response body, so fix that */
     if (at_cookie_result == NGX_DECLINED)
     {
         return NGX_HTTP_UNAUTHORIZED;
     }
 
-    // Allocate enough memory to store the token, which is less than half of the cookie payload
+    // Decrypt the secure cookie to get its access token content
     ngx_str_t access_token;
-    ngx_int_t decryption_result = oauth_proxy_decrypt(request, &access_token, &at_cookie_encrypted_hex);
+    ngx_int_t decryption_result = oauth_proxy_decrypt(request, &module_location_config->hex_encryption_key, &at_cookie_encrypted_hex, &access_token);
     if (decryption_result != NGX_OK)
-    {
-        
+    {   
         return decryption_result;
     }
 
     // Add the cookie to the authorization header
+    ngx_log_error(NGX_LOG_WARN, request->connection->log, 0, "*** ACCESS TOKEN: %V", &access_token);
     ngx_int_t add_header_result = add_authorization_header(request, &access_token);
     if (add_header_result != NGX_OK)
     {

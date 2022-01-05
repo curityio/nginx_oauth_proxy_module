@@ -14,15 +14,16 @@
  *  limitations under the License.
  */
 
-#include <openssl/rand.h>
+#include <openssl/evp.h>
 #include <ngx_config.h>
 #include <ngx_core.h>
 #include <ngx_http.h>
 #include <ngx_string.h>
 
 /* Forward declarations */
-// static ngx_int_t hex_to_bytes(const char *hex, size_t hexLen, u_char *bytes);
-static void bytes_to_hex(u_char *bytes, size_t bytesLen, u_char *hex);
+static ngx_int_t hex_to_bytes(const u_char *hex, size_t hex_len, u_char *bytes);
+static size_t calculate_decrypted_text_buffer_size(const ngx_str_t* encrypted_hex);
+static size_t min(size_t first, size_t second);
 
 /* Encryption related constants */
 const int GCM_IV_SIZE = 12;
@@ -30,31 +31,182 @@ const int GCM_TAG_SIZE = 16;
 const int AES_KEY_SIZE_BYTES = 32;
 
 /*
- * Perform AES256-GCM cookie decryption
+ * Performs AES256-GCM authenticated decryption of secure cookies, using the hex encryption key from configuration
+ * https://wiki.openssl.org/index.php/EVP_Authenticated_Encryption_and_Decryption
  */
-ngx_int_t oauth_proxy_decrypt(ngx_http_request_t *request, ngx_str_t *output, const ngx_str_t* input)
+ngx_int_t oauth_proxy_decrypt(ngx_http_request_t *request, const ngx_str_t* encryption_key_hex, const ngx_str_t* encrypted_hex, ngx_str_t *plaintext)
 {
-    u_char bytes[16];
-    size_t alloc_size = sizeof(bytes) * 2 + 1;
-    output->data = ngx_pcalloc(request->pool, alloc_size);
-    RAND_bytes(bytes, sizeof(bytes));
+    EVP_CIPHER_CTX *ctx = NULL;
+    u_char encryption_key_bytes[AES_KEY_SIZE_BYTES];
+    u_char *ciphertext_bytes = NULL;
+    u_char *plaintext_bytes = NULL;
+    u_char iv_hex[GCM_IV_SIZE * 2 + 1];
+    u_char iv_bytes[GCM_IV_SIZE];
+    u_char tag_hex[GCM_TAG_SIZE * 2 + 1];
+    u_char tag_bytes[GCM_TAG_SIZE];
+    size_t payload_len = 0;
+    int plaintext_len  = 0;
+    int len            = 0;
+    int evp_result     = 0;
+    ngx_int_t ret_code = NGX_OK;
+
+    ctx = EVP_CIPHER_CTX_new();
+    if (ctx == NULL)
+    {
+        ngx_log_error(NGX_LOG_WARN, request->connection->log, 0, "Unable to create the decryption cipher");
+        ret_code = NGX_HTTP_INTERNAL_SERVER_ERROR;
+    }
+
+    if (ret_code == NGX_OK)
+    {
+        ret_code = hex_to_bytes(encryption_key_hex->data, min(encryption_key_hex->len, AES_KEY_SIZE_BYTES), encryption_key_bytes);
+        if (ret_code != NGX_OK)
+        {
+            ngx_log_error(NGX_LOG_WARN, request->connection->log, 0, "The configured encryption key is not valid hex");
+        }
+    }
+
+    if (ret_code == NGX_OK)
+    {
+        payload_len = calculate_decrypted_text_buffer_size(encrypted_hex);
+        if (payload_len <= 0)
+        {
+            ngx_log_error(NGX_LOG_WARN, request->connection->log, 0, "The encrypted hex payload had an invalid length");
+            ret_code = NGX_HTTP_UNAUTHORIZED;
+        }
+    }
+
+    if (ret_code == NGX_OK)
+    {
+        ciphertext_bytes = ngx_pcalloc(request->pool, payload_len);
+        if (ciphertext_bytes == NULL)
+        {
+            ngx_log_error(NGX_LOG_WARN, request->connection->log, 0, "Problem encountered allocating memory for ciphertext bytes");
+            ret_code = NGX_HTTP_INTERNAL_SERVER_ERROR;
+        }
+    }
+
+    // In AES-GCM the plaintext and ciphertext sizes are the same
+    if (ret_code == NGX_OK)
+    {
+        plaintext_bytes = ngx_pcalloc(request->pool, payload_len);
+        if (plaintext_bytes == NULL)
+        {
+            ngx_log_error(NGX_LOG_WARN, request->connection->log, 0, "Problem encountered allocating memory for plaintext bytes");
+            ret_code = NGX_HTTP_INTERNAL_SERVER_ERROR;
+        }
+    }
     
-    bytes_to_hex(bytes, sizeof(bytes), output->data);
-    output->len = ngx_strlen(output->data);
-    return NGX_OK;
+    // The IV part of the payload is the first 12 hex characters
+    if (ret_code == NGX_OK)
+    {
+        ngx_memcpy(iv_hex, encrypted_hex->data, GCM_IV_SIZE * 2);
+        iv_hex[GCM_IV_SIZE * 2] = 0;
+        ret_code = hex_to_bytes(iv_hex, ngx_strlen(iv_hex), iv_bytes);
+        if (ret_code != NGX_OK)
+        {
+            ngx_log_error(NGX_LOG_WARN, request->connection->log, 0, "The IV section of the encrypted payload is not valid hex");
+            ret_code = NGX_HTTP_UNAUTHORIZED;
+        }
+    }
+
+    // The actual ciphertext is the large middle part of the payload
+    if (ret_code == NGX_OK)
+    {   
+        ret_code = hex_to_bytes(encrypted_hex->data + GCM_IV_SIZE * 2, encrypted_hex->len - (GCM_IV_SIZE + GCM_TAG_SIZE) * 2, ciphertext_bytes);
+        if (ret_code != NGX_OK)
+        {
+            ngx_log_error(NGX_LOG_WARN, request->connection->log, 0, "The ciphertext section of the encrypted payload is not valid hex");
+            ret_code = NGX_HTTP_UNAUTHORIZED;
+        }
+    }
+
+    // The tag part of the payload is the last 16 hex characters
+    if (ret_code == NGX_OK)
+    {
+        ngx_memcpy(tag_hex, encrypted_hex->data + encrypted_hex->len - GCM_TAG_SIZE * 2, GCM_TAG_SIZE * 2);
+        tag_hex[GCM_TAG_SIZE * 2] = 0;
+        ret_code = hex_to_bytes(tag_hex, GCM_IV_SIZE, tag_bytes);
+        if (ret_code != NGX_OK)
+        {
+            ngx_log_error(NGX_LOG_WARN, request->connection->log, 0, "The tag section of the encrypted payload is not valid hex");
+            ret_code = NGX_HTTP_UNAUTHORIZED;
+        }
+    }
+
+    if (ret_code == NGX_OK)
+    {
+        evp_result = EVP_DecryptInit_ex(ctx, EVP_aes_256_gcm(), NULL, encryption_key_bytes, iv_bytes);
+        if (evp_result == NGX_OK)
+        {
+            ngx_log_error(NGX_LOG_WARN, request->connection->log, 0, "Unable to initialize the decryption context, error number: %d", evp_result);
+            ret_code = NGX_HTTP_UNAUTHORIZED;
+        }
+    }
+
+    if (ret_code == NGX_OK)
+    {
+        evp_result = EVP_DecryptUpdate(ctx, plaintext_bytes, &len, ciphertext_bytes, payload_len);
+        if (evp_result == NGX_OK)
+        {
+            ngx_log_error(NGX_LOG_WARN, request->connection->log, 0, "Problem encountered decrypting data, error number: %d", evp_result);
+            ret_code = NGX_HTTP_UNAUTHORIZED;
+        }
+        else
+        {
+            plaintext_len = len;
+        }
+    }
+
+    if (ret_code == NGX_OK)
+    {
+        evp_result = EVP_CIPHER_CTX_ctrl(ctx, EVP_CTRL_GCM_SET_TAG, GCM_TAG_SIZE, tag_bytes);
+        if (evp_result == 0)
+        {
+            ngx_log_error(NGX_LOG_WARN, request->connection->log, 0, "Problem encountered setting the message authentication code, error number: %d", evp_result);
+            ret_code = NGX_HTTP_UNAUTHORIZED;
+        }
+    }
+
+    if (ret_code == NGX_OK)
+    {
+        evp_result = EVP_DecryptFinal_ex(ctx, plaintext_bytes + plaintext_len, &len);
+        if (evp_result > 0)
+        {
+            ngx_log_error(NGX_LOG_WARN, request->connection->log, 0, "Problem encountered finalizing encrypted data, error number: %d", evp_result);
+            ret_code = 1;
+        }
+        else
+        {
+            plaintext_len += len;
+        }
+    }
+
+    if (ret_code == NGX_OK)
+    {
+        plaintext->data = plaintext_bytes;
+        plaintext->len  = plaintext_len;
+    }
+
+    if (ctx != NULL)
+    {
+        EVP_CIPHER_CTX_free(ctx);
+    }
+
+    return ret_code;
 }
 
 /*
  * Convert each pair of hex characters to a byte value
  */
-/*static ngx_int_t hex_to_bytes(const char *hex, size_t hexLen, u_char *bytes)
+static ngx_int_t hex_to_bytes(const u_char *hex, size_t hex_len, u_char *bytes)
 {
-    if (hexLen %2 != 0)
+    if (hex_len %2 != 0)
     {
-       return NGX_HTTP_UNAUTHORIZED;
+       return -1;
     }
 
-    for (size_t i = 0; i < hexLen; i++)
+    for (size_t i = 0; i < hex_len; i++)
     {
         char c = hex[i];
         u_char d;
@@ -90,17 +242,24 @@ ngx_int_t oauth_proxy_decrypt(ngx_http_request_t *request, ngx_str_t *output, co
     }
 
     return NGX_OK;
-}*/
+}
 
 /*
- * Convert each byte to a pair of hex characters, and note that the last element adds the null terminator
+ * Before decryption, calcuate a buffer size in AES blocks, and allow space for a null terminator
  */
-static void bytes_to_hex(u_char *bytes, size_t bytes_size, u_char *hex)
+static size_t calculate_decrypted_text_buffer_size(const ngx_str_t* encrypted_hex)
 {
-    u_char *pos = hex;
-    for (size_t i = 0; i < bytes_size; i++)
-    {
-        sprintf((char *)pos, "%02x", bytes[i]);
-        pos += 2;
+    return encrypted_hex->len / 2 - (GCM_IV_SIZE + GCM_TAG_SIZE) + 1;
+}
+
+/*
+ * A utility to avoid overstepping the bounds of an array
+ */
+static size_t min(size_t first, size_t second)
+{
+    if (first < second) {
+        return first;
     }
+
+    return second;
 }
