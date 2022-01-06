@@ -218,15 +218,12 @@ static ngx_int_t handler(ngx_http_request_t *request)
     }
 
     // Add the cookie to the authorization header
-    ngx_log_error(NGX_LOG_WARN, request->connection->log, 0, "*** ACCESS TOKEN: %V", &access_token);
     ngx_int_t add_header_result = add_authorization_header(request, &access_token);
     if (add_header_result != NGX_OK)
     {
         return add_header_result;
     }
 
-    ngx_log_error(NGX_LOG_WARN, request->connection->log, 0, "*** INCOMING COOKIE: %V", &at_cookie_encrypted_hex);
-    ngx_log_error(NGX_LOG_WARN, request->connection->log, 0, "*** OUTGOING ACCESS TOKEN: %V", &request->headers_in.authorization->value);
     return NGX_OK;
 }
 

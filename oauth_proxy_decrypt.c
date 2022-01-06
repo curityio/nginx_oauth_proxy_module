@@ -22,8 +22,6 @@
 
 /* Forward declarations */
 static ngx_int_t hex_to_bytes(const u_char *hex, size_t hex_len, u_char *bytes);
-static size_t calculate_decrypted_text_buffer_size(const ngx_str_t* encrypted_hex);
-static size_t min(size_t first, size_t second);
 
 /* Encryption related constants */
 const int GCM_IV_SIZE = 12;
@@ -44,7 +42,7 @@ ngx_int_t oauth_proxy_decrypt(ngx_http_request_t *request, const ngx_str_t* encr
     u_char iv_bytes[GCM_IV_SIZE];
     u_char tag_hex[GCM_TAG_SIZE * 2 + 1];
     u_char tag_bytes[GCM_TAG_SIZE];
-    size_t payload_len = 0;
+    int ciphertext_len = 0;
     int plaintext_len  = 0;
     int len            = 0;
     int evp_result     = 0;
@@ -59,7 +57,7 @@ ngx_int_t oauth_proxy_decrypt(ngx_http_request_t *request, const ngx_str_t* encr
 
     if (ret_code == NGX_OK)
     {
-        ret_code = hex_to_bytes(encryption_key_hex->data, min(encryption_key_hex->len, AES_KEY_SIZE_BYTES), encryption_key_bytes);
+        ret_code = hex_to_bytes(encryption_key_hex->data, AES_KEY_SIZE_BYTES * 2, encryption_key_bytes);
         if (ret_code != NGX_OK)
         {
             ngx_log_error(NGX_LOG_WARN, request->connection->log, 0, "The configured encryption key is not valid hex");
@@ -68,8 +66,8 @@ ngx_int_t oauth_proxy_decrypt(ngx_http_request_t *request, const ngx_str_t* encr
 
     if (ret_code == NGX_OK)
     {
-        payload_len = calculate_decrypted_text_buffer_size(encrypted_hex);
-        if (payload_len <= 0)
+        ciphertext_len = encrypted_hex->len / 2 - (GCM_IV_SIZE + GCM_TAG_SIZE);
+        if (ciphertext_len <= 0)
         {
             ngx_log_error(NGX_LOG_WARN, request->connection->log, 0, "The encrypted hex payload had an invalid length");
             ret_code = NGX_HTTP_UNAUTHORIZED;
@@ -78,7 +76,7 @@ ngx_int_t oauth_proxy_decrypt(ngx_http_request_t *request, const ngx_str_t* encr
 
     if (ret_code == NGX_OK)
     {
-        ciphertext_bytes = ngx_pcalloc(request->pool, payload_len);
+        ciphertext_bytes = ngx_pcalloc(request->pool, ciphertext_len);
         if (ciphertext_bytes == NULL)
         {
             ngx_log_error(NGX_LOG_WARN, request->connection->log, 0, "Problem encountered allocating memory for ciphertext bytes");
@@ -86,10 +84,10 @@ ngx_int_t oauth_proxy_decrypt(ngx_http_request_t *request, const ngx_str_t* encr
         }
     }
 
-    // In AES-GCM the plaintext and ciphertext sizes are the same
+    // In AES-GCM the plaintext and ciphertext sizes are the same but we add a character for the null terminator
     if (ret_code == NGX_OK)
     {
-        plaintext_bytes = ngx_pcalloc(request->pool, payload_len);
+        plaintext_bytes = ngx_pcalloc(request->pool, ciphertext_len + 1);
         if (plaintext_bytes == NULL)
         {
             ngx_log_error(NGX_LOG_WARN, request->connection->log, 0, "Problem encountered allocating memory for plaintext bytes");
@@ -102,7 +100,7 @@ ngx_int_t oauth_proxy_decrypt(ngx_http_request_t *request, const ngx_str_t* encr
     {
         ngx_memcpy(iv_hex, encrypted_hex->data, GCM_IV_SIZE * 2);
         iv_hex[GCM_IV_SIZE * 2] = 0;
-        ret_code = hex_to_bytes(iv_hex, ngx_strlen(iv_hex), iv_bytes);
+        ret_code = hex_to_bytes(iv_hex, GCM_IV_SIZE * 2, iv_bytes);
         if (ret_code != NGX_OK)
         {
             ngx_log_error(NGX_LOG_WARN, request->connection->log, 0, "The IV section of the encrypted payload is not valid hex");
@@ -126,7 +124,7 @@ ngx_int_t oauth_proxy_decrypt(ngx_http_request_t *request, const ngx_str_t* encr
     {
         ngx_memcpy(tag_hex, encrypted_hex->data + encrypted_hex->len - GCM_TAG_SIZE * 2, GCM_TAG_SIZE * 2);
         tag_hex[GCM_TAG_SIZE * 2] = 0;
-        ret_code = hex_to_bytes(tag_hex, GCM_IV_SIZE, tag_bytes);
+        ret_code = hex_to_bytes(tag_hex, GCM_TAG_SIZE * 2, tag_bytes);
         if (ret_code != NGX_OK)
         {
             ngx_log_error(NGX_LOG_WARN, request->connection->log, 0, "The tag section of the encrypted payload is not valid hex");
@@ -137,7 +135,7 @@ ngx_int_t oauth_proxy_decrypt(ngx_http_request_t *request, const ngx_str_t* encr
     if (ret_code == NGX_OK)
     {
         evp_result = EVP_DecryptInit_ex(ctx, EVP_aes_256_gcm(), NULL, encryption_key_bytes, iv_bytes);
-        if (evp_result == NGX_OK)
+        if (evp_result == 0)
         {
             ngx_log_error(NGX_LOG_WARN, request->connection->log, 0, "Unable to initialize the decryption context, error number: %d", evp_result);
             ret_code = NGX_HTTP_UNAUTHORIZED;
@@ -146,8 +144,8 @@ ngx_int_t oauth_proxy_decrypt(ngx_http_request_t *request, const ngx_str_t* encr
 
     if (ret_code == NGX_OK)
     {
-        evp_result = EVP_DecryptUpdate(ctx, plaintext_bytes, &len, ciphertext_bytes, payload_len);
-        if (evp_result == NGX_OK)
+        evp_result = EVP_DecryptUpdate(ctx, plaintext_bytes, &len, ciphertext_bytes, ciphertext_len);
+        if (evp_result == 0)
         {
             ngx_log_error(NGX_LOG_WARN, request->connection->log, 0, "Problem encountered decrypting data, error number: %d", evp_result);
             ret_code = NGX_HTTP_UNAUTHORIZED;
@@ -171,14 +169,15 @@ ngx_int_t oauth_proxy_decrypt(ngx_http_request_t *request, const ngx_str_t* encr
     if (ret_code == NGX_OK)
     {
         evp_result = EVP_DecryptFinal_ex(ctx, plaintext_bytes + plaintext_len, &len);
-        if (evp_result > 0)
+        if (evp_result <= 0)
         {
             ngx_log_error(NGX_LOG_WARN, request->connection->log, 0, "Problem encountered finalizing encrypted data, error number: %d", evp_result);
-            ret_code = 1;
+            ret_code = NGX_HTTP_UNAUTHORIZED;
         }
         else
         {
             plaintext_len += len;
+            plaintext_bytes[plaintext_len] = 0;
         }
     }
 
@@ -242,24 +241,4 @@ static ngx_int_t hex_to_bytes(const u_char *hex, size_t hex_len, u_char *bytes)
     }
 
     return NGX_OK;
-}
-
-/*
- * Before decryption, calcuate a buffer size in AES blocks, and allow space for a null terminator
- */
-static size_t calculate_decrypted_text_buffer_size(const ngx_str_t* encrypted_hex)
-{
-    return encrypted_hex->len / 2 - (GCM_IV_SIZE + GCM_TAG_SIZE) + 1;
-}
-
-/*
- * A utility to avoid overstepping the bounds of an array
- */
-static size_t min(size_t first, size_t second)
-{
-    if (first < second) {
-        return first;
-    }
-
-    return second;
 }
