@@ -66,7 +66,7 @@ AES256-GCM is used, with a hex encoding, meaning that each cookie value consists
 | Last 32 hex digits | This contains the 16 byte message authentication code |
 | Middle section | This contains the ciphertext and its length matches that of the token being encrypted |
 
-## HTTP Methods
+## HTTP Behaviors
 
 The plugin has three main behaviors, depending on the HTTP method:
 
@@ -80,7 +80,12 @@ For further CSRF information see the [OWASP Best Practices](https://cheatsheetse
 
 ## Implementation Details
 
-To build the code yourself or to adapt it, see the ![Implementation Guide](Implementation.md)
+See the following resources for further details on how to work with this project:
+
+| Guide | Description |
+| ----- | ----------- |
+| [Development](development/Development.md) | How to build, run and test the code on a macOS computer |
+| [Deployment](deployment/Deployment.md) | How to build and deploy the module to a Docker container |
 
 ## More Information
 

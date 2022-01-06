@@ -4,24 +4,23 @@ Get this working and proven
 Bear in mind the approach here, which expects the openssl library as a prerequisite:
 - https://github.com/zmartzone/liboauth2#dependencies
 
-CONFIGURATION TESTS AND VERIFICATION
-------------------------------------
-Update to use max cookie prefix
-Trusted web origins
-Use assertions in code
-
 DECRYPTION TESTS
 ----------------
+- Generate the value locally via a command, eg in Node.js
 - 32 char cookie prefix and a POST
+
+CONFIGURATION TESTS
+-------------------
+Trusted web origins
+
+ENVIRONMENT
+-----------
+CLion setup
 
 CSRF TESTS
 ----------
 Do this verification in a test driven manner similar to curl tests
 Error response tests to think about
-
-ENVIRONMENT
------------
-CLion setup
 
 PEOPLE COMMUNICATION
 --------------------
