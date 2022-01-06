@@ -73,10 +73,10 @@ The plugin has three main behaviors, depending on the HTTP method:
 | Method | Behavior |
 | ------ | -------- |
 | OPTIONS | For CORS pre-flight requests from the SPA, the plugin returns immediately |
-| GET | Decrypts the cookie and forwards an access token, or returns 401 if there is no valid cookie |
-| PUT, POST, PATCH, DELETE | Also applies double submit cookie checks, to verify a matching CSRF request header |
+| GET | Decrypts the cookie and forwards an access token, or returns 401 if not found |
+| PUT, POST, PATCH, DELETE | Also applies Cross Site Request Forgery double submit cookie checks |
 
-See the [OWASP Best Practices](https://cheatsheetseries.owasp.org/cheatsheets/Cross-Site_Request_Forgery_Prevention_Cheat_Sheet.html) for further information on Cross Site Request Forgery checks.
+For further CSRF information see the [OWASP Best Practices](https://cheatsheetseries.owasp.org/cheatsheets/Cross-Site_Request_Forgery_Prevention_Cheat_Sheet.html).
 
 ## Implementation Details
 
