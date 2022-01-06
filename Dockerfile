@@ -18,3 +18,13 @@ RUN wget https://sourceforge.net/projects/pcre/files/pcre/8.44/pcre-8.44.tar.gz 
 RUN wget https://www.zlib.net/zlib-1.2.11.tar.gz && tar xzvf zlib-1.2.11.tar.gz
 RUN wget https://github.com/openssl/openssl/archive/refs/tags/OpenSSL_1_1_1m.tar.gz && tar xzvf OpenSSL_1_1_1m.tar.gz
 RUN CONFIG_OPTS="--with-pcre=../pcre-8.44 --with-zlib=../zlib-1.2.11 --with-openssl=../openssl-OpenSSL_1_1_1m" ./configure && make
+
+######
+FROM alpine
+
+ARG NGINX_VERSION
+ENV NGINX_VERSION=$NGINX_VERSION
+COPY --from=ubuntu20-builder /tmp/nginx-$NGINX_VERSION/objs/ngx_curity_http_oauth_proxy_module.so /build/ubuntu.20.04.ngx_curity_http_oauth_proxy_module_$NGINX_VERSION.so
+
+ENTRYPOINT ["sleep"]
+CMD ["300"]
