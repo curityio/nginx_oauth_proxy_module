@@ -10,7 +10,7 @@ This is used to implement the OAuth Proxy component of the [Token Handler Patter
 
 ## Security Overview
 
-The OAuth proxy is a forwarder to deal with cookie specific logic and does not perform the primary JWT verification.\
+The OAuth proxy is a forwarder to deal with cookie specific logic and transation.\
 A typical flow for an SPA calling an API would work like this:
 
 ![Security Handling](doc/security-handling.png)
@@ -29,10 +29,10 @@ The following settings can be configured for one or more NGINX routes:
 | Setting | Behavior |
 | ------- | -------- |
 | oauth_proxy | Set to `on` or `off` to enable or disable the plugin |
-| oauth_proxy_cookie_prefix | Set the prefix used in cookies, such as `example` above |
-| oauth_proxy_allow_tokens | Set to `on` or `off` to pass requests with tokens straight through to the API |
+| oauth_proxy_allow_tokens | Set to `on` to disable cookie checks for requests that already have an access token |
+| oauth_proxy_cookie_prefix | Set the company or product prefix used in cookies, such as `example` below |
 | oauth_proxy_hex_encryption_key | An AES256 hex encryption key, which must be 64 hex characters |
-| oauth_proxy_trusted_web_origins | Only requests from trusted web origins are allowed, and CORS headers will enable the SPA to read error responses |
+| oauth_proxy_trusted_web_origins | Set trusted web origins that are allowed to route requests via the OAuth proxy |
 
 ```nginx
 location /products {
@@ -53,8 +53,8 @@ The plugin uses two cookies, with a customizable prefix and known suffixes:
 
 | Cookie | Contains |
 | ------ | -------- |
-| example-at | An access token, and it is recommended to use small opaque tokens, though JWTs are also supported |
-| example-csrf | Random hex bytes used for double submit cookie checks for data changing commands |
+| example-at | An access token cookie, which can contain either an opaque token or a JWT |
+| example-csrf | A CSRF cookie containing random hex bytes used for double submit cookie checks |
 
 ## Cookie Encryption Details
 
@@ -73,10 +73,10 @@ The plugin has three main behaviors, depending on the HTTP method:
 | Method | Behavior |
 | ------ | -------- |
 | OPTIONS | For CORS pre-flight requests from the SPA, the plugin returns immediately |
-| GET | Checks the origin header, then decrypts a secure cookie and forwards an access token, or returns 401 if no valid cookie is supplied |
-| PUT, POST, PATCH, DELETE | The plugin also applied the double submit checks, by looking for a CSRF token and CSRF request header |
+| GET | Decrypts a secure cookie and forwards an access token, or returns 401 if no valid cookie is supplied |
+| PUT, POST, PATCH, DELETE | Also apply double submit cookie checks, by looking for a matching CSRF request header |
 
-See the [OWASP Best Practices](https://cheatsheetseries.owasp.org/cheatsheets/Cross-Site_Request_Forgery_Prevention_Cheat_Sheet.html) for further information on Cross Site Request Forgery best practices.
+See the [OWASP Best Practices](https://cheatsheetseries.owasp.org/cheatsheets/Cross-Site_Request_Forgery_Prevention_Cheat_Sheet.html) for further information on Cross Site Request Forgery checks.
 
 ## Implementation Details
 
