@@ -30,7 +30,7 @@ The following settings can be configured for one or more NGINX routes:
 | ------- | -------- |
 | oauth_proxy | Set to `on` or `off` to enable or disable the plugin |
 | oauth_proxy_allow_tokens | Allow disabling of cookie checks for requests that already have an access token |
-| oauth_proxy_cookie_prefix | Set the company or product prefix used in cookies, such as `example` below |
+| oauth_proxy_cookie_prefix | Set the preferred string prefix used in cookies, such as `example` below |
 | oauth_proxy_hex_encryption_key | An AES256 hex encryption key, which must be 64 hex characters |
 | oauth_proxy_trusted_web_origins | Set trusted web origins that are allowed to call the OAuth Proxy |
 
@@ -73,8 +73,8 @@ The plugin has three main behaviors, depending on the HTTP method:
 | Method | Behavior |
 | ------ | -------- |
 | OPTIONS | For CORS pre-flight requests from the SPA, the plugin returns immediately |
-| GET | Decrypts a secure cookie and forwards an access token, or returns 401 if no valid cookie is supplied |
-| PUT, POST, PATCH, DELETE | Apply double submit cookie checks, by looking for a matching CSRF request header |
+| GET | Decrypts the cookie and forwards an access token, or returns 401 if there is no valid cookie |
+| PUT, POST, PATCH, DELETE | Also applies double submit cookie checks, to verify a matching CSRF request header |
 
 See the [OWASP Best Practices](https://cheatsheetseries.owasp.org/cheatsheets/Cross-Site_Request_Forgery_Prevention_Cheat_Sheet.html) for further information on Cross Site Request Forgery checks.
 
