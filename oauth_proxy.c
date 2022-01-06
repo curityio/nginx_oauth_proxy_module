@@ -22,7 +22,8 @@
 /* Custom types */
 typedef struct
 {
-    ngx_flag_t enable;
+    ngx_flag_t enabled;
+    ngx_flag_t allow_tokens;
     ngx_str_t cookie_prefix;
     ngx_str_t hex_encryption_key;
     ngx_str_t trusted_web_origins;
@@ -34,11 +35,14 @@ typedef struct
     ngx_uint_t status;
 } oauth_proxy_module_context_t;
 
-/* Forward declarations of local functions */
-static ngx_int_t post_configuration(ngx_conf_t *config);
-static ngx_int_t handler(ngx_http_request_t *request);
+/* Forward declarations of plumbing functions */
 static void *create_location_configuration(ngx_conf_t *config);
 static char *merge_location_configuration(ngx_conf_t *main_config, void *parent, void *child);
+static ngx_int_t post_configuration(ngx_conf_t *config);
+
+/* Forward declarations of logic functions */
+static char *validate_configuration(ngx_conf_t *cf, void *data, void *conf);
+static ngx_int_t handler(ngx_http_request_t *request);
 static ngx_int_t get_cookie(ngx_http_request_t *request, ngx_str_t* cookie_value, ngx_str_t* cookie_prefix, const char *cookie_suffix);
 static ngx_int_t add_authorization_header(ngx_http_request_t *request, ngx_str_t* token_value);
 
@@ -46,15 +50,24 @@ static ngx_int_t add_authorization_header(ngx_http_request_t *request, ngx_str_t
 extern ngx_int_t oauth_proxy_decrypt(ngx_http_request_t *request, const ngx_str_t* encryption_key_hex, const ngx_str_t* encrypted_hex, ngx_str_t *plain_text);
 
 /* Configuration data */
+static ngx_conf_post_handler_pt validator = validate_configuration;
 static ngx_command_t oauth_proxy_module_directives[] =
 {
     {
-          ngx_string("oauth_proxy"),
-          NGX_HTTP_MAIN_CONF | NGX_HTTP_SRV_CONF | NGX_HTTP_LOC_CONF | NGX_CONF_FLAG,
-          ngx_conf_set_flag_slot,
-          NGX_HTTP_LOC_CONF_OFFSET,
-          offsetof(oauth_proxy_configuration_t, enable),
-          NULL
+        ngx_string("oauth_proxy"),
+        NGX_HTTP_MAIN_CONF | NGX_HTTP_SRV_CONF | NGX_HTTP_LOC_CONF | NGX_CONF_FLAG,
+        ngx_conf_set_flag_slot,
+        NGX_HTTP_LOC_CONF_OFFSET,
+        offsetof(oauth_proxy_configuration_t, enabled),
+        NULL
+    },
+    {
+        ngx_string("oauth_proxy_allow_tokens"),
+        NGX_HTTP_LOC_CONF | NGX_CONF_TAKE1,
+        ngx_conf_set_flag_slot,
+        NGX_HTTP_LOC_CONF_OFFSET,
+        offsetof(oauth_proxy_configuration_t, allow_tokens),
+        NULL
     },
     {
         ngx_string("oauth_proxy_cookie_prefix"),
@@ -70,7 +83,7 @@ static ngx_command_t oauth_proxy_module_directives[] =
         ngx_conf_set_str_slot,
         NGX_HTTP_LOC_CONF_OFFSET,
         offsetof(oauth_proxy_configuration_t, hex_encryption_key),
-        NULL
+        NULL,
     },
     {
         ngx_string("oauth_proxy_trusted_web_origins"),
@@ -78,7 +91,7 @@ static ngx_command_t oauth_proxy_module_directives[] =
         ngx_conf_set_str_slot,
         NGX_HTTP_LOC_CONF_OFFSET,
         offsetof(oauth_proxy_configuration_t, trusted_web_origins),
-        NULL
+        &validator
     },
     ngx_null_command /* command termination */
 };
@@ -120,15 +133,14 @@ ngx_module_t ngx_curity_http_oauth_proxy_module =
  */
 static void *create_location_configuration(ngx_conf_t *config)
 {
-    // ngx_conf_log_error(NGX_LOG_WARN, config, 0, "*** OAUTH PROXY: create_location_configuration called");
     oauth_proxy_configuration_t *location_config = ngx_pcalloc(config->pool, sizeof(oauth_proxy_configuration_t));
-
     if (location_config == NULL)
     {
         return NGX_CONF_ERROR;
     }
 
-    location_config->enable = NGX_CONF_UNSET_UINT;
+    location_config->enabled      = NGX_CONF_UNSET_UINT;
+    location_config->allow_tokens = NGX_CONF_UNSET_UINT;
     return location_config;
 }
 
@@ -137,15 +149,13 @@ static void *create_location_configuration(ngx_conf_t *config)
  */
 static char *merge_location_configuration(ngx_conf_t *main_config, void *parent, void *child)
 {
-    // ngx_conf_log_error(NGX_LOG_WARN, main_config, 0, "*** OAUTH PROXY: merge_location_configuration called");
     oauth_proxy_configuration_t *parent_config = parent, *child_config = child;
 
-    // This shows the input value
-    // ngx_conf_log_error(NGX_LOG_WARN, main_config, 0, "*** OAUTH PROXY: child encryption key is %V", &child_config->hex_encryption_key);
-
-    ngx_conf_merge_off_value(child_config->enable, parent_config->enable, 0)
-    ngx_conf_merge_str_value(child_config->hex_encryption_key, parent_config->hex_encryption_key, "")
-
+    ngx_conf_merge_off_value(child_config->enabled,             parent_config->enabled,             0);
+    ngx_conf_merge_off_value(child_config->allow_tokens,        parent_config->allow_tokens,        0);
+    ngx_conf_merge_str_value(child_config->cookie_prefix,       parent_config->cookie_prefix,       "");
+    ngx_conf_merge_str_value(child_config->hex_encryption_key,  parent_config->hex_encryption_key,  "");
+    ngx_conf_merge_str_value(child_config->trusted_web_origins, parent_config->trusted_web_origins, "");
     return NGX_CONF_OK;
 }
 
@@ -154,7 +164,6 @@ static char *merge_location_configuration(ngx_conf_t *main_config, void *parent,
  */
 static ngx_int_t post_configuration(ngx_conf_t *config)
 {
-    // ngx_conf_log_error(NGX_LOG_WARN, config, 0, "*** OAUTH PROXY: post_configuration called");
     ngx_http_core_main_conf_t *main_config = ngx_http_conf_get_module_main_conf(config, ngx_http_core_module);
     ngx_http_handler_pt *h = ngx_array_push(&main_config->phases[NGX_HTTP_ACCESS_PHASE].handlers);
 
@@ -169,6 +178,28 @@ static ngx_int_t post_configuration(ngx_conf_t *config)
 }
 
 /*
+ * Validate the module's input before allowing the server to start
+ */
+static char *validate_configuration(ngx_conf_t *cf, void *data, void *conf)
+{
+    oauth_proxy_configuration_t *module_location_config = ngx_http_conf_get_module_loc_conf(cf, ngx_curity_http_oauth_proxy_module);
+    if (module_location_config->enabled)
+    {
+        if (module_location_config != NULL) 
+        {
+            if (module_location_config->hex_encryption_key.len == 0)
+            {
+                ngx_conf_log_error(NGX_LOG_WARN, cf, 0, "The hex_encryption_key configuration directive was not provided");
+                return NGX_CONF_ERROR;
+            }
+        }
+    }
+
+    return NGX_CONF_OK;
+}
+
+
+/*
  * Called during HTTP requests to make cookie related checks and then to decrypt the cookie to get an access token
  */
 static ngx_int_t handler(ngx_http_request_t *request)
@@ -177,7 +208,7 @@ static ngx_int_t handler(ngx_http_request_t *request)
             request, ngx_curity_http_oauth_proxy_module);
 
     // Return immediately when the module is disabled
-    if (!module_location_config->enable)
+    if (!module_location_config->enabled)
     {
         ngx_log_error(NGX_LOG_WARN, request->connection->log, 0, "OAuth proxy module is disabled");
         return NGX_DECLINED;

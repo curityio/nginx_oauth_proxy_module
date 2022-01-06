@@ -1,4 +1,4 @@
-# OAuth Proxy Module - macOS Development Setup
+# OAuth Proxy Module - Implementation Steps
 
 ## 1. Configure
 
@@ -48,16 +48,26 @@ sudo /usr/local/nginx/sbin/nginx
 
 The nginx.conf file disables the daemon and runs NGINX interactively, so that logs are easily viewable.
 
-## 5. Act as a Client
+## 5. Act as an SPA Client
 
-Then run curl commands such as this, which runs the plugin, then routes the request to an internet API.\
-The internet API echoes headers so that we can see the token extracted from the secure cookie:
+During development, run curl requests to represent the SPA, which will be routed to a mockbin target API:
 
 ```bash
 ENCRYPTED_ACCESS_TOKEN=$(cat ./development/encrypted_access_token.txt)
 curl -X GET http://localhost:8080/api \
 -H "origin: https://www.example.com" \
 -H "cookie: example-at=$ENCRYPTED_ACCESS_TOKEN"
+```
+
+The mockbin API echoes headers so that we can visualize how the token is extracted from the secure cookie and forwarded:
+
+```json
+"headers": {
+    "host": "mockbin.org",
+    "origin": "https://www.example.com",
+    "cookie": "example-at=093d3fb879767f6ec2b1e7e359040fe6ba875734ee043c5cc484d3da8963a351e9aba1c5e273f3d1ea2914f83836fa434474d1720b3040f5f7237f34536b7389",
+    "authorization": "Bearer 42665300-efe8-419d-be52-07b53e208f46",
+}
 ```
 
 ## 6. Test Setup
@@ -76,3 +86,9 @@ Then run this command from the root folder to execute all NGINX tests from the `
 ```bash
 make test
 ```
+
+During the execution of each test, the file at `t/servroot/conf/nginx.conf` is updated, and can be used to troubleshoot.
+
+## 8. Linux Deployment
+
+TODO

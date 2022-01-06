@@ -1,24 +1,28 @@
-ENCRYPTION
-----------
-Get first steps integrated and basically working:
-- Run a helper script during tests to encrypt data
-
-README
-------
-Update READMEs
-
 LINUX DEPLOYMENT
 ----------------
-Build for a Linux distro and deploy a .so library
-
+Get this working and proven
 Bear in mind the approach here, which expects the openssl library as a prerequisite:
 - https://github.com/zmartzone/liboauth2#dependencies
 
-CODE AND TEST COMPLETION
-------------------------
-Test driven completion, to include scenarios from current curl tests, with asserts:
-- CLion
-- arrays for trusted web origins
+CONFIGURATION TESTS AND VERIFICATION
+------------------------------------
+Do this carefully with tests, and reduce the choices, eg to restrict the size of the cookie prefix to 32
+Then use less dynamic allocation as a result
+Arrays for trusted web origins
+Use assertions in code
+
+DECRYPTION TESTS
+----------------
+Ideally run a small tool that does encryption, perhaps developed in Node.js
+Use assertions in code
+
+CSRF TESTS
+----------
+Do this verification in a test driven manner similar to curl tests
+
+ENVIRONMENT
+-----------
+CLion setup
 
 PEOPLE COMMUNICATION
 --------------------
