@@ -46,6 +46,10 @@ static ngx_int_t handler(ngx_http_request_t *request);
 static ngx_int_t get_cookie(ngx_http_request_t *request, ngx_str_t* cookie_value, ngx_str_t* cookie_prefix, const char *cookie_suffix);
 static ngx_int_t add_authorization_header(ngx_http_request_t *request, ngx_str_t* token_value);
 
+/* Constants */
+static size_t MAX_COOKIE_PREFIX_LENGTH = 32;
+static size_t MAX_COOKIE_SUFFIX_LENGTH = 5; /* The longest suffix is -csrf */
+
 /* Imports from the decryption source file */
 extern ngx_int_t oauth_proxy_decrypt(ngx_http_request_t *request, const ngx_str_t* encryption_key_hex, const ngx_str_t* encrypted_hex, ngx_str_t *plain_text);
 
@@ -187,10 +191,31 @@ static char *validate_configuration(ngx_conf_t *cf, void *data, void *conf)
     {
         if (module_location_config != NULL) 
         {
+            if (module_location_config->cookie_prefix.len == 0)
+            {
+                ngx_conf_log_error(NGX_LOG_WARN, cf, 0, "The cookie_prefix configuration directive was not provided");
+                return NGX_CONF_ERROR;
+            }
+
+            if (module_location_config->cookie_prefix.len > MAX_COOKIE_PREFIX_LENGTH)
+            {
+                ngx_conf_log_error(NGX_LOG_WARN, cf, 0, "The cookie_prefix configuration directive has a maximum length of %d characters", MAX_COOKIE_PREFIX_LENGTH);
+                return NGX_CONF_ERROR;
+            }
+        
             if (module_location_config->hex_encryption_key.len == 0)
             {
                 ngx_conf_log_error(NGX_LOG_WARN, cf, 0, "The hex_encryption_key configuration directive was not provided");
                 return NGX_CONF_ERROR;
+            }
+
+            if (module_location_config != NULL) 
+            {
+                if (module_location_config->hex_encryption_key.len != 64)
+                {
+                    ngx_conf_log_error(NGX_LOG_WARN, cf, 0, "The hex_encryption_key configuration directive must contain 64 hex characters");
+                    return NGX_CONF_ERROR;
+                }
             }
         }
     }
@@ -263,17 +288,12 @@ static ngx_int_t handler(ngx_http_request_t *request)
  */
 static ngx_int_t get_cookie(ngx_http_request_t *request, ngx_str_t* cookie_value, ngx_str_t* cookie_prefix, const char *cookie_suffix)
 {
-    size_t cookie_name_len = cookie_prefix->len + ngx_strlen(cookie_suffix);
-    u_char *cookie_name = ngx_pcalloc(request->pool, cookie_name_len);
-    if (cookie_name == NULL)
-    {
-        ngx_log_error(NGX_LOG_WARN, request->connection->log, 0, "OAuth proxy failed to allocate memory for the call to allocate memory for cookie %V%s", cookie_prefix, cookie_suffix);
-        return NGX_HTTP_INTERNAL_SERVER_ERROR;
-    }
+    u_char cookie_name[MAX_COOKIE_PREFIX_LENGTH + MAX_COOKIE_SUFFIX_LENGTH + 1];
+    ngx_snprintf(cookie_name, sizeof(cookie_name), "%V%s", cookie_prefix, cookie_suffix);
 
-    ngx_snprintf(cookie_name, cookie_name_len, "%V%s", cookie_prefix, cookie_suffix);
-    ngx_str_t cookie_name_str = (ngx_str_t)ngx_string(cookie_name);
-    cookie_name_str.len = cookie_name_len;
+    ngx_str_t cookie_name_str;
+    cookie_name_str.data = cookie_name;
+    cookie_name_str.len = ngx_strlen(cookie_name);
 
     return ngx_http_parse_multi_header_lines(&request->headers_in.cookies, &cookie_name_str, cookie_value);
 }

@@ -6,19 +6,18 @@ Bear in mind the approach here, which expects the openssl library as a prerequis
 
 CONFIGURATION TESTS AND VERIFICATION
 ------------------------------------
-Do this carefully with tests, and reduce the choices, eg to restrict the size of the cookie prefix to 32
-Then use less dynamic allocation as a result
-Arrays for trusted web origins
+Update to use max cookie prefix
+Trusted web origins
 Use assertions in code
 
 DECRYPTION TESTS
 ----------------
-Ideally run a small tool that does encryption, perhaps developed in Node.js
-Use assertions in code
+- 32 char cookie prefix and a POST
 
 CSRF TESTS
 ----------
 Do this verification in a test driven manner similar to curl tests
+Error response tests to think about
 
 ENVIRONMENT
 -----------
