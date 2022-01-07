@@ -32,7 +32,7 @@ The following settings can be configured for one or more NGINX routes:
 | oauth_proxy_allow_tokens | Allow disabling of cookie checks for requests that already have an access token |
 | oauth_proxy_cookie_prefix | Set the preferred string prefix used in cookies, such as `example` below |
 | oauth_proxy_hex_encryption_key | An AES256 hex encryption key, which must be 64 hex characters |
-| oauth_proxy_trusted_web_origins | Set trusted web origins that are allowed to call the OAuth Proxy |
+| oauth_proxy_trusted_web_origin | An array of trusted web origins that are allowed to call the OAuth Proxy |
 
 ```nginx
 location /products {
@@ -41,7 +41,7 @@ location /products {
     oauth_proxy_allow_tokens on;
     oauth_proxy_cookie_prefix "example";
     oauth_proxy_hex_encryption_key "4e4636356d65563e4c73233847503e3b21436e6f7629724950526f4b5e2e4e50";
-    oauth_proxy_trusted_web_origins "https://www.example.com";
+    oauth_proxy_trusted_web_origin "https://www.example.com";
 
     proxy_pass "https://products-api.example.com";
 }

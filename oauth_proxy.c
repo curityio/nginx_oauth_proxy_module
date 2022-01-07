@@ -26,7 +26,7 @@ typedef struct
     ngx_flag_t allow_tokens;
     ngx_str_t cookie_prefix;
     ngx_str_t hex_encryption_key;
-    ngx_str_t trusted_web_origins;
+    ngx_array_t *trusted_web_origins;
 } oauth_proxy_configuration_t;
 
 typedef struct
@@ -39,22 +39,21 @@ typedef struct
 static void *create_location_configuration(ngx_conf_t *config);
 static char *merge_location_configuration(ngx_conf_t *main_config, void *parent, void *child);
 static ngx_int_t post_configuration(ngx_conf_t *config);
+static ngx_int_t validate_configuration(ngx_conf_t *main_config, oauth_proxy_configuration_t *module_location_config);
 
-/* Forward declarations of logic functions */
-static char *validate_configuration(ngx_conf_t *cf, void *data, void *conf);
+/* Forward declarations of implementation functions */
 static ngx_int_t handler(ngx_http_request_t *request);
 static ngx_int_t get_cookie(ngx_http_request_t *request, ngx_str_t* cookie_value, ngx_str_t* cookie_prefix, const char *cookie_suffix);
 static ngx_int_t add_authorization_header(ngx_http_request_t *request, ngx_str_t* token_value);
 
 /* Constants */
 static size_t MAX_COOKIE_PREFIX_LENGTH = 32;
-static size_t MAX_COOKIE_SUFFIX_LENGTH = 5; /* The longest suffix is -csrf */
+static size_t MAX_COOKIE_SUFFIX_LENGTH = 5; /* The longest cookie suffix is -csrf */
 
 /* Imports from the decryption source file */
 extern ngx_int_t oauth_proxy_decrypt(ngx_http_request_t *request, const ngx_str_t* encryption_key_hex, const ngx_str_t* encrypted_hex, ngx_str_t *plain_text);
 
 /* Configuration data */
-static ngx_conf_post_handler_pt validator = validate_configuration;
 static ngx_command_t oauth_proxy_module_directives[] =
 {
     {
@@ -87,15 +86,15 @@ static ngx_command_t oauth_proxy_module_directives[] =
         ngx_conf_set_str_slot,
         NGX_HTTP_LOC_CONF_OFFSET,
         offsetof(oauth_proxy_configuration_t, hex_encryption_key),
-        NULL,
+        NULL
     },
     {
-        ngx_string("oauth_proxy_trusted_web_origins"),
+        ngx_string("oauth_proxy_trusted_web_origin"),
         NGX_HTTP_LOC_CONF | NGX_CONF_TAKE1,
-        ngx_conf_set_str_slot,
+        ngx_conf_set_str_array_slot,
         NGX_HTTP_LOC_CONF_OFFSET,
         offsetof(oauth_proxy_configuration_t, trusted_web_origins),
-        &validator
+        NULL
     },
     ngx_null_command /* command termination */
 };
@@ -143,8 +142,9 @@ static void *create_location_configuration(ngx_conf_t *config)
         return NGX_CONF_ERROR;
     }
 
-    location_config->enabled      = NGX_CONF_UNSET_UINT;
-    location_config->allow_tokens = NGX_CONF_UNSET_UINT;
+    location_config->enabled             = NGX_CONF_UNSET_UINT;
+    location_config->allow_tokens        = NGX_CONF_UNSET_UINT;
+    location_config->trusted_web_origins = NGX_CONF_UNSET_PTR;
     return location_config;
 }
 
@@ -154,17 +154,25 @@ static void *create_location_configuration(ngx_conf_t *config)
 static char *merge_location_configuration(ngx_conf_t *main_config, void *parent, void *child)
 {
     oauth_proxy_configuration_t *parent_config = parent, *child_config = child;
+    ngx_int_t validation_result = NGX_OK;
 
     ngx_conf_merge_off_value(child_config->enabled,             parent_config->enabled,             0);
     ngx_conf_merge_off_value(child_config->allow_tokens,        parent_config->allow_tokens,        0);
     ngx_conf_merge_str_value(child_config->cookie_prefix,       parent_config->cookie_prefix,       "");
     ngx_conf_merge_str_value(child_config->hex_encryption_key,  parent_config->hex_encryption_key,  "");
-    ngx_conf_merge_str_value(child_config->trusted_web_origins, parent_config->trusted_web_origins, "");
+    ngx_conf_merge_ptr_value(child_config->trusted_web_origins, parent_config->trusted_web_origins, NULL);
+
+    validation_result = validate_configuration(main_config, child_config);
+    if (validation_result != NGX_OK)
+    {
+        return NGX_CONF_ERROR;
+    }
+    
     return NGX_CONF_OK;
 }
 
 /*
- * Receive and validate the configuration data
+ * Set up the handler after configuration has been processed
  */
 static ngx_int_t post_configuration(ngx_conf_t *config)
 {
@@ -177,63 +185,83 @@ static ngx_int_t post_configuration(ngx_conf_t *config)
     }
 
     *h = handler;
-
     return NGX_OK;
 }
 
 /*
- * Validate the module's input before allowing the server to start
+ * Validate the cookie prefix to prevent cryptic problems later
  */
-static char *validate_configuration(ngx_conf_t *cf, void *data, void *conf)
+static ngx_int_t validate_configuration(ngx_conf_t *main_config, oauth_proxy_configuration_t *module_location_config)
 {
-    oauth_proxy_configuration_t *module_location_config = ngx_http_conf_get_module_loc_conf(cf, ngx_curity_http_oauth_proxy_module);
-    if (module_location_config->enabled)
+    ngx_str_t *trusted_web_origins = NULL;
+    ngx_str_t trusted_web_origin;
+
+    if (module_location_config != NULL && module_location_config->enabled)
     {
-        if (module_location_config != NULL) 
+        if (module_location_config->cookie_prefix.len == 0)
         {
-            if (module_location_config->cookie_prefix.len == 0)
-            {
-                ngx_conf_log_error(NGX_LOG_WARN, cf, 0, "The cookie_prefix configuration directive was not provided");
-                return NGX_CONF_ERROR;
-            }
+            ngx_conf_log_error(NGX_LOG_WARN, main_config, 0, "The cookie_prefix configuration directive was not provided");
+            return NGX_ERROR;
+        }
 
-            if (module_location_config->cookie_prefix.len > MAX_COOKIE_PREFIX_LENGTH)
-            {
-                ngx_conf_log_error(NGX_LOG_WARN, cf, 0, "The cookie_prefix configuration directive has a maximum length of %d characters", MAX_COOKIE_PREFIX_LENGTH);
-                return NGX_CONF_ERROR;
-            }
-        
-            if (module_location_config->hex_encryption_key.len == 0)
-            {
-                ngx_conf_log_error(NGX_LOG_WARN, cf, 0, "The hex_encryption_key configuration directive was not provided");
-                return NGX_CONF_ERROR;
-            }
+        if (module_location_config->cookie_prefix.len > MAX_COOKIE_PREFIX_LENGTH)
+        {
+            ngx_conf_log_error(NGX_LOG_WARN, main_config, 0, "The cookie_prefix configuration directive has a maximum length of %d characters", MAX_COOKIE_PREFIX_LENGTH);
+            return NGX_ERROR;
+        }
 
-            if (module_location_config != NULL) 
+        if (module_location_config->hex_encryption_key.len == 0)
+        {
+            ngx_conf_log_error(NGX_LOG_WARN, main_config, 0, "The hex_encryption_key configuration directive was not provided");
+            return NGX_ERROR;
+        }
+
+        if (module_location_config->hex_encryption_key.len != 64)
+        {
+            ngx_conf_log_error(NGX_LOG_WARN, main_config, 0, "The hex_encryption_key configuration directive must contain 64 hex characters");
+            return NGX_ERROR;
+        }
+
+        if (module_location_config->trusted_web_origins == NULL || module_location_config->trusted_web_origins->nelts == 0)
+        {
+            ngx_conf_log_error(NGX_LOG_WARN, main_config, 0, "The trusted_web_origin configuration directive was not provided for any web origins");
+            return NGX_ERROR;
+        }
+
+        trusted_web_origins = module_location_config->trusted_web_origins->elts;
+        for (ngx_uint_t i = 0; i < module_location_config->trusted_web_origins->nelts; i++)
+        {
+            trusted_web_origin = trusted_web_origins[i];
+            if (trusted_web_origin.len < 7)
             {
-                if (module_location_config->hex_encryption_key.len != 64)
-                {
-                    ngx_conf_log_error(NGX_LOG_WARN, cf, 0, "The hex_encryption_key configuration directive must contain 64 hex characters");
-                    return NGX_CONF_ERROR;
-                }
+                ngx_conf_log_error(NGX_LOG_WARN, main_config, 0, "An invalid trusted_web_origin configuration directive was provided", &trusted_web_origin);
+                return NGX_ERROR;
+            }
+            
+            if (ngx_strncasecmp(trusted_web_origin.data, (u_char*)"HTTP://",  7) != 0 &&
+                ngx_strncasecmp(trusted_web_origin.data, (u_char*)"HTTPS://", 8) != 0)
+            {
+                ngx_conf_log_error(NGX_LOG_WARN, main_config, 0, "An invalid trusted_web_origin configuration directive was provided: %V", &trusted_web_origin);
+                return NGX_ERROR;
             }
         }
     }
 
-    return NGX_CONF_OK;
+    return NGX_OK;
 }
-
 
 /*
  * Called during HTTP requests to make cookie related checks and then to decrypt the cookie to get an access token
  */
 static ngx_int_t handler(ngx_http_request_t *request)
 {
-    oauth_proxy_configuration_t *module_location_config = ngx_http_get_module_loc_conf(
-            request, ngx_curity_http_oauth_proxy_module);
-
+    oauth_proxy_configuration_t *module_location_config = NULL;
+    ngx_str_t at_cookie_encrypted_hex;
+    ngx_str_t access_token;
+    ngx_int_t ret_code = NGX_OK;
+    
     // Return immediately when the module is disabled
-    ngx_log_error(NGX_LOG_WARN, request->connection->log, 0, "*** IN PLUGIN");
+    module_location_config = ngx_http_get_module_loc_conf(request, ngx_curity_http_oauth_proxy_module);
     if (!module_location_config->enabled)
     {
         ngx_log_error(NGX_LOG_WARN, request->connection->log, 0, "OAuth proxy module is disabled");
@@ -253,38 +281,36 @@ static ngx_int_t handler(ngx_http_request_t *request)
     }
 
     // Try to get the access token cookie
-    ngx_str_t at_cookie_encrypted_hex;
-    ngx_int_t at_cookie_result = get_cookie(request, &at_cookie_encrypted_hex, &module_location_config->cookie_prefix, "-at");
+    
+    ret_code = get_cookie(request, &at_cookie_encrypted_hex, &module_location_config->cookie_prefix, "-at");
 
     // When no cookie is provided we return an unauthorized status code
-    if (at_cookie_result == NGX_DECLINED)
+    if (ret_code == NGX_DECLINED)
     {
-        ngx_log_error(NGX_LOG_WARN, request->connection->log, 0, "*** COOKIE DECLINED");
+        ngx_log_error(NGX_LOG_WARN, request->connection->log, 0, "No cookie was found in the incoming request");
         return NGX_HTTP_UNAUTHORIZED;
     }
 
     // Handle other errors getting the cookie
-    if (at_cookie_result != NGX_OK)
+    if (ret_code != NGX_OK)
     {
-        ngx_log_error(NGX_LOG_WARN, request->connection->log, 0, "*** COOKIE ERROR: %d", at_cookie_result);
-        return at_cookie_result;
+        ngx_log_error(NGX_LOG_WARN, request->connection->log, 0, "cookie read problem encountered: %d", ret_code);
+        return ret_code;
     }
 
     // Decrypt the secure cookie to get its access token content
-    ngx_log_error(NGX_LOG_WARN, request->connection->log, 0, "*** COOKIE: %V", &at_cookie_encrypted_hex);
-    ngx_str_t access_token;
-    ngx_int_t decryption_result = oauth_proxy_decrypt(request, &module_location_config->hex_encryption_key, &at_cookie_encrypted_hex, &access_token);
-    if (decryption_result != NGX_OK)
+    
+    ret_code = oauth_proxy_decrypt(request, &module_location_config->hex_encryption_key, &at_cookie_encrypted_hex, &access_token);
+    if (ret_code != NGX_OK)
     {   
-        return decryption_result;
+        return ret_code;
     }
 
     // Add the cookie to the authorization header
-    ngx_log_error(NGX_LOG_WARN, request->connection->log, 0, "*** TOKEN: %V", &access_token);
-    ngx_int_t add_header_result = add_authorization_header(request, &access_token);
-    if (add_header_result != NGX_OK)
+    ret_code = add_authorization_header(request, &access_token);
+    if (ret_code != NGX_OK)
     {
-        return add_header_result;
+        return ret_code;
     }
 
     return NGX_OK;
@@ -296,16 +322,16 @@ static ngx_int_t handler(ngx_http_request_t *request)
 static ngx_int_t get_cookie(ngx_http_request_t *request, ngx_str_t* cookie_value, ngx_str_t* cookie_prefix, const char *cookie_suffix)
 {
     u_char cookie_name[MAX_COOKIE_PREFIX_LENGTH + MAX_COOKIE_SUFFIX_LENGTH + 1];
-    size_t suffix_len = ngx_strlen(cookie_suffix);
+    size_t suffix_len = 0;
+    ngx_str_t cookie_name_str;
 
+    suffix_len = ngx_strlen(cookie_suffix);
     ngx_memcpy(cookie_name, cookie_prefix->data, cookie_prefix->len);
     ngx_memcpy(cookie_name + cookie_prefix->len, cookie_suffix, suffix_len);
     cookie_name[cookie_prefix->len + suffix_len] = 0;
-
-    ngx_str_t cookie_name_str;
+    
     cookie_name_str.data = cookie_name;
     cookie_name_str.len = ngx_strlen(cookie_name);
-
     return ngx_http_parse_multi_header_lines(&request->headers_in.cookies, &cookie_name_str, cookie_value);
 }
 
@@ -314,6 +340,9 @@ static ngx_int_t get_cookie(ngx_http_request_t *request, ngx_str_t* cookie_value
  */
 static ngx_int_t add_authorization_header(ngx_http_request_t *request, ngx_str_t* token_value)
 {
+    size_t header_value_len = 0;
+    u_char *header_value = NULL;
+
     request->headers_in.authorization = ngx_list_push(&request->headers_in.headers);
     if (request->headers_in.authorization == NULL)
     {
@@ -321,8 +350,8 @@ static ngx_int_t add_authorization_header(ngx_http_request_t *request, ngx_str_t
         return NGX_HTTP_INTERNAL_SERVER_ERROR;
     }
 
-    size_t header_value_len = ngx_strlen("Bearer ") + token_value->len;
-    u_char *header_value = ngx_pcalloc(request->pool, header_value_len);
+    header_value_len = ngx_strlen("Bearer ") + token_value->len;
+    header_value = ngx_pcalloc(request->pool, header_value_len);
     if (header_value == NULL)
     {
         ngx_log_error(NGX_LOG_WARN, request->connection->log, 0, "OAuth proxy failed to allocate memory for the authorization header value");

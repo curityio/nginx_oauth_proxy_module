@@ -13,6 +13,11 @@ TEST DRIVEN:
 ENVIRONMENT
 -----------
 CLion setup
+Valgrind and memory leaks
+
+DOCUMENTATION
+-------------
+Update as for phantom token module but keep the development folder.
 
 PEOPLE COMMUNICATION
 --------------------
