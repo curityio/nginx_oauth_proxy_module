@@ -46,6 +46,7 @@ location /t {
 GET /t
 
 --- more_headers
+origin: https://www.example.com
 authorization: bearer xxx
 
 --- error_code: 401
@@ -53,7 +54,7 @@ authorization: bearer xxx
 --- error_log
 No cookie was found in the incoming request
 
-=== TEST H3: GET with an untrusted web origin returns 401
+=== TEST H3: GET without an origin header returns 401
 
 --- config
 location /t {
@@ -62,22 +63,39 @@ location /t {
     oauth_proxy_cookie_prefix "example";
     oauth_proxy_hex_encryption_key "4e4636356d65563e4c73233847503e3b21436e6f7629724950526f4b5e2e4e50";
     oauth_proxy_trusted_web_origin "https://www.example.com";
+}
 
-    proxy_pass "http://localhost:8080/anything";
+--- request
+GET /t
+
+--- error_code: 401
+
+--- error_log
+The request did not have an origin header
+
+=== TEST H4: GET with an untrusted web origin header value returns 401
+
+--- config
+location /t {
+    oauth_proxy on;
+    oauth_proxy_allow_tokens on;
+    oauth_proxy_cookie_prefix "example";
+    oauth_proxy_hex_encryption_key "4e4636356d65563e4c73233847503e3b21436e6f7629724950526f4b5e2e4e50";
+    oauth_proxy_trusted_web_origin "https://www.example.com";
 }
 
 --- request
 GET /t
 
 --- more_headers
-origin: https://www.example.com
+origin: https://www.malicious-site.com
 
 --- error_code: 401
 
 --- error_log
-No cookie was found in the incoming request
+The request was from an untrusted web origin
 
-=== TEST H4: GET without a cookie or token credential returns 401
+=== TEST H5: GET without a cookie or token credential returns 401
 
 --- config
 location /t {
@@ -86,8 +104,6 @@ location /t {
     oauth_proxy_cookie_prefix "example";
     oauth_proxy_hex_encryption_key "4e4636356d65563e4c73233847503e3b21436e6f7629724950526f4b5e2e4e50";
     oauth_proxy_trusted_web_origin "https://www.example.com";
-
-    proxy_pass "http://localhost:8080/anything";
 }
 
 --- request

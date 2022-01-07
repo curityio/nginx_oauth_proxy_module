@@ -19,17 +19,9 @@ TODO
 
 ## 3. Deploy a Docker Container
 
-Run the following script to test a local deployment using an official Docker image with the OAuth proxy module:
+Run the following script to test a local deployment using an official Docker image with the OAuth proxy module.\
+This will wait for the reverse proxy to come up and then send a curl command with valid cookies.
 
 ```bash
 ./deploy.sh
-```
-Test calling the API and verify that cookie decryption works and that you see the forwarded token in the output:
-
-```bash
-```bash
-ENCRYPTED_ACCESS_TOKEN=$(cat ../development/encrypted_access_token.txt)
-curl -X GET http://localhost:8080/api \
--H "origin: https://www.example.com" \
--H "cookie: example-at=$ENCRYPTED_ACCESS_TOKEN"
 ```

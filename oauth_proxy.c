@@ -39,10 +39,12 @@ typedef struct
 static void *create_location_configuration(ngx_conf_t *config);
 static char *merge_location_configuration(ngx_conf_t *main_config, void *parent, void *child);
 static ngx_int_t post_configuration(ngx_conf_t *config);
-static ngx_int_t validate_configuration(ngx_conf_t *main_config, oauth_proxy_configuration_t *module_location_config);
+static ngx_int_t validate_configuration(ngx_conf_t *config, oauth_proxy_configuration_t *module_location_config);
 
 /* Forward declarations of implementation functions */
 static ngx_int_t handler(ngx_http_request_t *request);
+static ngx_str_t *search_headers_in(ngx_http_request_t *request, u_char *name, size_t len);
+static ngx_int_t verify_web_origin(oauth_proxy_configuration_t *config, ngx_str_t *web_origin);
 static ngx_int_t get_cookie(ngx_http_request_t *request, ngx_str_t* cookie_value, ngx_str_t* cookie_prefix, const char *cookie_suffix);
 static ngx_int_t add_authorization_header(ngx_http_request_t *request, ngx_str_t* token_value);
 
@@ -191,7 +193,7 @@ static ngx_int_t post_configuration(ngx_conf_t *config)
 /*
  * Validate the cookie prefix to prevent cryptic problems later
  */
-static ngx_int_t validate_configuration(ngx_conf_t *main_config, oauth_proxy_configuration_t *module_location_config)
+static ngx_int_t validate_configuration(ngx_conf_t *config, oauth_proxy_configuration_t *module_location_config)
 {
     ngx_str_t *trusted_web_origins = NULL;
     ngx_str_t trusted_web_origin;
@@ -200,31 +202,31 @@ static ngx_int_t validate_configuration(ngx_conf_t *main_config, oauth_proxy_con
     {
         if (module_location_config->cookie_prefix.len == 0)
         {
-            ngx_conf_log_error(NGX_LOG_WARN, main_config, 0, "The cookie_prefix configuration directive was not provided");
+            ngx_conf_log_error(NGX_LOG_WARN, config, 0, "The cookie_prefix configuration directive was not provided");
             return NGX_ERROR;
         }
 
         if (module_location_config->cookie_prefix.len > MAX_COOKIE_PREFIX_LENGTH)
         {
-            ngx_conf_log_error(NGX_LOG_WARN, main_config, 0, "The cookie_prefix configuration directive has a maximum length of %d characters", MAX_COOKIE_PREFIX_LENGTH);
+            ngx_conf_log_error(NGX_LOG_WARN, config, 0, "The cookie_prefix configuration directive has a maximum length of %d characters", MAX_COOKIE_PREFIX_LENGTH);
             return NGX_ERROR;
         }
 
         if (module_location_config->hex_encryption_key.len == 0)
         {
-            ngx_conf_log_error(NGX_LOG_WARN, main_config, 0, "The hex_encryption_key configuration directive was not provided");
+            ngx_conf_log_error(NGX_LOG_WARN, config, 0, "The hex_encryption_key configuration directive was not provided");
             return NGX_ERROR;
         }
 
         if (module_location_config->hex_encryption_key.len != 64)
         {
-            ngx_conf_log_error(NGX_LOG_WARN, main_config, 0, "The hex_encryption_key configuration directive must contain 64 hex characters");
+            ngx_conf_log_error(NGX_LOG_WARN, config, 0, "The hex_encryption_key configuration directive must contain 64 hex characters");
             return NGX_ERROR;
         }
 
         if (module_location_config->trusted_web_origins == NULL || module_location_config->trusted_web_origins->nelts == 0)
         {
-            ngx_conf_log_error(NGX_LOG_WARN, main_config, 0, "The trusted_web_origin configuration directive was not provided for any web origins");
+            ngx_conf_log_error(NGX_LOG_WARN, config, 0, "The trusted_web_origin configuration directive was not provided for any web origins");
             return NGX_ERROR;
         }
 
@@ -234,14 +236,14 @@ static ngx_int_t validate_configuration(ngx_conf_t *main_config, oauth_proxy_con
             trusted_web_origin = trusted_web_origins[i];
             if (trusted_web_origin.len < 7)
             {
-                ngx_conf_log_error(NGX_LOG_WARN, main_config, 0, "An invalid trusted_web_origin configuration directive was provided", &trusted_web_origin);
+                ngx_conf_log_error(NGX_LOG_WARN, config, 0, "An invalid trusted_web_origin configuration directive was provided", &trusted_web_origin);
                 return NGX_ERROR;
             }
             
-            if (ngx_strncasecmp(trusted_web_origin.data, (u_char*)"HTTP://",  7) != 0 &&
-                ngx_strncasecmp(trusted_web_origin.data, (u_char*)"HTTPS://", 8) != 0)
+            if (ngx_strncasecmp(trusted_web_origin.data, (u_char*)"http://",  7) != 0 &&
+                ngx_strncasecmp(trusted_web_origin.data, (u_char*)"https://", 8) != 0)
             {
-                ngx_conf_log_error(NGX_LOG_WARN, main_config, 0, "An invalid trusted_web_origin configuration directive was provided: %V", &trusted_web_origin);
+                ngx_conf_log_error(NGX_LOG_WARN, config, 0, "An invalid trusted_web_origin configuration directive was provided: %V", &trusted_web_origin);
                 return NGX_ERROR;
             }
         }
@@ -256,6 +258,7 @@ static ngx_int_t validate_configuration(ngx_conf_t *main_config, oauth_proxy_con
 static ngx_int_t handler(ngx_http_request_t *request)
 {
     oauth_proxy_configuration_t *module_location_config = NULL;
+    ngx_str_t *web_origin = NULL;
     ngx_str_t at_cookie_encrypted_hex;
     ngx_str_t access_token;
     ngx_int_t ret_code = NGX_OK;
@@ -268,8 +271,8 @@ static ngx_int_t handler(ngx_http_request_t *request)
         return NGX_DECLINED;
     }
 
-    // Do not perform handling for pre-flight requests from SPAs
-    if (ngx_strncasecmp(request->method_name.data, (u_char*)"OPTIONS", 7) == 0)
+    // Pre-flight requests from SPAs will never return cookies or tokens, so return immediately
+    if (ngx_strncasecmp(request->method_name.data, (u_char*)"options", 7) == 0)
     {
         return NGX_OK;
     }
@@ -280,8 +283,23 @@ static ngx_int_t handler(ngx_http_request_t *request)
         return NGX_OK;
     }
 
+    // Try to find the web origin
+    web_origin = search_headers_in(request, (u_char*)"origin", 6);
+    if (web_origin == NULL)
+    {
+        ngx_log_error(NGX_LOG_WARN, request->connection->log, 0, "The request did not have an origin header");
+        return NGX_HTTP_UNAUTHORIZED;
+    }
+
+    // Check that it is trusted
+    ret_code = verify_web_origin(module_location_config, web_origin);
+    if (ret_code != NGX_OK)
+    {
+        ngx_log_error(NGX_LOG_WARN, request->connection->log, 0, "The request was from an untrusted web origin");
+        return NGX_HTTP_UNAUTHORIZED;
+    }
+
     // Try to get the access token cookie
-    
     ret_code = get_cookie(request, &at_cookie_encrypted_hex, &module_location_config->cookie_prefix, "-at");
 
     // When no cookie is provided we return an unauthorized status code
@@ -294,7 +312,7 @@ static ngx_int_t handler(ngx_http_request_t *request)
     // Handle other errors getting the cookie
     if (ret_code != NGX_OK)
     {
-        ngx_log_error(NGX_LOG_WARN, request->connection->log, 0, "cookie read problem encountered: %d", ret_code);
+        ngx_log_error(NGX_LOG_WARN, request->connection->log, 0, "Cookie read problem encountered: %d", ret_code);
         return ret_code;
     }
 
@@ -314,6 +332,69 @@ static ngx_int_t handler(ngx_http_request_t *request)
     }
 
     return NGX_OK;
+}
+
+/*
+ * Find a header that is not in the standard headers_in structure
+ * https://www.nginx.com/resources/wiki/start/topics/examples/headers_management/
+ */
+static ngx_str_t *search_headers_in(ngx_http_request_t *request, u_char *name, size_t len)
+{
+    ngx_list_part_t *part = NULL;
+    ngx_table_elt_t *h = NULL;
+    ngx_uint_t i = 0;
+
+    // Get the first part of the list. There is usual only one part
+    part = &request->headers_in.headers.part;
+    h = part->elts;
+
+    // Headers list array may consist of more than one part, so loop through all of it
+    for (i = 0; /* void */ ; i++) {
+
+        if (i >= part->nelts) {
+            if (part->next == NULL) {
+                /* The last part, search is done. */
+                break;
+            }
+
+            part = part->next;
+            h = part->elts;
+            i = 0;
+        }
+
+        // Just compare the lengths and then the names case insensitively
+        if (len != h[i].key.len || ngx_strcasecmp(name, h[i].key.data) != 0) {
+            continue;
+        }
+
+        // Stop the search at the first matched header
+        return &h[i].value;
+    }
+
+    return NULL;
+}
+
+/*
+ * Ensure that incoming requests have the origin header that all modern browsers send
+ */
+static ngx_int_t verify_web_origin(oauth_proxy_configuration_t *config, ngx_str_t *web_origin)
+{
+    ngx_str_t *trusted_web_origins = NULL;
+    ngx_str_t trusted_web_origin;
+
+    trusted_web_origins = config->trusted_web_origins->elts;
+    for (ngx_uint_t i = 0; i < config->trusted_web_origins->nelts; i++)
+    {
+        trusted_web_origin = trusted_web_origins[i];
+
+        if (web_origin->len == trusted_web_origin.len && 
+            ngx_strncasecmp(web_origin->data, trusted_web_origin.data, web_origin->len) == 0)
+        {
+            return NGX_OK;
+        }
+    }
+
+    return NGX_ERROR;
 }
 
 /*

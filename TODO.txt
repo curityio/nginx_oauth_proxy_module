@@ -1,23 +1,26 @@
 TEST DRIVEN:
 -----------
-1. http tests - I need to know how to send headers etc in NGINX test syntax - see phantom Token
+1. HTTP and CSRF code and tests to write
+   Include CORS headers in error responses
 
-2. xsrf - write the code with the tests
-
-3. decryption - I'd like to generate this via an executable + file option
-   once done delete my local access token file
-
-4. trusted web origins + response bodies for errors
+2. Include an error body with a code and message
    https://github.com/usamadar/ngx_hello_world/blob/master/ngx_http_hello_module.c
 
-ENVIRONMENT
------------
+3. Decryption - I'd like to generate this via an executable + file option
+   Once done delete my local access token file
+
+OTHER
+-----
 CLion setup
+Better use of const
 Valgrind and memory leaks
+Run the official test suite
+Complete the builds
 
 DOCUMENTATION
 -------------
-Update as for phantom token module but keep the development folder.
+Update to look and feel the same as the phantom token module.
+Keep the development folder for a productive future setup.
 
 PEOPLE COMMUNICATION
 --------------------
