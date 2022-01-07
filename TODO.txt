@@ -1,26 +1,18 @@
-LINUX DEPLOYMENT
-----------------
-Get this working and proven
-Bear in mind the approach here, which expects the openssl library as a prerequisite:
-- https://github.com/zmartzone/liboauth2#dependencies
+TEST DRIVEN:
+-----------
+1. http tests - I need to know how to send headers etc in NGINX test syntax - see phantom Token
 
-DECRYPTION TESTS
-----------------
-- Generate the value locally via a command, eg in Node.js
-- 32 char cookie prefix and a POST
+2. xsrf - write the code with the tests
 
-CONFIGURATION TESTS
--------------------
-Trusted web origins
+3. decryption - I'd like to generate this via an executable + file option
+   once done delete my local access token file
+
+4. trusted web origins + response bodies for errors
+   https://github.com/usamadar/ngx_hello_world/blob/master/ngx_http_hello_module.c
 
 ENVIRONMENT
 -----------
 CLion setup
-
-CSRF TESTS
-----------
-Do this verification in a test driven manner similar to curl tests
-Error response tests to think about
 
 PEOPLE COMMUNICATION
 --------------------

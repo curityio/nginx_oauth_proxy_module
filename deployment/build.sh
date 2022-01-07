@@ -1,5 +1,12 @@
 #!/bin/bash
 
+##########################################################################
+# Builds the officially distributed libraries for various flavors of Linux
+##########################################################################
+
+cd "$(dirname "${BASH_SOURCE[0]}")"
+cd ..
+
 NGINX_VERSION=${NGINX_VERSION:-1.21.3}
 NGINX_TARBALL=nginx-${NGINX_VERSION}.tar.gz
 
@@ -22,7 +29,7 @@ docker build --no-cache -t nginx-module-builder \
   --build-arg NGINX_VERSION="$NGINX_VERSION" \
   --build-arg NGINX_DEBUG=n \
   --build-arg DYNAMIC_MODULE=Y \
-  -f Dockerfile .
+  -f deployment/Dockerfile .
 
 docker run --name nginx-modules -d nginx-module-builder 300
 docker cp nginx-modules:/build/ .

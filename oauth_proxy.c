@@ -233,6 +233,7 @@ static ngx_int_t handler(ngx_http_request_t *request)
             request, ngx_curity_http_oauth_proxy_module);
 
     // Return immediately when the module is disabled
+    ngx_log_error(NGX_LOG_WARN, request->connection->log, 0, "*** IN PLUGIN");
     if (!module_location_config->enabled)
     {
         ngx_log_error(NGX_LOG_WARN, request->connection->log, 0, "OAuth proxy module is disabled");
@@ -246,7 +247,7 @@ static ngx_int_t handler(ngx_http_request_t *request)
     }
 
     // Pass the request through if it has an Authorization header, eg from a mobile client that uses the same route as an SPA
-    if (request->headers_in.authorization && request->headers_in.authorization->value.len > 0)
+    if (module_location_config->allow_tokens && request->headers_in.authorization && request->headers_in.authorization->value.len > 0)
     {
         return NGX_OK;
     }
@@ -254,18 +255,23 @@ static ngx_int_t handler(ngx_http_request_t *request)
     // Try to get the access token cookie
     ngx_str_t at_cookie_encrypted_hex;
     ngx_int_t at_cookie_result = get_cookie(request, &at_cookie_encrypted_hex, &module_location_config->cookie_prefix, "-at");
-    if (at_cookie_result == NGX_HTTP_INTERNAL_SERVER_ERROR)
-    {
-        return at_cookie_result;
-    }
 
     // When no cookie is provided we return an unauthorized status code
     if (at_cookie_result == NGX_DECLINED)
     {
+        ngx_log_error(NGX_LOG_WARN, request->connection->log, 0, "*** COOKIE DECLINED");
         return NGX_HTTP_UNAUTHORIZED;
     }
 
+    // Handle other errors getting the cookie
+    if (at_cookie_result != NGX_OK)
+    {
+        ngx_log_error(NGX_LOG_WARN, request->connection->log, 0, "*** COOKIE ERROR: %d", at_cookie_result);
+        return at_cookie_result;
+    }
+
     // Decrypt the secure cookie to get its access token content
+    ngx_log_error(NGX_LOG_WARN, request->connection->log, 0, "*** COOKIE: %V", &at_cookie_encrypted_hex);
     ngx_str_t access_token;
     ngx_int_t decryption_result = oauth_proxy_decrypt(request, &module_location_config->hex_encryption_key, &at_cookie_encrypted_hex, &access_token);
     if (decryption_result != NGX_OK)
@@ -274,6 +280,7 @@ static ngx_int_t handler(ngx_http_request_t *request)
     }
 
     // Add the cookie to the authorization header
+    ngx_log_error(NGX_LOG_WARN, request->connection->log, 0, "*** TOKEN: %V", &access_token);
     ngx_int_t add_header_result = add_authorization_header(request, &access_token);
     if (add_header_result != NGX_OK)
     {
@@ -289,7 +296,11 @@ static ngx_int_t handler(ngx_http_request_t *request)
 static ngx_int_t get_cookie(ngx_http_request_t *request, ngx_str_t* cookie_value, ngx_str_t* cookie_prefix, const char *cookie_suffix)
 {
     u_char cookie_name[MAX_COOKIE_PREFIX_LENGTH + MAX_COOKIE_SUFFIX_LENGTH + 1];
-    ngx_snprintf(cookie_name, sizeof(cookie_name), "%V%s", cookie_prefix, cookie_suffix);
+    size_t suffix_len = ngx_strlen(cookie_suffix);
+
+    ngx_memcpy(cookie_name, cookie_prefix->data, cookie_prefix->len);
+    ngx_memcpy(cookie_name + cookie_prefix->len, cookie_suffix, suffix_len);
+    cookie_name[cookie_prefix->len + suffix_len] = 0;
 
     ngx_str_t cookie_name_str;
     cookie_name_str.data = cookie_name;

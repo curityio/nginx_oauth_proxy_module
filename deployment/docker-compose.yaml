@@ -1,1 +1,10 @@
-TODO
+version: '3.8'
+services:
+  nginx:
+    image: nginx:1.21.3-alpine
+    ports:
+    - 8080:8080
+    volumes:
+    - ./nginx.conf:/etc/nginx/nginx.conf
+    # This is wrong since I am deploying an ubuntu image to alpine - will fix shortly
+    - ../build/ubuntu.20.04.ngx_curity_http_oauth_proxy_module_1.21.3.so:/usr/lib/nginx/modules/ngx_curity_http_oauth_proxy_module.so

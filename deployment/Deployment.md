@@ -8,16 +8,28 @@ Run the following script to build the NGINX as a dynamic module for multiple fla
 ./build.sh
 ```
 
-This builds the module as a shared libaray with an `.so` extension on the `nginx-modules` Docker image.
+Each build of the module produces a shared libray with an `.so` extension within the ./build folder.\
+There are 10 output files in total, including this one:
 
-## 2. View Shared Libraries
+- ubuntu.20.04.ngx_curity_http_oauth_proxy_module_1.21.3.so
 
-TODO: Get a stronger understanding of where everything goes in Docker
+## 2. Understand Build Process
+
+TODO
 
 ## 3. Deploy a Docker Container
 
-TODO
+Run the following script to test a local deployment using an official Docker image with the OAuth proxy module:
 
-## 4. Test the Deployed System
+```bash
+./deploy.sh
+```
+Test calling the API and verify that cookie decryption works and that you see the forwarded token in the output:
 
-TODO
+```bash
+```bash
+ENCRYPTED_ACCESS_TOKEN=$(cat ../development/encrypted_access_token.txt)
+curl -X GET http://localhost:8080/api \
+-H "origin: https://www.example.com" \
+-H "cookie: example-at=$ENCRYPTED_ACCESS_TOKEN"
+```
