@@ -15,6 +15,11 @@ __DATA__
 --- config
 location /t {
     oauth_proxy off;
+    
+    proxy_pass http://localhost:1984/target;
+}
+location /target {
+    add_header 'authorization' $http_authorization;
     return 200;
 }
 
@@ -140,8 +145,13 @@ location /t {
     oauth_proxy_allow_tokens on;
     oauth_proxy_cookie_prefix "example";
     oauth_proxy_hex_encryption_key "4e4636356d65563e4c73233847503e3b21436e6f7629724950526f4b5e2e4e50";
-    oauth_proxy_trusted_web_origin "http://webapp1.example.com";
-    oauth_proxy_trusted_web_origin "http://webapp2.example.com";
+    oauth_proxy_trusted_web_origin "http://www.example.com";
+    
+
+    proxy_pass http://localhost:1984/target;
+}
+location /target {
+    add_header 'authorization' $http_authorization;
     return 200;
 }
 
@@ -150,7 +160,7 @@ GET /
 
 --- error_code: 200
 
-=== TEST C10: NGINX starts correctly with a valid configuration with multiple web origins
+=== TEST C10: NGINX starts correctly with a valid configuration and multiple web origins
 
 --- config
 location /t {
@@ -158,8 +168,13 @@ location /t {
     oauth_proxy_allow_tokens on;
     oauth_proxy_cookie_prefix "example";
     oauth_proxy_hex_encryption_key "4e4636356d65563e4c73233847503e3b21436e6f7629724950526f4b5e2e4e50";
-    oauth_proxy_trusted_web_origin "http://webapp1.example.com";
+    oauth_proxy_trusted_web_origin "https://webapp1.example.com";
     oauth_proxy_trusted_web_origin "https://webapp2.example.com";
+
+    proxy_pass http://localhost:1984/target;
+}
+location /target {
+    add_header 'authorization' $http_authorization;
     return 200;
 }
 

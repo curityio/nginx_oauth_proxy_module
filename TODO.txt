@@ -1,26 +1,29 @@
+TIDY UP
+-------
+1. Get test::base to read input from files
+2. Complete input data with a JWT
+3. Use const * everywhere
+4. Consolidate the development folder and document tests better
+5. Add config tests to verify parent / child behaviors
+
 TEST DRIVEN:
 -----------
-1. HTTP and CSRF code and tests to write
-   Include CORS headers in error responses
+1. POSTs and XSRF to complete
 
 2. Include an error body with a code and message
    https://github.com/usamadar/ngx_hello_world/blob/master/ngx_http_hello_module.c
 
-3. Decryption - I'd like to generate this via an executable + file option
-   Once done delete my local access token file
+3. Update docs in line with phantom token module:
+   Configuration directives
+   Loading the module
+   Example configuration
 
 OTHER
 -----
 CLion setup
-Better use of const
 Valgrind and memory leaks
 Run the official test suite
-Complete the builds
-
-DOCUMENTATION
--------------
-Update to look and feel the same as the phantom token module.
-Keep the development folder for a productive future setup.
+Complete the builds for all Linux flavors and document behavior
 
 PEOPLE COMMUNICATION
 --------------------
@@ -38,7 +41,3 @@ On the OSS channel, tell people this is coming, but not finished yet and raise i
 - End-to-End error experience for SPAs
   It feels a bit cludgy asking SPAs to read a header for some error responses and not others
   My thoughts are to follow standards but also return a JSON body with a code and message payload
-
-OPEN QUESTIONS
---------------
-Review all resources carefully and make a list of any code / build instructions I don't understand

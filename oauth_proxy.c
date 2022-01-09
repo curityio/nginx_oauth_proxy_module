@@ -47,6 +47,7 @@ static ngx_str_t *search_headers_in(ngx_http_request_t *request, u_char *name, s
 static ngx_int_t verify_web_origin(oauth_proxy_configuration_t *config, ngx_str_t *web_origin);
 static ngx_int_t get_cookie(ngx_http_request_t *request, ngx_str_t* cookie_value, ngx_str_t* cookie_prefix, const char *cookie_suffix);
 static ngx_int_t add_authorization_header(ngx_http_request_t *request, ngx_str_t* token_value);
+static ngx_int_t add_cors_error_headers(ngx_http_request_t *request, ngx_str_t *web_origin);
 
 /* Constants */
 static size_t MAX_COOKIE_PREFIX_LENGTH = 32;
@@ -295,6 +296,7 @@ static ngx_int_t handler(ngx_http_request_t *request)
     ret_code = verify_web_origin(module_location_config, web_origin);
     if (ret_code != NGX_OK)
     {
+        add_cors_error_headers(request, web_origin);
         ngx_log_error(NGX_LOG_WARN, request->connection->log, 0, "The request was from an untrusted web origin");
         return NGX_HTTP_UNAUTHORIZED;
     }
@@ -305,6 +307,7 @@ static ngx_int_t handler(ngx_http_request_t *request)
     // When no cookie is provided we return an unauthorized status code
     if (ret_code == NGX_DECLINED)
     {
+        add_cors_error_headers(request, web_origin);
         ngx_log_error(NGX_LOG_WARN, request->connection->log, 0, "No cookie was found in the incoming request");
         return NGX_HTTP_UNAUTHORIZED;
     }
@@ -312,15 +315,17 @@ static ngx_int_t handler(ngx_http_request_t *request)
     // Handle other errors getting the cookie
     if (ret_code != NGX_OK)
     {
+        add_cors_error_headers(request, web_origin);
         ngx_log_error(NGX_LOG_WARN, request->connection->log, 0, "Cookie read problem encountered: %d", ret_code);
         return ret_code;
     }
 
     // Decrypt the secure cookie to get its access token content
-    
+    ngx_log_error(NGX_LOG_WARN, request->connection->log, 0, "*** RECEIVED COOKIE IS: %V", &at_cookie_encrypted_hex);
     ret_code = oauth_proxy_decrypt(request, &module_location_config->hex_encryption_key, &at_cookie_encrypted_hex, &access_token);
     if (ret_code != NGX_OK)
-    {   
+    {
+        add_cors_error_headers(request, web_origin);
         return ret_code;
     }
 
@@ -328,6 +333,7 @@ static ngx_int_t handler(ngx_http_request_t *request)
     ret_code = add_authorization_header(request, &access_token);
     if (ret_code != NGX_OK)
     {
+        add_cors_error_headers(request, web_origin);
         return ret_code;
     }
 
@@ -443,5 +449,35 @@ static ngx_int_t add_authorization_header(ngx_http_request_t *request, ngx_str_t
     ngx_str_set(&request->headers_in.authorization->key, "Authorization");
     request->headers_in.authorization->value = (ngx_str_t)ngx_string(header_value);
     request->headers_in.authorization->value.len = header_value_len;
+    return NGX_OK;
+}
+
+/*
+ * Ensure that Javascript code running in trusted web origins can read details from error responses
+ */
+static ngx_int_t add_cors_error_headers(ngx_http_request_t *request, ngx_str_t *web_origin)
+{
+    ngx_table_elt_t *allow_headers     = NULL;
+    ngx_table_elt_t *allow_credentials = NULL;
+
+    allow_headers = ngx_list_push(&request->headers_out.headers);
+    if (allow_headers == NULL) {
+        return NGX_ERROR;
+    }
+
+    allow_credentials = ngx_list_push(&request->headers_out.headers);
+    if (allow_credentials == NULL) {
+        return NGX_ERROR;
+    }
+
+    allow_headers->key = (ngx_str_t)ngx_string("Access-Control-Allow-Origin");;
+    allow_headers->value.data = web_origin->data;
+    allow_headers->value.len = web_origin->len;
+    allow_headers->hash = 1;
+
+    allow_credentials->key = (ngx_str_t)ngx_string("Access-Control-Allow-Credentials");
+    allow_credentials->value = (ngx_str_t)ngx_string("true");
+    allow_credentials->hash = 1;
+
     return NGX_OK;
 }

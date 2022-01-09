@@ -15,7 +15,7 @@ There are 10 output files in total, including this one:
 
 ## 2. Understand Build Process
 
-TODO
+TODO - write up what is happening in the Docker containers
 
 ## 3. Deploy a Docker Container
 

@@ -1,3 +1,7 @@
+##########################################################################################
+# Used for basic testing that the dynamic module works when deployed to a Docker container
+##########################################################################################
+
 version: '3.8'
 services:
   nginx:
