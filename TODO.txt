@@ -33,6 +33,7 @@ TEST DRIVEN:
    Configuration directives
    Loading the module
    Example configuration
+   Mention creation of encryption key - with openssl as an example
 
 OTHER
 -----
