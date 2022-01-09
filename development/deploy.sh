@@ -1,8 +1,8 @@
 #!/bin/bash
 
-###################################################################
-# Deploys a built .so file as a dynamic module and tests loading it
-###################################################################
+#############################################################################################
+# Uses Docker Compose to deploy the dynamic module .so file, then run a couple of basic tests
+#############################################################################################
 
 cd "$(dirname "${BASH_SOURCE[0]}")"
 
@@ -22,3 +22,7 @@ ENCRYPTED_ACCESS_TOKEN=$(cat ../development/encrypted_access_token.txt)
 curl -X GET http://localhost:8080/api \
 -H "origin: https://www.example.com" \
 -H "cookie: example-at=$ENCRYPTED_ACCESS_TOKEN"
+
+#
+# Assert results
+#

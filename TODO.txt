@@ -1,6 +1,5 @@
 TIDY UP
 -------
-1. Get test::base to read input from files
 2. Complete input data with a JWT
 3. Use const * everywhere
 4. Consolidate the development folder and document tests better
@@ -8,12 +7,29 @@ TIDY UP
 
 TEST DRIVEN:
 -----------
-1. POSTs and XSRF to complete
+1. POSTs and CSRF to complete
+- 401 if no CSRF cookie
+- 401 if no CSRF header
+- 401 if they do not match
+- single cookie header
+- multiple cookie headers (HTTP/2)
+- All error tests to assert error_log - some HTTP tests are not doing this
 
 2. Include an error body with a code and message
    https://github.com/usamadar/ngx_hello_world/blob/master/ngx_http_hello_module.c
 
-3. Update docs in line with phantom token module:
+3. Config tests
+- Root location
+- Root location with child deactivated - can I use /api and /api/child?
+- Two child locations for API1 and API2
+- Error messages to indicate which section
+
+4. Decryption tests
+- Change Perl string characters - understand how to do this
+
+5. JWT tests
+
+6. Update docs in line with phantom token module:
    Configuration directives
    Loading the module
    Example configuration

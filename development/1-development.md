@@ -1,14 +1,14 @@
 # OAuth Proxy Module - Development
 
-## 1. Build OpenSSL
+## 1. Intellisense Setup
 
-First download and build OpenSSL for macOS as a prerequisite:
+First run this script to build and deploy OpenSSL for macOS as a prerequisite:
 
 ```bash
 ./development/openssl_setup.sh
 ```
 
-The following locations will be updated, so that the NGINX build can find OpenSSL headers and libraries:
+The following locations will be updated, so that development tools can find headers:
 
 ```text
 /usr/local/include/openssl/*
@@ -27,7 +27,7 @@ CONFIG_OPTS='--with-openssl=../openssl-OpenSSL_1_1_1m' ./configure
 
 This will download NGINX source code and point it to the OpenSSL locations.
 
-## 2. Make
+## 3. Make
 
 Next run the make command to build the NGINX C code whenever it changes:
 
@@ -35,7 +35,7 @@ Next run the make command to build the NGINX C code whenever it changes:
 ./make
 ```
 
-## 3. Make Install
+## 4. Make Install
 
 Next run this to deploy the built NGINX system locally, along with the OAuth proxy module:
 
@@ -45,35 +45,49 @@ sudo make install
 
 The `/usr/local/nginx` location will then be updated with a full NGINX installation.
 
-## 4. Run NGINX Locally
+## 5. Run NGINX Locally
 
 Deploy the development `nginx.conf` file, then start NGINX locally:
 
 ```bash
-sudo cp ./development/nginx.conf /usr/local/nginx/conf/
+sudo cp ./development/macos_nginx.conf /usr/local/nginx/conf/
 sudo /usr/local/nginx/sbin/nginx
 ```
 
 This nginx.conf file disables the daemon and runs NGINX interactively, so that logs are easily viewable.
 
-## 5. Act as an SPA Client
+## 6. Act as an SPA Client
 
 During development, run curl requests to represent the SPA, which will be routed to a mockbin target API:
 
 ```bash
-ENCRYPTED_ACCESS_TOKEN=$(cat ./data/encrypted_opaque_access_token.txt)
+AT_COOKIE='093d3fb879767f6ec2b1e7e359040fe6ba875734ee043c5cc484d3da8963a351e9aba1c5e273f3d1ea2914f83836fa434474d1720b3040f5f7237f34536b7389'
 curl -X GET http://localhost:8080/api \
 -H "origin: https://www.example.com" \
--H "cookie: example-at=$ENCRYPTED_ACCESS_TOKEN"
+-H "cookie: example-at=$AT_COOKIE"
 ```
 
-The request is routed through to a mockbin API which echoes headers so that we can view the token extracted from the cookie:
+```bash
+AT_COOKIE='093d3fb879767f6ec2b1e7e359040fe6ba875734ee043c5cc484d3da8963a351e9aba1c5e273f3d1ea2914f83836fa434474d1720b3040f5f7237f34536b7389'
+CSRF_HEADER='pQguFsD6hFjnyYjaeC5KyijcWS6AvkJHiUmY7dLUsuTKsLAITLiJHVqsCdQpaGYO'
+CSRF_COOKIE='f61b300a79018b4b94f480086d63395148084af1f20c3e474623e60f34a181656b3a54725c1b4ddaeec9171f0398bde8c6c1e0e12d90bdb13397bf24678cd17a230a3df8e1771f9992e3bf2d6567ad920e1c25dc5e3e015679b5e673'
+curl -X POST http://localhost:8080/api \
+-H "origin: https://www.example.com" \
+-H "x-example-csrf: $CSRF_HEADER" \
+-H "cookie: example-at=$AT_COOKIE; example-csrf=$CSRF_COOKIE"
+```
+
+Failed requests return a JSON error payload and also CORS headers so that the SPA can read the response.\
+Successful requests are routed through to a mockbin API that echoes headers, so that we can view the forwarded token:
 
 ```json
-"headers": {
+{
+  "method": "GET"
+  "headers": {
     "host": "mockbin.org",
     "origin": "https://www.example.com",
     "cookie": "example-at=093d3fb879767f6ec2b1e7e359040fe6ba875734ee043c5cc484d3da8963a351e9aba1c5e273f3d1ea2914f83836fa434474d1720b3040f5f7237f34536b7389",
     "authorization": "Bearer 42665300-efe8-419d-be52-07b53e208f46",
+  }
 }
 ```

@@ -10,7 +10,7 @@ run_tests();
 
 __DATA__
 
-=== TEST D1: A request with a cookie too small to be a valid encrypted payload returns 401
+=== TEST DECRYPTION_1: A request with a cookie too small to be a valid encrypted payload returns 401
 
 --- config
 location /t {

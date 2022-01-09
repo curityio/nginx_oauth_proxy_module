@@ -1,7 +1,7 @@
 #!/bin/bash
 
 #
-# Install OpenSSL on a development computer, so that NGINX can compile against headers and link to libraries
+# Install OpenSSL on a development computer, for the best developer experience and use of intellisense
 #
 
 cd "$(dirname "${BASH_SOURCE[0]}")"

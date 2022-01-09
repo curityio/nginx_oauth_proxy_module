@@ -21,7 +21,7 @@
 #include <ngx_string.h>
 
 /* Forward declarations */
-static ngx_int_t hex_to_bytes(const u_char *hex, size_t hex_len, u_char *bytes);
+static ngx_int_t bytes_from_hex(u_char *bytes, const u_char *hex, size_t hex_len);
 
 /* Encryption related constants */
 const int GCM_IV_SIZE = 12;
@@ -32,7 +32,7 @@ const int AES_KEY_SIZE_BYTES = 32;
  * Performs AES256-GCM authenticated decryption of secure cookies, using the hex encryption key from configuration
  * https://wiki.openssl.org/index.php/EVP_Authenticated_Encryption_and_Decryption
  */
-ngx_int_t oauth_proxy_decrypt(ngx_http_request_t *request, const ngx_str_t* encryption_key_hex, const ngx_str_t* encrypted_hex, ngx_str_t *plaintext)
+ngx_int_t oauth_proxy_decrypt(ngx_http_request_t *request, const ngx_str_t *encryption_key_hex, const ngx_str_t *encrypted_hex, ngx_str_t *plaintext)
 {
     EVP_CIPHER_CTX *ctx = NULL;
     u_char encryption_key_bytes[AES_KEY_SIZE_BYTES];
@@ -57,7 +57,7 @@ ngx_int_t oauth_proxy_decrypt(ngx_http_request_t *request, const ngx_str_t* encr
 
     if (ret_code == NGX_OK)
     {
-        ret_code = hex_to_bytes(encryption_key_hex->data, AES_KEY_SIZE_BYTES * 2, encryption_key_bytes);
+        ret_code = bytes_from_hex(encryption_key_bytes, encryption_key_hex->data, AES_KEY_SIZE_BYTES * 2);
         if (ret_code != NGX_OK)
         {
             ngx_log_error(NGX_LOG_WARN, request->connection->log, 0, "The configured encryption key is not valid hex");
@@ -100,7 +100,7 @@ ngx_int_t oauth_proxy_decrypt(ngx_http_request_t *request, const ngx_str_t* encr
     {
         ngx_memcpy(iv_hex, encrypted_hex->data, GCM_IV_SIZE * 2);
         iv_hex[GCM_IV_SIZE * 2] = 0;
-        ret_code = hex_to_bytes(iv_hex, GCM_IV_SIZE * 2, iv_bytes);
+        ret_code = bytes_from_hex(iv_bytes, iv_hex, GCM_IV_SIZE * 2);
         if (ret_code != NGX_OK)
         {
             ngx_log_error(NGX_LOG_WARN, request->connection->log, 0, "The IV section of the encrypted payload is not valid hex");
@@ -111,7 +111,7 @@ ngx_int_t oauth_proxy_decrypt(ngx_http_request_t *request, const ngx_str_t* encr
     // The actual ciphertext is the large middle part of the payload
     if (ret_code == NGX_OK)
     {   
-        ret_code = hex_to_bytes(encrypted_hex->data + GCM_IV_SIZE * 2, encrypted_hex->len - (GCM_IV_SIZE + GCM_TAG_SIZE) * 2, ciphertext_bytes);
+        ret_code = bytes_from_hex(ciphertext_bytes, encrypted_hex->data + GCM_IV_SIZE * 2, encrypted_hex->len - (GCM_IV_SIZE + GCM_TAG_SIZE) * 2);
         if (ret_code != NGX_OK)
         {
             ngx_log_error(NGX_LOG_WARN, request->connection->log, 0, "The ciphertext section of the encrypted payload is not valid hex");
@@ -124,7 +124,7 @@ ngx_int_t oauth_proxy_decrypt(ngx_http_request_t *request, const ngx_str_t* encr
     {
         ngx_memcpy(tag_hex, encrypted_hex->data + encrypted_hex->len - GCM_TAG_SIZE * 2, GCM_TAG_SIZE * 2);
         tag_hex[GCM_TAG_SIZE * 2] = 0;
-        ret_code = hex_to_bytes(tag_hex, GCM_TAG_SIZE * 2, tag_bytes);
+        ret_code = bytes_from_hex(tag_bytes, tag_hex, GCM_TAG_SIZE * 2);
         if (ret_code != NGX_OK)
         {
             ngx_log_error(NGX_LOG_WARN, request->connection->log, 0, "The tag section of the encrypted payload is not valid hex");
@@ -198,7 +198,7 @@ ngx_int_t oauth_proxy_decrypt(ngx_http_request_t *request, const ngx_str_t* encr
 /*
  * Convert each pair of hex characters to a byte value
  */
-static ngx_int_t hex_to_bytes(const u_char *hex, size_t hex_len, u_char *bytes)
+static ngx_int_t bytes_from_hex(u_char *bytes, const u_char *hex, size_t hex_len)
 {
     if (hex_len %2 != 0)
     {
@@ -225,7 +225,7 @@ static ngx_int_t hex_to_bytes(const u_char *hex, size_t hex_len, u_char *bytes)
         else
         {
             // invalid character
-            return 1;
+            return NGX_ERROR;
         }
         
         if (i % 2 == 0)
@@ -235,7 +235,7 @@ static ngx_int_t hex_to_bytes(const u_char *hex, size_t hex_len, u_char *bytes)
         }
         else
         {
-            // high order byte is then added
+            // high order byte is then added to the low order byte
             bytes[i / 2] += d;
         }
     }

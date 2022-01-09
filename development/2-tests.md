@@ -17,6 +17,10 @@ Then run this command from the root folder to execute all NGINX tests from the `
 make test
 ```
 
+TODO: individual tests and use of --- ONLY and Makefile
+Also mention how I am handling 200 success
+
 ## 3. Understand Test Syntax
 
-See the [Preparing Tests Guide](https://openresty.gitbooks.io/programming-openresty/content/testing/preparing-tests.html) to understand syntax.
+See the [Preparing Tests Guide](https://openresty.gitbooks.io/programming-openresty/content/testing/preparing-tests.html) to understand syntax.\
+Documentation is limited but see [online tests](https://github.com/openresty/headers-more-nginx-module/tree/master/t) from GitHub repositories.

@@ -19,7 +19,7 @@
 #include <ngx_http.h>
 #include <ngx_string.h>
 
-/* Custom types */
+/* Configuration data */
 typedef struct
 {
     ngx_flag_t enabled;
@@ -29,34 +29,7 @@ typedef struct
     ngx_array_t *trusted_web_origins;
 } oauth_proxy_configuration_t;
 
-typedef struct
-{
-    ngx_uint_t done;
-    ngx_uint_t status;
-} oauth_proxy_module_context_t;
-
-/* Forward declarations of plumbing functions */
-static void *create_location_configuration(ngx_conf_t *config);
-static char *merge_location_configuration(ngx_conf_t *main_config, void *parent, void *child);
-static ngx_int_t post_configuration(ngx_conf_t *config);
-static ngx_int_t validate_configuration(ngx_conf_t *config, oauth_proxy_configuration_t *module_location_config);
-
-/* Forward declarations of implementation functions */
-static ngx_int_t handler(ngx_http_request_t *request);
-static ngx_str_t *search_headers_in(ngx_http_request_t *request, u_char *name, size_t len);
-static ngx_int_t verify_web_origin(oauth_proxy_configuration_t *config, ngx_str_t *web_origin);
-static ngx_int_t get_cookie(ngx_http_request_t *request, ngx_str_t* cookie_value, ngx_str_t* cookie_prefix, const char *cookie_suffix);
-static ngx_int_t add_authorization_header(ngx_http_request_t *request, ngx_str_t* token_value);
-static ngx_int_t add_cors_error_headers(ngx_http_request_t *request, ngx_str_t *web_origin);
-
-/* Constants */
-static size_t MAX_COOKIE_PREFIX_LENGTH = 32;
-static size_t MAX_COOKIE_SUFFIX_LENGTH = 5; /* The longest cookie suffix is -csrf */
-
-/* Imports from the decryption source file */
-extern ngx_int_t oauth_proxy_decrypt(ngx_http_request_t *request, const ngx_str_t* encryption_key_hex, const ngx_str_t* encrypted_hex, ngx_str_t *plain_text);
-
-/* Configuration data */
+/* Configuration directives */
 static ngx_command_t oauth_proxy_module_directives[] =
 {
     {
@@ -101,6 +74,28 @@ static ngx_command_t oauth_proxy_module_directives[] =
     },
     ngx_null_command /* command termination */
 };
+
+/* Forward declarations of plumbing functions */
+static void *create_location_configuration(ngx_conf_t *config);
+static char *merge_location_configuration(ngx_conf_t *main_config, void *parent, void *child);
+static ngx_int_t post_configuration(ngx_conf_t *config);
+static ngx_int_t validate_configuration(ngx_conf_t *config, const oauth_proxy_configuration_t *module_location_config);
+
+/* Forward declarations of implementation functions */
+static ngx_int_t handler(ngx_http_request_t *request);
+static ngx_int_t verify_web_origin(const oauth_proxy_configuration_t *config, const ngx_str_t *web_origin);
+static ngx_int_t apply_xsrf_checks(ngx_http_request_t *request, const oauth_proxy_configuration_t *config, const ngx_str_t *web_origin);
+static ngx_str_t *search_headers_in(ngx_http_request_t *request, u_char *name, size_t len);
+static ngx_int_t get_cookie(ngx_http_request_t *request, ngx_str_t* cookie_value, const ngx_str_t* cookie_prefix, const u_char *cookie_suffix);
+static ngx_int_t add_authorization_header(ngx_http_request_t *request, const ngx_str_t* token_value);
+static ngx_int_t add_cors_error_headers(ngx_http_request_t *request, const ngx_str_t *web_origin);
+
+/* Imports from the decryption source file */
+extern ngx_int_t oauth_proxy_decrypt(ngx_http_request_t *request, const ngx_str_t* encryption_key_hex, const ngx_str_t* encrypted_hex, ngx_str_t *plain_text);
+
+/* Constants */
+static size_t MAX_COOKIE_PREFIX_LENGTH = 32;
+static size_t MAX_COOKIE_SUFFIX_LENGTH = 5; /* The longest cookie suffix is -csrf */
 
 /* NGINX integration */
 static ngx_http_module_t oauth_proxy_module_context =
@@ -192,9 +187,9 @@ static ngx_int_t post_configuration(ngx_conf_t *config)
 }
 
 /*
- * Validate the cookie prefix to prevent cryptic problems later
+ * Validate the cookie prefix to prevent deeper problems later
  */
-static ngx_int_t validate_configuration(ngx_conf_t *config, oauth_proxy_configuration_t *module_location_config)
+static ngx_int_t validate_configuration(ngx_conf_t *config, const oauth_proxy_configuration_t *module_location_config)
 {
     ngx_str_t *trusted_web_origins = NULL;
     ngx_str_t trusted_web_origin;
@@ -259,6 +254,7 @@ static ngx_int_t validate_configuration(ngx_conf_t *config, oauth_proxy_configur
 static ngx_int_t handler(ngx_http_request_t *request)
 {
     oauth_proxy_configuration_t *module_location_config = NULL;
+    u_char *web_origin_header_name = NULL;
     ngx_str_t *web_origin = NULL;
     ngx_str_t at_cookie_encrypted_hex;
     ngx_str_t access_token;
@@ -284,15 +280,15 @@ static ngx_int_t handler(ngx_http_request_t *request)
         return NGX_OK;
     }
 
-    // Try to find the web origin
-    web_origin = search_headers_in(request, (u_char*)"origin", 6);
+    // Verify the web origin, which is sent by all modern browsers
+    web_origin_header_name = (u_char *)"origin";
+    web_origin = search_headers_in(request, web_origin_header_name, ngx_strlen(web_origin_header_name));
     if (web_origin == NULL)
     {
         ngx_log_error(NGX_LOG_WARN, request->connection->log, 0, "The request did not have an origin header");
         return NGX_HTTP_UNAUTHORIZED;
     }
 
-    // Check that it is trusted
     ret_code = verify_web_origin(module_location_config, web_origin);
     if (ret_code != NGX_OK)
     {
@@ -301,27 +297,35 @@ static ngx_int_t handler(ngx_http_request_t *request)
         return NGX_HTTP_UNAUTHORIZED;
     }
 
-    // Try to get the access token cookie
-    ret_code = get_cookie(request, &at_cookie_encrypted_hex, &module_location_config->cookie_prefix, "-at");
+    // For data changing commands, apply double submit cookie checks in line with OWASP best practices
+    if (ngx_strncasecmp(request->method_name.data, (u_char *)"post",   4) == 0 ||
+        ngx_strncasecmp(request->method_name.data, (u_char *)"put",    3) == 0 ||
+        ngx_strncasecmp(request->method_name.data, (u_char *)"patch",  5) == 0 ||
+        ngx_strncasecmp(request->method_name.data, (u_char *)"delete", 6) == 0)
+    {
+        ret_code = apply_xsrf_checks(request, module_location_config, web_origin);
+        if (ret_code != NGX_OK)
+        {
+            return ret_code;
+        }
+    }
 
-    // When no cookie is provided we return an unauthorized status code
+    // Try to decrypt the access token cookie to get the access token
+    ret_code = get_cookie(request, &at_cookie_encrypted_hex, &module_location_config->cookie_prefix, (u_char *)"-at");
     if (ret_code == NGX_DECLINED)
     {
         add_cors_error_headers(request, web_origin);
-        ngx_log_error(NGX_LOG_WARN, request->connection->log, 0, "No cookie was found in the incoming request");
+        ngx_log_error(NGX_LOG_WARN, request->connection->log, 0, "No AT cookie was found in the incoming request");
         return NGX_HTTP_UNAUTHORIZED;
     }
 
-    // Handle other errors getting the cookie
     if (ret_code != NGX_OK)
     {
         add_cors_error_headers(request, web_origin);
-        ngx_log_error(NGX_LOG_WARN, request->connection->log, 0, "Cookie read problem encountered: %d", ret_code);
-        return ret_code;
+        ngx_log_error(NGX_LOG_WARN, request->connection->log, 0, "AT cookie read problem encountered: %d", ret_code);
+        return NGX_HTTP_UNAUTHORIZED;
     }
 
-    // Decrypt the secure cookie to get its access token content
-    ngx_log_error(NGX_LOG_WARN, request->connection->log, 0, "*** RECEIVED COOKIE IS: %V", &at_cookie_encrypted_hex);
     ret_code = oauth_proxy_decrypt(request, &module_location_config->hex_encryption_key, &at_cookie_encrypted_hex, &access_token);
     if (ret_code != NGX_OK)
     {
@@ -329,12 +333,88 @@ static ngx_int_t handler(ngx_http_request_t *request)
         return ret_code;
     }
 
-    // Add the cookie to the authorization header
+    // Finally, update the authorization header in the headers in, to forward to the API via proxy_pass
     ret_code = add_authorization_header(request, &access_token);
     if (ret_code != NGX_OK)
     {
         add_cors_error_headers(request, web_origin);
         return ret_code;
+    }
+
+    return NGX_OK;
+}
+/*
+ * Ensure that incoming requests have the origin header that all modern browsers send
+ */
+static ngx_int_t verify_web_origin(const oauth_proxy_configuration_t *config, const ngx_str_t *web_origin)
+{
+    ngx_str_t *trusted_web_origins = NULL;
+    ngx_str_t trusted_web_origin;
+
+    trusted_web_origins = config->trusted_web_origins->elts;
+    for (ngx_uint_t i = 0; i < config->trusted_web_origins->nelts; i++)
+    {
+        trusted_web_origin = trusted_web_origins[i];
+
+        if (web_origin->len == trusted_web_origin.len && 
+            ngx_strncasecmp(web_origin->data, trusted_web_origin.data, web_origin->len) == 0)
+        {
+            return NGX_OK;
+        }
+    }
+
+    return NGX_ERROR;
+}
+
+/*
+ * For data changing commands we make extra CSRF checks in line with OWASP best practices
+ */
+static ngx_int_t apply_xsrf_checks(ngx_http_request_t *request, const oauth_proxy_configuration_t *config, const ngx_str_t *web_origin)
+{
+    ngx_str_t csrf_cookie_encrypted_hex;
+    u_char csrf_header_name[2 + MAX_COOKIE_PREFIX_LENGTH + MAX_COOKIE_SUFFIX_LENGTH + 1];
+    ngx_str_t *csrf_header_value = NULL;
+    ngx_str_t csrf_token;
+    ngx_int_t ret_code = NGX_OK;
+    
+    ret_code = get_cookie(request, &csrf_cookie_encrypted_hex, &config->cookie_prefix, (u_char *)"-csrf");
+    if (ret_code == NGX_DECLINED)
+    {
+        add_cors_error_headers(request, web_origin);
+        ngx_log_error(NGX_LOG_WARN, request->connection->log, 0, "No CSRF cookie was found in the incoming request");
+        return NGX_HTTP_UNAUTHORIZED;
+    }
+
+    if (ret_code != NGX_OK)
+    {
+        add_cors_error_headers(request, web_origin);
+        ngx_log_error(NGX_LOG_WARN, request->connection->log, 0, "CSRF cookie read problem encountered: %d", ret_code);
+        return ret_code;
+    }
+
+    ngx_memcpy(csrf_header_name, "x-", 2);
+    ngx_memcpy(csrf_header_name + 2, config->cookie_prefix.data, config->cookie_prefix.len);
+    ngx_memcpy(csrf_header_name + 2 + config->cookie_prefix.len, "-csrf", 5);
+    csrf_header_name[2 + config->cookie_prefix.len + 5] = 0;
+    csrf_header_value = search_headers_in(request, csrf_header_name, ngx_strlen(csrf_header_name));
+    if (csrf_header_value == NULL)
+    {
+        ngx_log_error(NGX_LOG_WARN, request->connection->log, 0, "A data changing request did not have a CSRF header");
+        return NGX_HTTP_UNAUTHORIZED;
+    }
+
+    ngx_log_error(NGX_LOG_WARN, request->connection->log, 0, "*** csrf_cookie_encrypted_hex is %V", &csrf_cookie_encrypted_hex);
+    ret_code = oauth_proxy_decrypt(request, &config->hex_encryption_key, &csrf_cookie_encrypted_hex, &csrf_token);
+    if (ret_code != NGX_OK)
+    {
+        add_cors_error_headers(request, web_origin);
+        return ret_code;
+    }
+
+    if (ngx_strcmp(csrf_token.data, csrf_header_value->data) != 0)
+    {
+        ngx_log_error(NGX_LOG_WARN, request->connection->log, 0, "The CSRF request header did not match the value in the encrypted CSRF cookie");
+        return NGX_HTTP_UNAUTHORIZED;
     }
 
     return NGX_OK;
@@ -359,7 +439,7 @@ static ngx_str_t *search_headers_in(ngx_http_request_t *request, u_char *name, s
 
         if (i >= part->nelts) {
             if (part->next == NULL) {
-                /* The last part, search is done. */
+                // The last part, search is done
                 break;
             }
 
@@ -381,32 +461,9 @@ static ngx_str_t *search_headers_in(ngx_http_request_t *request, u_char *name, s
 }
 
 /*
- * Ensure that incoming requests have the origin header that all modern browsers send
- */
-static ngx_int_t verify_web_origin(oauth_proxy_configuration_t *config, ngx_str_t *web_origin)
-{
-    ngx_str_t *trusted_web_origins = NULL;
-    ngx_str_t trusted_web_origin;
-
-    trusted_web_origins = config->trusted_web_origins->elts;
-    for (ngx_uint_t i = 0; i < config->trusted_web_origins->nelts; i++)
-    {
-        trusted_web_origin = trusted_web_origins[i];
-
-        if (web_origin->len == trusted_web_origin.len && 
-            ngx_strncasecmp(web_origin->data, trusted_web_origin.data, web_origin->len) == 0)
-        {
-            return NGX_OK;
-        }
-    }
-
-    return NGX_ERROR;
-}
-
-/*
  * Get a cookie and deal with string manipulation
  */
-static ngx_int_t get_cookie(ngx_http_request_t *request, ngx_str_t* cookie_value, ngx_str_t* cookie_prefix, const char *cookie_suffix)
+static ngx_int_t get_cookie(ngx_http_request_t *request, ngx_str_t* cookie_value, const ngx_str_t* cookie_prefix, const u_char *cookie_suffix)
 {
     u_char cookie_name[MAX_COOKIE_PREFIX_LENGTH + MAX_COOKIE_SUFFIX_LENGTH + 1];
     size_t suffix_len = 0;
@@ -416,7 +473,7 @@ static ngx_int_t get_cookie(ngx_http_request_t *request, ngx_str_t* cookie_value
     ngx_memcpy(cookie_name, cookie_prefix->data, cookie_prefix->len);
     ngx_memcpy(cookie_name + cookie_prefix->len, cookie_suffix, suffix_len);
     cookie_name[cookie_prefix->len + suffix_len] = 0;
-    
+
     cookie_name_str.data = cookie_name;
     cookie_name_str.len = ngx_strlen(cookie_name);
     return ngx_http_parse_multi_header_lines(&request->headers_in.cookies, &cookie_name_str, cookie_value);
@@ -425,7 +482,7 @@ static ngx_int_t get_cookie(ngx_http_request_t *request, ngx_str_t* cookie_value
 /*
  * Set the authorization header and deal with string manipulation
  */
-static ngx_int_t add_authorization_header(ngx_http_request_t *request, ngx_str_t* token_value)
+static ngx_int_t add_authorization_header(ngx_http_request_t *request, const ngx_str_t* token_value)
 {
     size_t header_value_len = 0;
     u_char *header_value = NULL;
@@ -444,8 +501,8 @@ static ngx_int_t add_authorization_header(ngx_http_request_t *request, ngx_str_t
         ngx_log_error(NGX_LOG_WARN, request->connection->log, 0, "OAuth proxy failed to allocate memory for the authorization header value");
         return NGX_HTTP_INTERNAL_SERVER_ERROR;
     }
-    ngx_snprintf(header_value, header_value_len, "Bearer %V", token_value);
 
+    ngx_snprintf(header_value, header_value_len, "Bearer %V", token_value);
     ngx_str_set(&request->headers_in.authorization->key, "Authorization");
     request->headers_in.authorization->value = (ngx_str_t)ngx_string(header_value);
     request->headers_in.authorization->value.len = header_value_len;
@@ -455,7 +512,7 @@ static ngx_int_t add_authorization_header(ngx_http_request_t *request, ngx_str_t
 /*
  * Ensure that Javascript code running in trusted web origins can read details from error responses
  */
-static ngx_int_t add_cors_error_headers(ngx_http_request_t *request, ngx_str_t *web_origin)
+static ngx_int_t add_cors_error_headers(ngx_http_request_t *request, const ngx_str_t *web_origin)
 {
     ngx_table_elt_t *allow_headers     = NULL;
     ngx_table_elt_t *allow_credentials = NULL;
