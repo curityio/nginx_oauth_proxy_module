@@ -9,8 +9,6 @@ OPENSSL_VERSION_TAG='OpenSSL_1_1_1m'
 BUILD_INFO_FILE="$SRC_DIR/.build.info"
 test -f "$BUILD_INFO_FILE" && . "$BUILD_INFO_FILE"
 
-echo "*** DEBUG"
-echo "*** $CONFIG_OPTS"
 declare -a CONFIG_OPTS=($CONFIG_OPTS --with-compat --with-cc-opt="-Wformat -Werror=format-security")
 
 if [[ -z "$NGINX_SRC_DIR" ]]; then

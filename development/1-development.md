@@ -2,13 +2,13 @@
 
 ## 1. Intellisense Setup
 
-First run this script to build and deploy OpenSSL for macOS as a prerequisite:
+To enable the development IDE to find OpenSSL headers I first build OpenSSL from source: 
 
 ```bash
 ./development/openssl_setup.sh
 ```
 
-The following locations will be updated, so that development tools can find headers:
+The following locations will then be updated, so that development tools can find headers:
 
 ```text
 /usr/local/include/openssl/*
@@ -19,13 +19,18 @@ The following locations will be updated, so that development tools can find head
 
 ## 2. Configure
 
-Run the base configure script, and accept all defaults, except set `DYNAMIC_MODULE=n`, which is best for debugging:
+Run the base configure script as follows, to download NGINX source and point it to the OpenSSL location:
 
 ```bash
 CONFIG_OPTS='--with-openssl=../openssl-OpenSSL_1_1_1m' ./configure 
 ```
 
-This will download NGINX source code and point it to the OpenSSL locations.
+Select these options to enable tests to run and to enable debugging of the C code:
+
+```text
+DYNAMIC_MODULE=n
+NGINX_DEBUG=y
+```
 
 ## 3. Make
 
@@ -91,3 +96,18 @@ Successful requests are routed through to a mockbin API that echoes headers, so 
   }
 }
 ```
+
+## 7. Debugging
+
+Download and install CLion, and you can sign up for a free trial license if required.
+Once nginx is running, select  `Run / Attach to Process`, then set breakpoints.\
+Then send curl requests to NGINX and step through the module's code:
+
+SCREENSHOT
+
+Alternatively you can use Visual Studio Code and install the C/C++ Extension Pack.\
+Then use `ngx_log_error` calls to do simple print debugging. 
+
+## 8. Check for Memory Leaks
+
+TODO: valgrind

@@ -19,6 +19,7 @@ make test
 
 TODO: individual tests and use of --- ONLY and Makefile
 Also mention how I am handling 200 success
+Port 1984 is used
 
 ## 3. Understand Test Syntax
 
