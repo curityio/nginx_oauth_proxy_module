@@ -156,7 +156,7 @@ The plugin expects to receive up to two cookies, which use a custom prefix with 
 | example-at | -at | An encrypted cookie containing either an opaque or JWT access token |
 | example-csrf | -csrf | A CSRF cookie verified during data changing requests |
 
-Cookies are encrypted using AES256-GCM, with a hex encoding, and each cookie consists of these parts:
+Cookies are encrypted using AES256-GCM, with a hex encoding, in this format:
 
 | Cookie Section | Contains |
 | -------------- | -------- |

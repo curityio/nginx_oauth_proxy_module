@@ -75,12 +75,8 @@ GET /t
 
 If required, add `ngx_log_error` statements to C code, then look at test logs at `t/servroot/logs/error.log`.
 
-## 5. Generate your own Encryption Key
+## 5. Testing Interoperability
 
-If required you can update tests with your own generated hex encryption key:
+The following GitHub repo ensures that encryption is compliant across technologies:
 
-```bash
-openssl rand 32 | xxd -p -c 64
-```
-
-Further work on AES256-GCM encryption across technologies is in the [Token Handler Encryption Tests](https://github.com/curityio/token-handler-encryption-tests) repo.
+- [Token Handler Encryption Tests](https://github.com/curityio/token-handler-encryption-tests)
