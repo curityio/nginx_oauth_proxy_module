@@ -74,6 +74,7 @@ ngx_int_t oauth_proxy_decrypt(ngx_http_request_t *request, const ngx_str_t *encr
         }
     }
 
+    // The cookie ciphertext size is unknown and could represent a large JWT, so allocate memory dynamically
     if (ret_code == NGX_OK)
     {
         ciphertext_bytes = ngx_pcalloc(request->pool, ciphertext_len);
@@ -147,7 +148,7 @@ ngx_int_t oauth_proxy_decrypt(ngx_http_request_t *request, const ngx_str_t *encr
         evp_result = EVP_DecryptUpdate(ctx, plaintext_bytes, &len, ciphertext_bytes, ciphertext_len);
         if (evp_result == 0)
         {
-            ngx_log_error(NGX_LOG_WARN, request->connection->log, 0, "Problem encountered decrypting data, error number: %d", evp_result);
+            ngx_log_error(NGX_LOG_WARN, request->connection->log, 0, "Problem encountered processing ciphertext, error number: %d", evp_result);
             ret_code = NGX_HTTP_UNAUTHORIZED;
         }
         else
@@ -171,7 +172,7 @@ ngx_int_t oauth_proxy_decrypt(ngx_http_request_t *request, const ngx_str_t *encr
         evp_result = EVP_DecryptFinal_ex(ctx, plaintext_bytes + plaintext_len, &len);
         if (evp_result <= 0)
         {
-            ngx_log_error(NGX_LOG_WARN, request->connection->log, 0, "Problem encountered finalizing encrypted data, error number: %d", evp_result);
+            ngx_log_error(NGX_LOG_WARN, request->connection->log, 0, "Problem encountered decrypting data, error number: %d", evp_result);
             ret_code = NGX_HTTP_UNAUTHORIZED;
         }
         else

@@ -1,28 +1,31 @@
-1. JWT access token tests
+ENVIRONMENT
+-----------
+1. CLion to attach to nginx - document this with a screenshot
 
-2. Child section that overrides parent section during a GET
-
-3. Multiple cookie headers (HTTP/2)
-
-4. Decryption tests
-- Change Perl string characters - understand how to do this
-
-5. Include an error body with a code and message
-   https://github.com/usamadar/ngx_hello_world/blob/master/ngx_http_hello_module.c
-
-6. Update main README in line with phantom token module:
+DOC
+---
+1. Update main README in line with phantom token module:
    Configuration directives
    Loading the module
    Example configuration
    Mention creation of encryption key - with openssl as an example
+   Merge to main
 
-7. CLion install and attach to nginx - document this
+FINAL
+-----
+1. Complete the builds for all Linux flavors and document behavior
+   Also redeploy to Docker and follow my own instructions
 
-8. valgrind and checking for memory leaks
+2. valgrind and checking for memory leaks
 
-9. Run the official test suite
+3. Run the official test suite
 
-10. Complete the builds for all Linux flavors and document behavior
+TESTS
+-----
+1. Child section that overrides parent section during a GET
+   Use different encryption key and check this works
+
+2. Separate cookie headers (HTTP/2)
 
 PEOPLE COMMUNICATION
 --------------------

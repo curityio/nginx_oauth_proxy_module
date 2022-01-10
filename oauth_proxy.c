@@ -403,7 +403,6 @@ static ngx_int_t apply_xsrf_checks(ngx_http_request_t *request, const oauth_prox
         return NGX_HTTP_UNAUTHORIZED;
     }
 
-    ngx_log_error(NGX_LOG_WARN, request->connection->log, 0, "*** csrf_cookie_encrypted_hex is %V", &csrf_cookie_encrypted_hex);
     ret_code = oauth_proxy_decrypt(request, &config->hex_encryption_key, &csrf_cookie_encrypted_hex, &csrf_token);
     if (ret_code != NGX_OK)
     {
@@ -494,6 +493,7 @@ static ngx_int_t add_authorization_header(ngx_http_request_t *request, const ngx
         return NGX_HTTP_INTERNAL_SERVER_ERROR;
     }
 
+    // The header size is unknown and could represent a large JWT, so allocate memory dynamically
     header_value_len = ngx_strlen("Bearer ") + token_value->len;
     header_value = ngx_pcalloc(request->pool, header_value_len);
     if (header_value == NULL)

@@ -4,7 +4,8 @@
 # Runs configuration tests to verify that only correct input is accepted
 ########################################################################
 
-use FindBin;
+use strict;
+use warnings;
 use Test::Nginx::Socket 'no_plan';
 run_tests();
 

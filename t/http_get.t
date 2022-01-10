@@ -9,14 +9,16 @@ use warnings;
 use Test::Nginx::Socket 'no_plan';
 
 SKIP: {
-    our $at_opaque_cookie = "093d3fb879767f6ec2b1e7e359040fe6ba875734ee043c5cc484d3da8963a351e9aba1c5e273f3d1ea2914f83836fa434474d1720b3040f5f7237f34536b7389";
     our $at_opaque = "42665300-efe8-419d-be52-07b53e208f46";
+    our $at_opaque_cookie = "093d3fb879767f6ec2b1e7e359040fe6ba875734ee043c5cc484d3da8963a351e9aba1c5e273f3d1ea2914f83836fa434474d1720b3040f5f7237f34536b7389";
+    
     run_tests();
 }
 
 __DATA__
 
 === TEST HTTP_GET_1: GET with an authorization header is allowed when enabled
+# Verify that mobile and SPA clients can use the same routes, where the first sends access tokens directly
 
 --- config
 location /t {
@@ -42,6 +44,7 @@ authorization: bearer xxx
 --- error_code: 200
 
 === TEST HTTP_GET_2: GET with an authorization header is rejected when not enabled
+# Verify that if a company wants to force mobile and SPA clients to use different routes they can do so
 
 --- config
 location /t {
@@ -65,6 +68,7 @@ authorization: bearer xxx
 No AT cookie was found in the incoming request
 
 === TEST HTTP_GET_3: GET without an origin header returns 401
+# SPA clients are expected to always send the origin header, as supported by all modern browsers
 
 --- config
 location /t {
@@ -84,6 +88,7 @@ GET /t
 The request did not have an origin header
 
 === TEST HTTP_GET_4: GET with an untrusted web origin header value returns 401
+# Verify that the request is rejected if a malicious site calls the plugin
 
 --- config
 location /t {
@@ -106,6 +111,7 @@ origin: https://www.malicious-site.com
 The request was from an untrusted web origin
 
 === TEST HTTP_GET_5: GET without a cookie or token credential returns 401
+# Verify that a 401 is received when there is no message credential at all
 
 --- config
 location /t {
@@ -128,6 +134,7 @@ origin: https://www.example.com
 No AT cookie was found in the incoming request
 
 === TEST HTTP_GET_6: GET errors return CORS headers so that Javascript can read error details
+# The SPA will receive a cryptic network error without these CORS headers
 
 --- config
 location /t {
@@ -151,9 +158,9 @@ Access-Control-Allow-Origin: https://www.example.com
 Access-Control-Allow-Credentials: true
 
 === TEST HTTP_GET_7: GET with a valid cookie returns 200 and an Authorization header
+# Ensure that the happy path for a GET request works
 
 --- config
-ignore_invalid_headers on;
 location /t {
     oauth_proxy on;
     oauth_proxy_allow_tokens off;
