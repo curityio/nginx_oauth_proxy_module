@@ -55,7 +55,7 @@ The `/usr/local/nginx` location will then be updated with a full NGINX installat
 Deploy the development `nginx.conf` file, then start NGINX locally:
 
 ```bash
-sudo cp ./development/macos_nginx.conf /usr/local/nginx/conf/
+sudo cp ./development/dev_nginx.conf /usr/local/nginx/conf/
 sudo /usr/local/nginx/sbin/nginx
 ```
 

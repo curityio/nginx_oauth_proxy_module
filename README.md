@@ -248,8 +248,8 @@ If you wish to customize this module by building from source, see the following 
 
 | Guide | Description |
 | ----- | ----------- |
-| [Development](resources/1-development.md) | How to build and work with the module on a macOS development computer |
-| [Testing](resources/3-testing.md) | How to run NGINX tests to verify the module's success and failure behavior |
+| [Development](resources/1-development.md) | How to build and work with the module on a development computer |
+| [Testing](resources/2-testing.md) | How to run NGINX tests to verify the module's success and failure behavior |
 | [Deployment](resources/3-deployment.md) | How to build and deploy the module to a Docker container |
 
 ## Status

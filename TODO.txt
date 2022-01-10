@@ -1,6 +1,7 @@
 TODO
 ----
-1. Finish deployment related docs
+1. Finish deployment related docs and proof read
+   Add the table on the home page
 
 2. Final tests:
 - Multiple cookie headers test (HTTP/2)
@@ -10,7 +11,7 @@ TODO
 
 4. Merge to main
 
-5. Post on channel by 11:00 Tuesday
+5. Post on channel by midday Tuesday
 
 FINAL
 -----
