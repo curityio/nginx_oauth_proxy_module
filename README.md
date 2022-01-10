@@ -15,11 +15,11 @@ A typical flow for an SPA calling an API would work like this:
 
 ![Security Handling](resources/security-handling.png)
 
-- The SPA makes an API call with an AES256 encrypted HTTP Only cookie containing an opaque access token
+- The SPA sends an AES256 encrypted HTTP Only cookie containing an opaque access token
 - The OAuth Proxy module decrypts the cookie to get the opaque access token
 - The opaque access token is then forwarded in the HTTP Authorization Header
 - The [Phantom Token Module](https://github.com/curityio/nginx_phantom_token_module) then swaps the opaque token for a JWT access token
-- The incoming HTTP Authorization Header is then updated with the JWT access token and forwarded to the API
+- The incoming HTTP Authorization Header is then updated with the JWT access token
 - The API must then verify the JWT in a zero trust manner, on every request
 
 ## Configuration Directives
@@ -57,7 +57,7 @@ If set to `off` then all locations for which the module is configured must conta
 >
 > **Context**: `location`                                                   
 
-A cookie prefix name must be provided, and common conventions are to use company / product names.\
+A cookie prefix name must be provided, such as a company and / or product name.\
 The value of `example` used in this README can be replaced with your own custom value.\
 The maximum allowed length of the prefix is 64 characters.
 
@@ -86,7 +86,7 @@ openssl rand 32 | xxd -p -c 64
 > **Context**: `location`                                                   
 
 An array of at least one trusted web origins where SPA clients will run in the browser.\
-Multiple web subdomains can be configured, though a single web domain is the most common use case:
+Multiple subdomains can be configured, though a single value is the most common use case:
 
 ```nginx
 location / {
@@ -156,7 +156,7 @@ The plugin expects to receive up to two cookies, which use a custom prefix with 
 | example-at | -at | An encrypted cookie containing either an opaque or JWT access token |
 | example-csrf | -csrf | A CSRF cookie verified during data changing requests |
 
-AES256-GCM encryption is used, with a hex encoding, meaning that each cookie value consists of these parts:
+Cookies are encrypted using AES256-GCM, with a hex encoding, and each cookie consists of these parts:
 
 | Cookie Section | Contains |
 | -------------- | -------- |
@@ -175,16 +175,16 @@ The plugin does not perform any logic for pre-flight requests from the SPA and r
 #### Web Origin Checks
 
 For other methods, the plugin first reads the `Origin HTTP Header`, sent by all modern browsers.\
-If this does not contain a trusted value the request is immediately rejected with a 401 response.\
+If this does not contain a trusted value the request is immediately rejected with a 401 response.
 
 #### Cross Site Request Forgery Checks
 
 The process is as follows, though the exact identifiers depend on the configured cookie prefix:
 
-- After user login the browser receives an `example-csrf` cookie from the main Token Handler API.
-- Whenever the SPA loads it receives a `csrf-token`, which stays the same for the authenticated session.
-- This must be sent as a `x-example-csrf` request header on data changing commands (POST, PUT, PATCH, DELETE).
-- The cookie and header value must be the same or the module returns a 401 error response.
+- After a user login the browser receives an `example-csrf` cookie from the main Token Handler API.
+- When the SPA loads it receives a `csrf-token`, which stays the same for the authenticated session.
+- This is sent as an `x-example-csrf` request header on POST, PUT, PATCH, DELETE commands.
+- The cookie and header value must have the same value or the module returns a 401 error response.
 
 #### Access Token Handling
 
@@ -195,7 +195,7 @@ The `-at` cookie is decrypted, after which the token is forwarded to the downstr
 Authorization Bearer 42665300-efe8-419d-be52-07b53e208f46
 ```
 
-If you use opaque reference tokens the encrypted cookies will not exceed NGINX default header sizes.\
+With opaque reference tokens the encrypted cookies do not exceed NGINX default header sizes.\
 If large JWTs are used, then these NGINX properties may need to use larger than default values:
 
 - proxy_buffers
@@ -207,11 +207,11 @@ If large JWTs are used, then these NGINX properties may need to use larger than 
 AES256-GCM uses authenticated encryption, so invalid cookies are rejected with a 401 response:
 
 - Cookies encrypted with a different encryption key
-- Cookie payloads that have been tampered with
+- Cookies where any part of the payload has been tampered with
 
 #### Error Responses
 
-The main failure scenarios are summarized below:
+The common failure scenarios are summarized below:
 
 | Failure Type | Description | Error Status |
 | ------------ | ----------- | ------------ |
@@ -233,8 +233,8 @@ This module has been tested with these NGINX versions:
 - NGINX 1.13.7 (NGINX Plus Release 14)
 - NGINX 1.13.10 (NGINX Plus Release 15)
 
-It is likely to work with newer versions of NGINX, but only these have been verified.
-
+It is likely to work with newer versions of NGINX, but only the above have been verified.
+ 
 ### Releases
 
 Pre-built binaries of this module are provided for the following versions of NGINX.\
