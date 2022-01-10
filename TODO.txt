@@ -1,19 +1,24 @@
 TODO
 ----
-1. Get all distros building - those based on yum are failing
+1. Finish deployment related docs
 
-2. Finish deployment related docs and merge to main
+2. Final tests:
+- Multiple cookie headers test (HTTP/2)
+- 64 char cookie prefix
 
-3. Multiple cookie headers (HTTP/2)
+3. Update open questions
+
+4. Merge to main
+
+5. Post on channel by 11:00 Tuesday
 
 FINAL
 -----
-1. CLion to attach to nginx - document this with a screenshot
-   Try using the latest instructions
+1. CLion to attach to nginx - try using latest instructions, then add a screenshot to docs
 
-2. valgrind and checking for memory leaks
+2. Run the official test suite
 
-3. Run the official test suite
+3. valgrind and checking for memory leaks
 
 PEOPLE COMMUNICATION
 --------------------

@@ -28,7 +28,7 @@ docker build --no-cache -t nginx-module-builder \
   --build-arg NGINX_VERSION="$NGINX_VERSION" \
   --build-arg NGINX_DEBUG=n \
   --build-arg DYNAMIC_MODULE=Y \
-  -f Dockerfile.new .
+  -f Dockerfile .
 
 docker run --name nginx-modules -d nginx-module-builder 300
 docker cp nginx-modules:/build/ .
