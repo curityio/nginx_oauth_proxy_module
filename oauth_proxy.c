@@ -94,7 +94,7 @@ static ngx_int_t add_cors_error_headers(ngx_http_request_t *request, const ngx_s
 extern ngx_int_t oauth_proxy_decrypt(ngx_http_request_t *request, const ngx_str_t* encryption_key_hex, const ngx_str_t* encrypted_hex, ngx_str_t *plain_text);
 
 /* Constants */
-static size_t MAX_COOKIE_PREFIX_LENGTH = 32;
+static size_t MAX_COOKIE_PREFIX_LENGTH = 64;
 static size_t MAX_COOKIE_SUFFIX_LENGTH = 5; /* The longest cookie suffix is -csrf */
 
 /* NGINX integration */
@@ -193,6 +193,7 @@ static ngx_int_t validate_configuration(ngx_conf_t *config, const oauth_proxy_co
 {
     ngx_str_t *trusted_web_origins = NULL;
     ngx_str_t trusted_web_origin;
+    ngx_uint_t i = 0;
 
     if (module_location_config != NULL && module_location_config->enabled)
     {
@@ -227,7 +228,7 @@ static ngx_int_t validate_configuration(ngx_conf_t *config, const oauth_proxy_co
         }
 
         trusted_web_origins = module_location_config->trusted_web_origins->elts;
-        for (ngx_uint_t i = 0; i < module_location_config->trusted_web_origins->nelts; i++)
+        for (i = 0; i < module_location_config->trusted_web_origins->nelts; i++)
         {
             trusted_web_origin = trusted_web_origins[i];
             if (trusted_web_origin.len < 7)
@@ -260,11 +261,10 @@ static ngx_int_t handler(ngx_http_request_t *request)
     ngx_str_t access_token;
     ngx_int_t ret_code = NGX_OK;
     
-    // Return immediately when the module is disabled
+    // Return immediately for locations where the module is not used
     module_location_config = ngx_http_get_module_loc_conf(request, ngx_curity_http_oauth_proxy_module);
     if (!module_location_config->enabled)
     {
-        ngx_log_error(NGX_LOG_WARN, request->connection->log, 0, "OAuth proxy module is disabled");
         return NGX_DECLINED;
     }
 
@@ -350,9 +350,10 @@ static ngx_int_t verify_web_origin(const oauth_proxy_configuration_t *config, co
 {
     ngx_str_t *trusted_web_origins = NULL;
     ngx_str_t trusted_web_origin;
+    ngx_uint_t i = 0;
 
     trusted_web_origins = config->trusted_web_origins->elts;
-    for (ngx_uint_t i = 0; i < config->trusted_web_origins->nelts; i++)
+    for (i = 0; i < config->trusted_web_origins->nelts; i++)
     {
         trusted_web_origin = trusted_web_origins[i];
 

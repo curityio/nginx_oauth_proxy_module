@@ -201,12 +201,14 @@ ngx_int_t oauth_proxy_decrypt(ngx_http_request_t *request, const ngx_str_t *encr
  */
 static ngx_int_t bytes_from_hex(u_char *bytes, const u_char *hex, size_t hex_len)
 {
+    size_t i = 0;
+
     if (hex_len %2 != 0)
     {
        return -1;
     }
 
-    for (size_t i = 0; i < hex_len; i++)
+    for (i = 0; i < hex_len; i++)
     {
         char c = hex[i];
         u_char d;

@@ -1,31 +1,19 @@
-ENVIRONMENT
------------
-1. CLion to attach to nginx - document this with a screenshot
+TODO
+----
+1. Get all distros building - those based on yum are failing
 
-DOC
----
-1. Update main README in line with phantom token module:
-   Configuration directives
-   Loading the module
-   Example configuration
-   Mention creation of encryption key - with openssl as an example
-   Merge to main
+2. Finish deployment related docs and merge to main
+
+3. Multiple cookie headers (HTTP/2)
 
 FINAL
 -----
-1. Complete the builds for all Linux flavors and document behavior
-   Also redeploy to Docker and follow my own instructions
+1. CLion to attach to nginx - document this with a screenshot
+   Try using the latest instructions
 
 2. valgrind and checking for memory leaks
 
 3. Run the official test suite
-
-TESTS
------
-1. Child section that overrides parent section during a GET
-   Use different encryption key and check this works
-
-2. Separate cookie headers (HTTP/2)
 
 PEOPLE COMMUNICATION
 --------------------

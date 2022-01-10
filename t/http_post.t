@@ -131,3 +131,122 @@ $data;
 
 --- response_headers eval
 "authorization: Bearer " . $main::at_opaque
+
+=== TEST HTTP_POST_5: POST with 2 locations and same details works as expected
+# Verify that the happy path works for multiple configuration sections
+
+--- config
+location /api1 {
+    oauth_proxy on;
+    oauth_proxy_allow_tokens off;
+    oauth_proxy_cookie_prefix "example";
+    oauth_proxy_hex_encryption_key "4e4636356d65563e4c73233847503e3b21436e6f7629724950526f4b5e2e4e50";
+    oauth_proxy_trusted_web_origin "https://www.example.com";
+
+    proxy_pass http://localhost:1984/target;
+}
+location /api2 {
+    oauth_proxy on;
+    oauth_proxy_allow_tokens off;
+    oauth_proxy_cookie_prefix "example";
+    oauth_proxy_hex_encryption_key "4e4636356d65563e4c73233847503e3b21436e6f7629724950526f4b5e2e4e50";
+    oauth_proxy_trusted_web_origin "https://www.example.com";
+
+    proxy_pass http://localhost:1984/target;
+}    
+location /target {
+    add_header 'authorization' $http_authorization;
+    return 200;
+}
+
+--- request
+POST /api2
+
+--- more_headers eval
+my $data;
+$data .= "origin: https://www.example.com\n";
+$data .= "x-example-csrf: " . $main::csrf_token . "\n";
+$data .= "cookie: example-at=" . $main::at_opaque_cookie . "; example-csrf=" . $main::csrf_cookie . "\n";
+$data;
+
+--- error_code: 200
+
+--- response_headers eval
+"authorization: Bearer " . $main::at_opaque
+
+=== TEST HTTP_POST_6: POST with 2 locations and different details works as expected
+# Verify that the happy path works for data changing commands with independent locations
+
+--- config
+location /api1 {
+    oauth_proxy on;
+    oauth_proxy_allow_tokens off;
+    oauth_proxy_cookie_prefix "example1";
+    oauth_proxy_hex_encryption_key "7b99279ab87533d3c238db874a842a91ee26a76027f3c03c317504963d2c9926";
+    oauth_proxy_trusted_web_origin "https://www.example1.com";
+
+    proxy_pass http://localhost:1984/target;
+}
+location /api2 {
+    oauth_proxy on;
+    oauth_proxy_allow_tokens off;
+    oauth_proxy_cookie_prefix "example2";
+    oauth_proxy_hex_encryption_key "4e4636356d65563e4c73233847503e3b21436e6f7629724950526f4b5e2e4e50";
+    oauth_proxy_trusted_web_origin "https://www.example2.com";
+
+    proxy_pass http://localhost:1984/target;
+}    
+location /target {
+    add_header 'authorization' $http_authorization;
+    return 200;
+}
+
+--- request
+POST /api2
+
+--- more_headers eval
+my $data;
+$data .= "origin: https://www.example2.com\n";
+$data .= "x-example2-csrf: " . $main::csrf_token . "\n";
+$data .= "cookie: example2-at=" . $main::at_opaque_cookie . "; example2-csrf=" . $main::csrf_cookie . "\n";
+$data;
+
+--- error_code: 200
+
+--- response_headers eval
+"authorization: Bearer " . $main::at_opaque
+
+=== TEST HTTP_POST_7: POST with parent child locations uses inherited properties as expected
+# Verify that the happy path works for data changing commands with independent locations
+
+--- config
+location /api {
+    oauth_proxy on;
+    oauth_proxy_allow_tokens off;
+    oauth_proxy_cookie_prefix "example";
+    oauth_proxy_hex_encryption_key "4e4636356d65563e4c73233847503e3b21436e6f7629724950526f4b5e2e4e50";
+    oauth_proxy_trusted_web_origin "https://www.example.com";
+
+    location /api/products {
+        proxy_pass http://localhost:1984/target;
+    } 
+}
+location /target {
+    add_header 'authorization' $http_authorization;
+    return 200;
+}
+
+--- request
+POST /api/products
+
+--- more_headers eval
+my $data;
+$data .= "origin: https://www.example.com\n";
+$data .= "x-example-csrf: " . $main::csrf_token . "\n";
+$data .= "cookie: example-at=" . $main::at_opaque_cookie . "; example-csrf=" . $main::csrf_cookie . "\n";
+$data;
+
+--- error_code: 200
+
+--- response_headers eval
+"authorization: Bearer " . $main::at_opaque

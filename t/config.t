@@ -44,22 +44,24 @@ location /t {
 --- error_log
 The cookie_prefix configuration directive was not provided
 
-=== TEST CONFIG_3: NGINX quits when the cookie prefix configured is abonrmally long
-# A 32 character limit is used for the prefix to allow deterministic stack allocation
+=== TEST CONFIG_3: NGINX quits when the cookie prefix configured is abnormally long
+# A 64 character limit is used for the prefix to allow deterministic stack allocation
 
 --- config
 location /t {
     oauth_proxy on;
     oauth_proxy_allow_tokens on;
-    oauth_proxy_cookie_prefix "example-example-example-example-example-example-example-example";
+    oauth_proxy_cookie_prefix "abcdefghijklmnopqrstuvwxyz-0123456789-abcdefghijklmnopqrstuvwxyz-0123456789";
     oauth_proxy_hex_encryption_key "4e4636356d65563e4c73233847503e3b21436e6f7629724950526f4b5e2e4e50";
     oauth_proxy_trusted_web_origin "https://www.example.com";
 }
 
+--- ONLY
+
 --- must_die
 
 --- error_log
-The cookie_prefix configuration directive has a maximum length of 32 characters
+The cookie_prefix configuration directive has a maximum length of 64 characters
 
 === TEST CONFIG_4: NGINX quits when no encryption key is configured
 # The plugin validates required parameters for each path
