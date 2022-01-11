@@ -7,11 +7,11 @@
 ######################################################################################################
 
 cd "$(dirname "${BASH_SOURCE[0]}")"
+cd ../..
 
 #
 # Get the code
 #
-cd ..
 curl -O -L https://github.com/openssl/openssl/archive/refs/tags/OpenSSL_1_1_1m.tar.gz
 if [ $? -ne 0 ]; then
   echo 'Problem encountered downloading OpenSSL source code'
@@ -48,7 +48,7 @@ if [ $? -ne 0 ]; then
 fi
 
 #
-# Deploy it to standard places
+# Deploy header and libraries to standard places so that it is programmable against
 #
 sudo make install
 if [ $? -ne 0 ]; then

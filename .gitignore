@@ -54,8 +54,9 @@ dkms.conf
 # macOS files
 .DS_Store
 
-# CLion files
+# IDE files
 .idea
+.vscode
 
 # Project specific files that are downloaded or built
 nginx-*.tar.gz*

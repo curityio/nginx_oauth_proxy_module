@@ -74,3 +74,7 @@ If required, add `ngx_log_error` statements to C code, then look at test logs at
 The following GitHub repo ensures that encryption is compliant across technologies:
 
 - [Token Handler Encryption Tests](https://github.com/curityio/token-handler-encryption-tests)
+
+## 6. Run NGINX Plus Certification Tests
+
+These require deployment first and are described in the [3-deployment](Deployment documentation).

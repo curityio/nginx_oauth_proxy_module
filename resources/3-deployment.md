@@ -45,9 +45,9 @@ Run the following script to deploy all .so files and run test curl requests with
 ./resources/nginx-opensource/deploy_and_test.sh
 ```
 
-## 4. Test NGINX Plus
+## 4. Run NGINX Plus Certification Tests
 
-TODO: this will run the official tests and will require some prerequisites:
+TODO: this will run the official tests and will require a test account and certificates:
 
 ```bash
 ./resources/nginx-opensource/deploy_and_test.sh

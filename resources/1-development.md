@@ -43,12 +43,13 @@ NGINX_DEBUG=y
 Whenever the code in the module changes, run the make command to rebuild NGINX:
 
 ```bash
-./make
+make
 ```
 
 ## 4. Make Install
 
-Pre-creating the nginx folder for development is recommended, to enable C debugging permissions:
+Pre-creating the nginx folder for development is recommended.\
+This enables nginx to be run as your own user account, which works better later when debugging:
 
 ```bash
 sudo mkdir /usr/local/nginx
@@ -77,8 +78,8 @@ This nginx.conf file is configured to disable the daemon, so that logs are easil
 This project can be debugged in a basic manner in any IDE, such as Visual Studio Code with the C/C++ Extension Pack.\
 To perform printf debugging you can add `ngx_log_error` statements to the C code and then look at NGINX output.
 
-When developing we recommend a more specialist tool such as CLion 2020.2 or newer.\
-Once nginx is running, select  `Run / Attach to Process`, and select the `nginx worker process`.\
+When developing we recommend a more specialist development tool such as CLion 2020.2 or newer.\
+Once nginx is running, select  `Run / Attach to Process`, and choose the `nginx worker process`.\
 Then set breakpoints, after which you can step through code carefully to check memory buffers:
 
 ![Debugger](resources/debugger.png)
