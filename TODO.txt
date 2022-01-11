@@ -1,8 +1,6 @@
 1. Run the official test suite for NGINX Plus
    Gain a better understanding of deployment practices and update questions
+   Try to automate this to some extent and document any manual steps
 
-2. Get the deployment-tests script to run other distros as best I can
-
-3. Run valgrind to ensure no memory leaks
-
-
+2. See if I can resolve current valgrind install problems
+   Then run memory profiling against nginx to ensure no leaks
