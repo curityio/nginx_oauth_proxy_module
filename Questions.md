@@ -40,10 +40,10 @@ DEPLOYMENT
 
 5. What NGINX prerequisite flags are there in total?\
    The module adds this config option, required for SSL to work:
-   --with-http_ssl_module
+   - --with-http_ssl_module
 
    It uses this option when building the module, to point to openssl source code:
-   --with-openssl=
+   - --with-openssl=
 
    The phantom token module mentions a number of others, and warns against --without options.\
    Should I mention all of the same options in this module, or are some of them not relevant?
@@ -71,7 +71,7 @@ IMPLEMENTATION
 3. I have left the secure cookies in the call to the downstream API.\
    Do we think it is cleaner to remove it and just forward the token?
 
-4. Should we return a JSON body in NGINX module error responses?\
+4. Should we return a JSON body in NGINX module error responses?
    For LUA plugins we have returned a JSON error response with a code and message field.\
    - code: unauthorized_request
    - message: The request contained a missing, invalid or expired credential
