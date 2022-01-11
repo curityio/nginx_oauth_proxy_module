@@ -17,7 +17,7 @@ Then run this command from the root folder to execute all NGINX tests from the `
 make test
 ```
 
-## 3. Understand Test Syntax
+## 3. Understand the Nginx Test Framework
 
 See the [OpenResty Testing Documents](https://openresty.gitbooks.io/programming-openresty/content/testing/preparing-tests.html) to understand syntax.\
 Documentation is limited but the [Headers More Repo](https://github.com/openresty/headers-more-nginx-module/tree/master/t) has a good selection of tests to compare against.

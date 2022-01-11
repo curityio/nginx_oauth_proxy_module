@@ -10,11 +10,13 @@ Run the following script to build the NGINX as a dynamic module for multiple fla
 
 A shared libray with a `.so` extension is produced for each Linux distro, in the local `./build` folder:
 
-- alpine.ngx_curity_http_oauth_proxy_module_1.21.3.so
-- debian.buster.ngx_curity_http_oauth_proxy_module_1.21.3.so
-- ubuntu.20.04.ngx_curity_http_oauth_proxy_module_1.21.3.so
+```text
+alpine.ngx_curity_http_oauth_proxy_module_1.21.3.so
+debian.buster.ngx_curity_http_oauth_proxy_module_1.21.3.so
+ubuntu.20.04.ngx_curity_http_oauth_proxy_module_1.21.3.so
+```
 
-## 2. Understand Build Process
+## 2. Troubleshoot Build Failures
 
 A multi-stage Docker build is used, to output built .so files to an `nginx-module-builder` image.\
 To troubleshoot failures, first reduce the Dockerfile to a single distro and comment out failing commands:
@@ -35,10 +37,18 @@ tar xzvf OpenSSL_1_1_1m.tar.gz
 RUN CONFIG_OPTS="--with-openssl=../openssl-OpenSSL_1_1_1m" ./configure && make
 ```
 
-## 3. Deploy a Docker Container
+## 3. Test NGINX Open Source
 
 Run the following script to deploy all .so files and run test curl requests with cookies:
 
 ```bash
-./deployment_tests.sh
+./resources/nginx-opensource/deploy_and_test.sh
+```
+
+## 4. Test NGINX Plus
+
+TODO: this will run the official tests and will require some prerequisites:
+
+```bash
+./resources/nginx-opensource/deploy_and_test.sh
 ```

@@ -2,16 +2,16 @@
 
 ## Prerequisites
 
-A C compiler must be installed that meets the ISO C Standard (C99), such as gcc.
-
+A C compiler must be installed that meets the ISO C Standard (C99), such as gcc.\
+This is likely to be installed by default on macOS.
 
 ## 1. Intellisense Setup
 
-Development IDEs expect to find OpenSSL headers in system locations, in order for intellisense to work.\
+Development IDEs expect to find OpenSSL headers in system locations.\
 To enable this you can build the OpenSSL code from source: 
 
 ```bash
-./resources/openssl_dev_setup.sh
+./resources/localhost/openssl_install.sh
 ```
 
 Standard system locations will then be updated, for an improved developer experience:
@@ -52,7 +52,7 @@ Pre-creating the nginx folder for development is recommended, to enable C debugg
 
 ```bash
 sudo mkdir /usr/local/nginx
-sudo chown myusername /usr/local/nginx
+sudo chown yourusername /usr/local/nginx
 ```
 
 Then deploy a working nginx system to the above location with this command:
@@ -66,7 +66,7 @@ make install
 Then deploy the development `nginx.conf` file and start NGINX locally:
 
 ```bash
-cp ./resources/dev_nginx.conf /usr/local/nginx/conf/nginx.conf
+cp ./resources/localhost/nginx.conf /usr/local/nginx/conf/nginx.conf
 /usr/local/nginx/sbin/nginx
 ```
 

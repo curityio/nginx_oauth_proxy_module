@@ -1,10 +1,8 @@
 1. Run the official test suite for NGINX Plus
-   Gain a better understanding of deployment practices
+   Gain a better understanding of deployment practices and update questions
 
-2. Run valgrind to ensure no memory leaks
+2. Get the deployment-tests script to run other distros as best I can
 
-3. Final tests:
-- Multiple cookie headers test with HTTP/2
-- Use a 64 char cookie prefix to test boundaries
+3. Run valgrind to ensure no memory leaks
 
-4. Get the deployment-tests script to run other distros as best I can
+

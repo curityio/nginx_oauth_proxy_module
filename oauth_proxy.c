@@ -195,8 +195,6 @@ static ngx_int_t validate_configuration(ngx_conf_t *config, const oauth_proxy_co
     ngx_str_t trusted_web_origin;
     ngx_uint_t i = 0;
 
-    ngx_conf_log_error(NGX_LOG_WARN, config, 0, "*** DEBUG2");
-
     if (module_location_config != NULL && module_location_config->enabled)
     {
         if (module_location_config->cookie_prefix.len == 0)
@@ -312,7 +310,7 @@ static ngx_int_t handler(ngx_http_request_t *request)
         }
     }
 
-    // Try to decrypt the access token cookie to get the access token
+    // This returns 0 when there is a single cookie header or > 0 when there are multiple cookie headers
     ret_code = get_cookie(request, &at_cookie_encrypted_hex, &module_location_config->cookie_prefix, (u_char *)"-at");
     if (ret_code == NGX_DECLINED)
     {
@@ -321,13 +319,7 @@ static ngx_int_t handler(ngx_http_request_t *request)
         return NGX_HTTP_UNAUTHORIZED;
     }
 
-    if (ret_code != NGX_OK)
-    {
-        add_cors_error_headers(request, web_origin);
-        ngx_log_error(NGX_LOG_WARN, request->connection->log, 0, "AT cookie read problem encountered: %d", ret_code);
-        return NGX_HTTP_UNAUTHORIZED;
-    }
-
+    // Try to decrypt the access token cookie to get the access token
     ret_code = oauth_proxy_decrypt(request, &module_location_config->hex_encryption_key, &at_cookie_encrypted_hex, &access_token);
     if (ret_code != NGX_OK)
     {
@@ -379,20 +371,14 @@ static ngx_int_t apply_xsrf_checks(ngx_http_request_t *request, const oauth_prox
     ngx_str_t *csrf_header_value = NULL;
     ngx_str_t csrf_token;
     ngx_int_t ret_code = NGX_OK;
-    
+
+    // This returns 0 when there is a single cookie header or > 0 when there are multiple cookie headers
     ret_code = get_cookie(request, &csrf_cookie_encrypted_hex, &config->cookie_prefix, (u_char *)"-csrf");
     if (ret_code == NGX_DECLINED)
     {
         add_cors_error_headers(request, web_origin);
         ngx_log_error(NGX_LOG_WARN, request->connection->log, 0, "No CSRF cookie was found in the incoming request");
         return NGX_HTTP_UNAUTHORIZED;
-    }
-
-    if (ret_code != NGX_OK)
-    {
-        add_cors_error_headers(request, web_origin);
-        ngx_log_error(NGX_LOG_WARN, request->connection->log, 0, "CSRF cookie read problem encountered: %d", ret_code);
-        return ret_code;
     }
 
     ngx_memcpy(csrf_header_name, "x-", 2);
