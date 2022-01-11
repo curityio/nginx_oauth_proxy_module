@@ -1,13 +1,11 @@
 TODO
 -----
-1. CLion to attach to nginx - try using latest instructions, then add a screenshot to docs
+1. Get the docker-compose script to run as many NGINX distros as I can
 
-2. Run valgrind and checking for memory leaks
-
-2. Run the official test suite for NGINX Plus
-
-4. Get the deployment test script to test all dynamic modules
-
-5. Final tests:
+2. Final tests:
 - Multiple cookie headers test with HTTP/2
 - Use a 64 char cookie prefix to test boundaries
+
+3. Run the official test suite for NGINX Plus
+
+4. Run valgrind and check for memory leaks

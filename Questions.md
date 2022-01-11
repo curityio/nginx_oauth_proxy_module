@@ -31,29 +31,29 @@ DEPLOYMENT
 3. What are the most common customer deployment models?\
    I would expect most of them to download an image such as 1.21.5-alpine, then copy in the module .so file.\
    Do some of them build NGINX from source?\
-   Is NGINX Plus dominant, eg I know this has better admin options?
+   I'm assuming that NGINX Plus is the main option used, due to better admin options etc?
  
 4. Right now I am using nginx 1.21.3 only, and 1.21.5 is the latest version.\
    How do we decide which specific versions to support?\
    My preference is just to start with the current latest for the initial release.\
    Are there official NGINX download links for each of the distros we support?
 
-5. What NGINX prerequisite flags are there in total?\
+5. What NGINX prerequisite flags are there in total that I need to document?\
    The module adds this config option, required for SSL to work:
    - --with-http_ssl_module
 
    It uses this option when building the module, to point to openssl source code:
    - --with-openssl=
 
-   The phantom token module mentions a number of others, and warns against --without options.\
+   The phantom token module mentions a number of `--without` options that are not compatible.\
    Should I mention all of the same options in this module, or are some of them not relevant?
 
-6. Do we think there are any library hell risks?\
-   Eg we build with openssl-1.1.1m and a customer NGINX container has openssl-1.1.1k?\
-   Is there anything we do to deal with this for other dependencies.
+6. Do we think there are any library dependency risks?\
+   Eg we build against openssl-1.1.1m and a customer NGINX container uses openssl-1.1.1k?\
+   Is there anything we do to deal with this for other dependencies?
 
 7. Jenkins and NGINX online deployment\
-   I guess we will deal with this once other points have been dealt with?\
+   I guess we will configure official builds in Jenkins once other details have been dealt with?\
    Worth discussing any special requirements here?
 
 IMPLEMENTATION
@@ -65,26 +65,27 @@ IMPLEMENTATION
    https://github.com/curityio/token-handler-encryption-tests
 
 2. Right now all of the token handler work uses hex encoding for encrypted cookies.\
-   I should update this to base64 (4 characters for every 3 bytes).\
+   I plan to update this to base64 (4 characters for every 3 bytes).\
    It is a more efficient wire format, and cookie size can be an issue.
 
-3. I have left the secure cookies in the call to the downstream API.\
-   Do we think it is cleaner to remove it and just forward the token?
+3. I have left secure cookies in the call to the downstream API.\
+   Do we think it is cleaner to remove them and only forward the token?
 
 4. Should we return a JSON body in NGINX module error responses?\
-   For LUA plugins we have returned a JSON error response with a code and message field:
+   For LUA plugins we have returned a JSON error response with a code and message field.\
+   Mostly we return a generic 401 message: 
    - code: unauthorized_request
    - message: The request contained a missing, invalid or expired credential
 
    I would prefer to do this since it gives us a better mechanism for informing the client.\
    Currently the demo SPA client just reads HTTP status codes though.
 
-5. Phantom token module enhancements\
-   Pre flight OPTIONS requests should be ignored, since they can never have aan Authorization header.\
+5. Phantom token module enhancements.\
+   Pre flight OPTIONS requests should be ignored, since they can never have an Authorization header.\
    Error responses due to expiry have an empty body and a code / message in the www-authenticate response header.\
    The SPA should be able to read these details.\
-   We could do this via CORS expose-headers capabilities, or by returning a JSON body?\
-   I like the JSON body option, but what do other people think?\
+   Would you prefer to use CORS expose-headers capabilities, or also return a JSON body?\
+   My thinking is that a JSON response could return the same details as the www-authenticate header.\
    https://stackoverflow.com/questions/33672689/javascript-jquery-can%C2%B4t-get-www-authenticate-response-header
 
 6. Docs
@@ -92,4 +93,4 @@ IMPLEMENTATION
    I am assuming that most readers will just want to grab a dynamic module and plug it in.\
    Meanwhile the resources folder has implementation details, which most users won't care about.\
    There was a lot of head scratching to figure this out, so I've split it into a few markdown files.\
-   Let me know if not happy with this format.
+   Let me know if you are not happy with this format.

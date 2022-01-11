@@ -195,6 +195,8 @@ static ngx_int_t validate_configuration(ngx_conf_t *config, const oauth_proxy_co
     ngx_str_t trusted_web_origin;
     ngx_uint_t i = 0;
 
+    ngx_conf_log_error(NGX_LOG_WARN, config, 0, "*** DEBUG2");
+
     if (module_location_config != NULL && module_location_config->enabled)
     {
         if (module_location_config->cookie_prefix.len == 0)
