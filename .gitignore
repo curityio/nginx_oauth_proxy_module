@@ -50,3 +50,18 @@ modules.order
 Module.symvers
 Mkfile.old
 dkms.conf
+
+# macOS files
+.DS_Store
+
+# CLion files
+.idea
+
+# Project specific files that are downloaded or built
+nginx-*.tar.gz*
+nginx-*/
+OpenSSL*.tar.gz*
+openssl-*
+t/servroot
+.build.info
+build
