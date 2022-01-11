@@ -6,7 +6,7 @@ Development IDEs expect to find OpenSSL headers in system locations, in order fo
 To enable this you can build the OpenSSL code from source: 
 
 ```bash
-./development/openssl_setup.sh
+./resources/openssl_dev_setup.sh
 ```
 
 Standard system locations will then be updated, for an improved developer experience:
@@ -56,7 +56,7 @@ The `/usr/local/nginx` location will then be updated with a full NGINX installat
 Deploy the development `nginx.conf` file, then start NGINX locally:
 
 ```bash
-sudo cp ./development/dev_nginx.conf /usr/local/nginx/conf/
+sudo cp ./resources/dev_nginx.conf /usr/local/nginx/conf/
 sudo /usr/local/nginx/sbin/nginx
 ```
 
@@ -97,9 +97,11 @@ Calls are routed to an internet mockbin API that echoes headers and shows the fo
 }
 ```
 
-Failed requests due to invalid cookies etc return CORS headers so that the SPA can read the response:
+Error responses that a valid web origin needs to read are returned along with these CORS headers:
 
 ```text
+Access-Control-Allow-Origin: https://www.example.com
+Access-Control-Allow-Credentials: true
 ```
 
 ## 7. Debugging
@@ -116,6 +118,6 @@ SCREENSHOT
 Alternatively you can use a simple IDE such as Visual Studio Code with the C/C++ Extension Pack.\
 To perform simple printf debugging you can add `ngx_log_error` to the C code and then look at NGINX output. 
 
-## 8. Check for Memory Leaks
+## 8. Memory Leak Prevention
 
 TODO: valgrind
