@@ -246,7 +246,7 @@ It is likely to work with newer versions of NGINX, but only the above have been 
 
 Pre-built binaries of this module are provided for the following versions of NGINX.\
 To use the module, download the .so file and deploy it to the modules folder of your NGINX system.\
-This [docker-compose file](./resources/docker=compose.yaml) has some deployment examples.
+This [docker-compose file](./resources/docker-compose.yaml) has some deployment examples.
 
 |                                   | NGINX 1.19.5 / NGINX Plus R23 | NGINX 1.19.10 / NGINX Plus R24    | NGINX 1.21.3 / NGINX Plus R25 |
 | ----------------------------------|:-----------------------------:|:---------------------------------:|:---------------------------------:|
