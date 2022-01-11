@@ -4,10 +4,10 @@ TODO
 
 2. Run valgrind and checking for memory leaks
 
-3. Get the deployment test script to test all dynamic modules
+2. Run the official test suite for NGINX Plus
 
-4. Run the official test suite for NGINX Plus
+4. Get the deployment test script to test all dynamic modules
 
 5. Final tests:
-- Multiple cookie headers test (HTTP/2)
+- Multiple cookie headers test with HTTP/2
 - Use a 64 char cookie prefix to test boundaries
