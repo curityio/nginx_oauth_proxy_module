@@ -72,26 +72,29 @@ cp ./resources/dev_nginx.conf /usr/local/nginx/conf/nginx.conf
 
 This nginx.conf file is configured to disable the daemon, so that logs are easily viewable.
 
-## 6. Debug 
+## 6. Debug Code
 
-This project can be debugged in CLion 2020.2 or newer by opening its folder.\
+This project can be debugged in a basic manner in any IDE, such as Visual Studio Code with the C/C++ Extension Pack.\
+To perform printf debugging you can add `ngx_log_error` statements to the C code and then look at NGINX output.
+
+When developing we recommend a more specialist tool such as CLion 2020.2 or newer.\
 Once nginx is running, select  `Run / Attach to Process`, and select the `nginx worker process`.\
-Then set breakpoints, after which you can step through code to look at cookie and token values:
+Then set breakpoints, after which you can step through code carefully to check memory buffers:
 
 ![Debugger](resources/debugger.png)
 
-You can use an alternative IDE of your choice if preferred, such as Visual Studio Code with the C/C++ Extension Pack.\
-To perform printf debugging you can add `ngx_log_error` statements to the C code and then look at NGINX output. 
-
 ## 7. Act as an SPA Client
 
-You can run curl requests against the nginx system in the same manner as the SPA will:
+You can run curl requests against the nginx system in the same manner as the SPA:
 
 ```bash
 AT_COOKIE='093d3fb879767f6ec2b1e7e359040fe6ba875734ee043c5cc484d3da8963a351e9aba1c5e273f3d1ea2914f83836fa434474d1720b3040f5f7237f34536b7389'
-curl -X GET http://localhost:8080/api \
+CSRF_COOKIE='f61b300a79018b4b94f480086d63395148084af1f20c3e474623e60f34a181656b3a54725c1b4ddaeec9171f0398bde8c6c1e0e12d90bdb13397bf24678cd17a230a3df8e1771f9992e3bf2d6567ad920e1c25dc5e3e015679b5e673'
+CSRF_HEADER='pQguFsD6hFjnyYjaeC5KyijcWS6AvkJHiUmY7dLUsuTKsLAITLiJHVqsCdQpaGYO'
+curl -X POST http://localhost:8080/api \
 -H "origin: https://www.example.com" \
--H "cookie: example-at=$AT_COOKIE"
+-H "x-example-csrf: $CSRF_HEADER" \
+-H "cookie: example-at=$AT_COOKIE; example-csrf=$CSRF_COOKIE"
 ```
 
 The development target API is an internet mockbin API that echoes headers and shows the forwarded token:

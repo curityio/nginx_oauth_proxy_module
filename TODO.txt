@@ -1,11 +1,10 @@
-TODO
------
-1. Get the docker-compose script to run as many NGINX distros as I can
+1. Run the official test suite for NGINX Plus
+   Gain a better understanding of deployment practices
 
-2. Final tests:
+2. Run valgrind to ensure no memory leaks
+
+3. Final tests:
 - Multiple cookie headers test with HTTP/2
 - Use a 64 char cookie prefix to test boundaries
 
-3. Run the official test suite for NGINX Plus
-
-4. Run valgrind and check for memory leaks
+4. Get the deployment-tests script to run other distros as best I can
