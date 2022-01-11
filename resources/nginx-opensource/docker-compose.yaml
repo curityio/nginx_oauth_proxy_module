@@ -1,0 +1,31 @@
+##########################################################################################
+# Used for basic testing that the dynamic modules work when deployed to a Docker container
+##########################################################################################
+
+version: '3.8'
+services:
+
+  # ubuntu-18
+
+  # ubuntu-20
+
+  # centos7
+
+  # centos8
+
+  # debian:stretch
+
+  # debian:buster
+
+  # amazonlinux:1
+
+  # amazonlinux:2
+
+  # There only seems to be a single open source distro, so I may simplify this deployment
+  nginx-alpine:
+    image: nginx:1.21.3-alpine
+    ports:
+    - 8089:8080
+    volumes:
+    - ./nginx.conf:/etc/nginx/nginx.conf
+    - ../../build/alpine.ngx_curity_http_oauth_proxy_module_1.21.3.so:/usr/lib/nginx/modules/ngx_curity_http_oauth_proxy_module.so

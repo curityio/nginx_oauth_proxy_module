@@ -59,7 +59,7 @@ dkms.conf
 
 # Project specific files that are downloaded or built
 nginx-*.tar.gz*
-nginx-*/
+/nginx-*
 OpenSSL*.tar.gz*
 openssl-*
 t/servroot
