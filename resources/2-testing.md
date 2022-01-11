@@ -24,31 +24,24 @@ Documentation is limited but the [Headers More Repo](https://github.com/openrest
 
 ## 4. Understand Test Behavior
 
-Each test spins up an instance of NGINX under the `t/servroot` folder.\
-You can look at `t/servroot/conf/nginx.conf` to see the deployed configuration for the test.
+Each test spins up an instance of NGINX under the `t/servroot` folder which runs on the test port of 1984.\
+Tests that are expected to succeed use proxy_pass to route to a target that runs after the module and simply returns:
 
-
-Tests that fail during startup can be expressed like this.\
-In this case no HTTP requests are needed:
-
-```text
---- config
+```nginx
 location /t {
     oauth_proxy on;
-    ...
+    oauth_proxy_allow_tokens off;
+    oauth_proxy_cookie_prefix "mycompany-myproduct";
+    oauth_proxy_hex_encryption_key "4e4636356d65563e4c73233847503e3b21436e6f7629724950526f4b5e2e4e50";
+    oauth_proxy_trusted_web_origin "https://www.example.com";
+    
+    proxy_pass http://localhost:1984/target;
 }
-
---- must_die
-
---- error_log
-Expected error log text
+location /target {
+    add_header 'authorization' $http_authorization;
+    return 200;
+}
 ```
-
-Tests that succeed send a request that routes through to an NGINX path that returns success.\
-Note that for Test::Nginx uses the test path of 1984:
-
-Tests that fail 
-
 
 ## 4. Troubleshoot Failed Tests
 
@@ -59,7 +52,7 @@ test: all
 	PATH=$(NGINX_SRC_DIR)/objs:$$PATH prove -v -f t/http_get.t
 ```
 
-Then add the `ONLY` directive to the test that is failing:
+Then add the `ONLY` directive to limit test execution to the single test that is failing:
 
 ```text
 --- config
@@ -73,6 +66,7 @@ GET /t
 --- ONLY
 ```
 
+View the `t/servroot/conf/nginx.conf` file to see the deployed configuration for a test.\
 If required, add `ngx_log_error` statements to C code, then look at test logs at `t/servroot/logs/error.log`.
 
 ## 5. Testing Interoperability

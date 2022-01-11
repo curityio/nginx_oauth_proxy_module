@@ -2,13 +2,14 @@
 
 ## 1. Intellisense Setup
 
-To enable the development IDE to find OpenSSL headers I first build OpenSSL from source: 
+Development IDEs expect to find OpenSSL headers in system locations, in order for intellisense to work.\
+To enable this you can build the OpenSSL code from source: 
 
 ```bash
 ./development/openssl_setup.sh
 ```
 
-The following locations will then be updated, so that development tools can find headers:
+Standard system locations will then be updated, for an improved developer experience:
 
 ```text
 /usr/local/include/openssl/*
@@ -19,13 +20,13 @@ The following locations will then be updated, so that development tools can find
 
 ## 2. Configure
 
-Run the base configure script as follows, to download NGINX source and point it to the OpenSSL location:
+Then run the base configure script as follows, to download NGINX source and point it to the OpenSSL location:
 
 ```bash
 CONFIG_OPTS='--with-openssl=../openssl-OpenSSL_1_1_1m' ./configure 
 ```
 
-Select these options to enable Perl tests to run and to enable debugging of the C code:
+Select these options to enable Perl tests to run and to enable debugging of the C code in an IDE such as CLion:
 
 ```text
 DYNAMIC_MODULE=n
@@ -34,7 +35,7 @@ NGINX_DEBUG=y
 
 ## 3. Make
 
-Next run the make command to build the NGINX C code whenever it changes:
+Whenever the code in the module changes, run the make command to rebuild NGINX:
 
 ```bash
 ./make
@@ -42,7 +43,7 @@ Next run the make command to build the NGINX C code whenever it changes:
 
 ## 4. Make Install
 
-Next run this to deploy the built NGINX system locally, along with the OAuth proxy module:
+Next run this to deploy the built NGINX system locally:
 
 ```bash
 sudo make install
@@ -63,7 +64,7 @@ This nginx.conf file disables the daemon and runs NGINX interactively, so that l
 
 ## 6. Act as an SPA Client
 
-During development, run curl requests to represent the SPA, which will be routed to a mockbin target API:
+During development, run curl requests in the same way as the SPA:
 
 ```bash
 AT_COOKIE='093d3fb879767f6ec2b1e7e359040fe6ba875734ee043c5cc484d3da8963a351e9aba1c5e273f3d1ea2914f83836fa434474d1720b3040f5f7237f34536b7389'
@@ -82,8 +83,7 @@ curl -X POST http://localhost:8080/api \
 -H "cookie: example-at=$AT_COOKIE; example-csrf=$CSRF_COOKIE"
 ```
 
-Failed requests return a JSON error payload and also CORS headers so that the SPA can read the response.\
-Successful requests are routed through to a mockbin API that echoes headers, so that we can view the forwarded token:
+Calls are routed to an internet mockbin API that echoes headers and shows the forwarded token:
 
 ```json
 {
@@ -97,6 +97,11 @@ Successful requests are routed through to a mockbin API that echoes headers, so 
 }
 ```
 
+Failed requests due to invalid cookies etc return CORS headers so that the SPA can read the response:
+
+```text
+```
+
 ## 7. Debugging
 
 The code can be imported into CLion 2020.2 or newer as a Makefile project.\ 
@@ -108,8 +113,8 @@ Then send curl requests to NGINX and step through the module's code:
 
 SCREENSHOT
 
-Alternatively you can start with Visual Studio Code and install the C/C++ Extension Pack.\
-Then use `ngx_log_error` calls to do simple printf debugging. 
+Alternatively you can use a simple IDE such as Visual Studio Code with the C/C++ Extension Pack.\
+To perform simple printf debugging you can add `ngx_log_error` to the C code and then look at NGINX output. 
 
 ## 8. Check for Memory Leaks
 

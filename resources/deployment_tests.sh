@@ -1,8 +1,8 @@
 #!/bin/bash
 
-#############################################################################################
-# Uses Docker Compose to deploy the dynamic module .so file, then run a couple of basic tests
-#############################################################################################
+#######################################################################################################
+# Uses Docker Compose to deploy each NGINX container and its .so file, then run a couple of basic tests
+#######################################################################################################
 
 cd "$(dirname "${BASH_SOURCE[0]}")"
 NGINX_BASE_URL='http://localhost:8080'
@@ -20,6 +20,8 @@ echo 'Waiting for NGINX to come up ...'
 while [ "$(curl -s -o /dev/null -w ''%{http_code}'' "$NGINX_BASE_URL")" != "200" ]; do
   sleep 2s
 done
+
+# TODO: Put this in a for loop with ports 8081-8089 for the 9 distros supported
 
 #
 # Make a GET request to the API via the OAuth proxy module with a secure cookie

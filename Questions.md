@@ -1,23 +1,93 @@
-Answers to these questions will be carried forward to all token handler resources:
+REVIEW PROCESS
+--------------
+1. It is probably best to start with a call to discuss questions that any of us have
 
-1. Should we use base64 as the wire format for encrypted data?
-   Currently we use hex for encrypted payloads.
+2. Reviewers should cast their eye over the NGINX code, tests, deployment and docs
+   Add as many comments as you like to PRs or send me info, on what is missing
 
-2. Should we return a JSON body in error responses, with an error code?
-   Currently we use empty responses in the same manner as phantom token module.
-   We have verified that it is sufficient for the SPA to read error status codes.
+3. I will deal with all of the review feedback points and update a number of related PME resources
 
-3. Do we need pcre and zlib dependencies in the Docker build?
+4. I will also be writing a whitepaper on SPA security, to cover the bigger picture
+   Reviewers might find this interesting as background on the overall web security goal
 
-4. Do we want to make the OpenSSL version configurable?
-   For now I have followed the pcre and zlib deployment approach
+DEPLOYMENT
+----------
+1. I have treated OpenSSL as the same type of dependency as pcre and zlib.
+   Do we feel this is the right approach, or should the customer choose an OpenSSL version?
+   I think the right approach is for us to dictate it, and currently we use the latest OpenSSL 1.1.1m.
+   I guess OpenSSL 3.x is best avoided due to interoperability issues?
+   https://github.com/openssl/openssl/tags
 
-5. Is my approach of using OpenSSL in the Dockerfile correct?
-   I need to look at the files in each distro and run some of them
+2. I have used the same Dockerfile dependencies as the phantom token module.
+   Is this right and do we need pcre and zlib?
+   Everything builds OK but is some of it redundant?
+   I have added some extra options to the Dockerfile, eg these were added to centos7:
+   - wget perl tar gzip
+   Note that I have updated the pcre download URL since the one in the phantom token module no longer exists:
+   - https://ftp.pcre.org/pub/pcre/pcre-8.44.tar.gz
+   - https://sourceforge.net/projects/pcre/files/pcre/8.44/pcre-8.44.tar.gz
+ 
+3. What are the most common customer deployment models?
+   I would expect most of them to download an image such as 1.21.5-alpine, then copy in the module .so file.
+   Do some of them build NGINX from source?
+   Is NGINX Plus dominant, eg I know this has better admin options?
+ 
+4. Right now I am using nginx 1.21.3 only, and 1.21.5 is the latest version.
+   How do we decide which specific versions to support?
+   My preference is just to start with the current latest for the initial release.
+   Are there official NGINX download links for each of the distros we support?
 
-6. I updated the download location of the PCRE library from ftp.pcre.org.
-   The previously referenced one no longer exists.
+5. What NGINX prerequisite flags are there in total?
+   The module adds this config option, required for SSL to work:
+   --with-http_ssl_module
+   It uses this option when building the module:
+   --with-openssl=<source location>
 
-7. Shall I update to the latest NGINX release of 1.25?
+   The phantom token module mentions a number of others, and warns against --without options.
+   Should I mention all of the same options in this module, or are some of them not relevant?
 
-8. How do I test all built versions, since some of them do not match the release versions?
+6. Do we think there are any library hell risks?
+   Eg we build with openssl-1.1.1m and a customer NGINX container has openssl-1.1.1k?
+   Is there anything we do to deal with this for other dependencies.
+
+7. Jenkins and NGINX online deployment
+   I guess we will deal with this once other points have been dealt with?
+   Worth discussing any special requirements here?
+
+IMPLEMENTATION
+--------------
+1. Cookie encryption uses AES256-GCM to avoid disclosing token details.
+   Politically it is good to be seen to use good encryption, though it does not prevent cookie replay.
+   This is mainstream and easy to explain, as an up to date authenticated symmetric algorithm.
+   The below repo uses it in a few different technologies:
+   https://github.com/curityio/token-handler-encryption-tests
+
+2. Right now all of the token handler work uses hex encoding for encrypted cookies.
+   I should update this to base64 (4 characters for every 3 bytes).
+   It is a more efficient wire format, and cookie size can be an issue.
+
+3. I have left the secure cookies in the call to the downstream API.
+   Do we think it is cleaner to remove it and just forward the token?
+
+4. Should we return a JSON body in NGINX module error responses?
+   For LUA plugins we have returned a JSON error response with a code and message field.
+   - code: unauthorized_request
+   - message: The request contained a missing, invalid or expired credential
+
+   I would prefer to do this since it gives us a better mechanism for informing the client.
+   Currently the demo SPA client just reads HTTP status codes though.
+
+5. Phantom token module enhancements
+   Pre flight OPTIONS requests should be ignored, since they can never have aan Authorization header.
+   Error responses due to expiry have an empty body and a code / message in the www-authenticate response header.
+   The SPA should be able to read these details.
+   We could do this via CORS expose-headers capabilities, or by returning a JSON body?
+   I like the JSON body option, but what do other people think?
+   https://stackoverflow.com/questions/33672689/javascript-jquery-can%C2%B4t-get-www-authenticate-response-header
+
+6. Docs
+   I have made the main README focused on using the module and understanding what it does.
+   I am assuming that most readers will just want to grab a dynamic module and plug it in.
+   Meanwhile the resources folder has implementation details, which most users won't care about.
+   There was a lot of head scratching to figure this out, so I've split it into a few markdown files.
+   Let me know if not happy with this format.

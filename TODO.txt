@@ -1,39 +1,13 @@
 TODO
-----
-1. Finish deployment related docs and proof read
-   Add the table on the home page
-
-2. Final tests:
-- Multiple cookie headers test (HTTP/2)
-- 64 char cookie prefix
-
-3. Update open questions
-
-4. Merge to main
-
-5. Post on channel by midday Tuesday
-
-FINAL
 -----
 1. CLion to attach to nginx - try using latest instructions, then add a screenshot to docs
 
-2. Run the official test suite
+2. Run valgrind and checking for memory leaks
 
-3. valgrind and checking for memory leaks
+3. Get the deployment test script to test all dynamic modules
 
-PEOPLE COMMUNICATION
---------------------
-On the OSS channel, tell people this is coming, but not finished yet and raise interesting points:
+4. Run the official test suite for NGINX Plus
 
-- Set the scene that customers put 2 plugins in front of APIs and use them from SPAs
-  There is a high level angle of a simple experience for customers, along with some low level details from us
-
-- Use of authenticated AES256 meaning if a man in the middle tampers with bytes there is a decryption error and message rejected
-  OpenSSL and how best to deal with it from a deployment viewpoint: link to Zmartzone example
-
-- Phantom Token Plugin update for SPAs (eg OPTIONS / response headers)
-  https://stackoverflow.com/questions/33672689/javascript-jquery-can%C2%B4t-get-www-authenticate-response-header
-
-- End-to-End error experience for SPAs
-  It feels a bit cludgy asking SPAs to read a header for some error responses and not others
-  My thoughts are to follow standards but also return a JSON body with a code and message payload
+5. Final tests:
+- Multiple cookie headers test (HTTP/2)
+- Use a 64 char cookie prefix to test boundaries
