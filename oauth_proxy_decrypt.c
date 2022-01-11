@@ -135,6 +135,7 @@ ngx_int_t oauth_proxy_decrypt(ngx_http_request_t *request, const ngx_str_t *encr
 
     if (ret_code == NGX_OK)
     {
+        // With this algorithm, this method will read precisely 32 bytes from the 4th parameter and 12 bytes from the 5th
         evp_result = EVP_DecryptInit_ex(ctx, EVP_aes_256_gcm(), NULL, encryption_key_bytes, iv_bytes);
         if (evp_result == 0)
         {
@@ -159,6 +160,7 @@ ngx_int_t oauth_proxy_decrypt(ngx_http_request_t *request, const ngx_str_t *encr
 
     if (ret_code == NGX_OK)
     {
+        // With this algorithm, this method will read precisely 16 bytes from the 4th parameter
         evp_result = EVP_CIPHER_CTX_ctrl(ctx, EVP_CTRL_GCM_SET_TAG, GCM_TAG_SIZE, tag_bytes);
         if (evp_result == 0)
         {
