@@ -71,8 +71,8 @@ IMPLEMENTATION
 3. I have left the secure cookies in the call to the downstream API.\
    Do we think it is cleaner to remove it and just forward the token?
 
-4. Should we return a JSON body in NGINX module error responses?
-   For LUA plugins we have returned a JSON error response with a code and message field.\
+4. Should we return a JSON body in NGINX module error responses?\
+   For LUA plugins we have returned a JSON error response with a code and message field:
    - code: unauthorized_request
    - message: The request contained a missing, invalid or expired credential
 
