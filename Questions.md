@@ -23,6 +23,7 @@ DEPLOYMENT
    Everything builds OK but is some of it redundant?\
    I have added some extra options to the Dockerfile, eg these were added to centos7:
    - wget perl tar gzip
+
    Note that I have updated the pcre download URL since the one in the phantom token module no longer exists:
    - https://ftp.pcre.org/pub/pcre/pcre-8.44.tar.gz
    - https://sourceforge.net/projects/pcre/files/pcre/8.44/pcre-8.44.tar.gz
@@ -40,8 +41,9 @@ DEPLOYMENT
 5. What NGINX prerequisite flags are there in total?\
    The module adds this config option, required for SSL to work:
    --with-http_ssl_module
-   It uses this option when building the module:
-   --with-openssl=<source location>
+
+   It uses this option when building the module, to point to openssl source code:
+   --with-openssl=
 
    The phantom token module mentions a number of others, and warns against --without options.\
    Should I mention all of the same options in this module, or are some of them not relevant?
@@ -70,7 +72,7 @@ IMPLEMENTATION
    Do we think it is cleaner to remove it and just forward the token?
 
 4. Should we return a JSON body in NGINX module error responses?\
-   For LUA plugins we have returned a JSON error response with a code and message field.
+   For LUA plugins we have returned a JSON error response with a code and message field.\
    - code: unauthorized_request
    - message: The request contained a missing, invalid or expired credential
 
