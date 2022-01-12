@@ -5,48 +5,10 @@ REVIEW PROCESS
 2. Reviewers should cast their eye over the NGINX code, tests, deployment and docs.\
    Add as many comments as you like to PRs or send me info, on what is missing
 
-3. I will deal with all of the review feedback points and update a number of related PME resources
+3. I will deal with all of the review feedback points and also update related PME resources
 
-4. I will also be writing a whitepaper on SPA security, to cover the bigger picture\
+4. I am also writing a whitepaper on SPA security, to cover the bigger picture\
    Reviewers might find this interesting as background on the overall web security goal
-
-IMPLEMENTATION
---------------
-1. Cookie encryption uses AES256-GCM to avoid disclosing token details.\
-   Politically it is good to be seen to use good encryption, though it does not prevent cookie replay.\
-   This is mainstream and easy to explain, as an up to date authenticated symmetric algorithm.\
-   The below repo uses it in a few different technologies:\
-   https://github.com/curityio/token-handler-encryption-tests
-
-2. Right now all of the token handler work uses hex encoding for encrypted cookies.\
-   I plan to update this to base64 (4 characters for every 3 bytes rather than 6 characters).\
-   It is a more efficient wire format, and cookie size can be an issue.
-
-3. I have left secure cookies in the call to the downstream API.\
-   Do we think it is cleaner to remove them and only forward the token?
-
-4. Should we return a JSON body in NGINX module error responses?\
-   For LUA plugins we have returned a JSON error response with a code and message field.\
-   Mostly we return a generic 401 message: 
-   - code: unauthorized_request
-   - message: The request contained a missing, invalid or expired credential
-
-   I would prefer to do this since it gives us a better mechanism for informing the client, eg of session expiry or other causes.\
-   Currently the demo SPA client just reads HTTP status codes and presents error responses in a basic way.
-
-5. Phantom token module and SPAs.\
-   Pre flight OPTIONS requests should be ignored, since they can never have an Authorization header.\
-   Error responses due to expiry have an empty body and a code / message in the www-authenticate response header.\
-   The SPA should be able to read these details.\
-   Would you prefer to use CORS expose-headers capabilities, or also return a JSON body?\
-   My thinking is that a JSON response could return the same details as the www-authenticate header.\
-   https://stackoverflow.com/questions/33672689/javascript-jquery-can%C2%B4t-get-www-authenticate-response-header
-
-6. Docs
-   I have made the main README focused on using the module and understanding what it does.\
-   Meanwhile the resources folder has implementation details, which most users won't care about.\
-   There was a lot of head scratching to figure this out, so I've split it into a few markdown files.\
-   Let me know if you are not happy with this format.
 
 DEPLOYMENT
 ----------
@@ -95,3 +57,39 @@ DEPLOYMENT
 7. Certification and release process.\
    How do we manage this for the phantom token module - is there a build artifact that manages it?\
    Or do I need to script this up and get an NGINX+ trial accoint?
+
+IMPLEMENTATION
+--------------
+1. Cookie encryption uses AES256-GCM to avoid disclosing token details.\
+   Politically it is good to be seen to use good encryption, though it does not prevent cookie replay.\
+   This is mainstream and easy to explain, as an up to date authenticated symmetric algorithm.\
+   The below repo uses it in a few different technologies:\
+   https://github.com/curityio/token-handler-encryption-tests
+
+2. Right now all of the token handler work uses hex encoding for encrypted cookies.\
+   I was thinking this should be updated to base64url encoded (4 characters for every 3 bytes), since cookie size is an issue.\
+   Base64 can have some characters that are not valid for cookies, and this is in line with JWEs and RFC7515.
+
+3. Should we return a JSON body in NGINX module error responses?\
+   For LUA plugins we have returned a JSON error response with a code and message field.\
+   Mostly we return a generic 401 message: 
+   - code: unauthorized_request
+   - message: The request contained a missing, invalid or expired credential
+
+   I would prefer to do this since it gives us a better mechanism for informing the client, eg of session expiry or other causes.\
+   Currently the demo SPA client just reads HTTP status codes and presents error responses in a basic way.
+
+4. Phantom token module and SPAs.\
+   Pre flight OPTIONS requests should be ignored, since they can never have an Authorization header.\
+   Error responses due to expiry have an empty body and a code / message in the www-authenticate response header.\
+   The SPA should be able to read these details.\
+   Would you prefer to use CORS expose-headers capabilities, or also return a JSON body?\
+   My thinking is that a JSON response could return the same details as the www-authenticate header.\
+   https://stackoverflow.com/questions/33672689/javascript-jquery-can%C2%B4t-get-www-authenticate-response-header
+
+5. Docs
+   I have made the main README focused on using the module and understanding what it does.\
+   Meanwhile the resources folder has implementation details, which most users won't care about.\
+   There was a lot of head scratching to figure this out, so I've split it into a few markdown files.\
+   Let me know if you are not happy with this format.
+
