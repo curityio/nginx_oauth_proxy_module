@@ -70,7 +70,7 @@ It deploys an entire NGINX system under the `/usr/local/nginx` folder:
 make install
 ```
 
-## 5. Run NGINX Locally
+## 6. Run NGINX Locally
 
 Deploy the development configuration in the `nginx.conf` file and start NGINX locally:
 
@@ -81,13 +81,13 @@ cp ./resources/localhost/nginx.conf /usr/local/nginx/conf/nginx.conf
 
 This nginx.conf file is configured to disable the daemon, so that logs are easily viewable.
 
-## 6. Debug Code
+## 7. Debug Code
 
 To perform printf debugging you can add `ngx_log_error` statements to the C code and then look at NGINX output.
 Once nginx is running, select  `Run / Attach to Process`, and choose the `nginx worker process`.\
 Then set breakpoints, after which you can step through code to check variable state carefully:
 
-![Debugger](resources/debugger.png)
+![Debugger](debugging.png)
 
 ## 7. Act as an SPA Client
 

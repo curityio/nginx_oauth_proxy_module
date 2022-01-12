@@ -11,7 +11,7 @@ cpan Test::Nginx
 
 ## 2. Run Tests
 
-Then run this command from the root folder to execute all NGINX tests from the `t` folder:
+Then run this command from the root folder to execute all NGINX tests developed in the `t` folder:
 
 ```bash
 make test
@@ -24,7 +24,7 @@ Documentation is limited but the [Headers More Repo](https://github.com/openrest
 
 ## 4. Understand Test Behavior
 
-Each test spins up an instance of NGINX under the `t/servroot` folder which runs on the test port of 1984.\
+Each test spins up an instance of NGINX under the `t/servroot` folder which runs on the default test port of 1984.\
 Tests that are expected to succeed use proxy_pass to route to a target that runs after the module and simply returns:
 
 ```nginx
@@ -78,9 +78,7 @@ The following GitHub repo ensures that encryption is compliant across technologi
 
 ## 6. Run NGINX Plus Certification Tests
 
-Before final release, our build system produces a dynamic module for multiple NGINX+ platforms, as described in [3-deployment.md].\
-To certify that a build is compatible with NGINX+, each shared library needs to be tested with NGINX's certification test suite, then released to GitHub.\
-For some background, refer to the [NGINX Plus Certified Modules Program documentation](https://www.nginx.com/partners/certified-module-program-documentation/#tech-doc-instructions-building). As described there:
+Before final release, our build system produces a dynamic module for multiple NGINX+ platforms, as described in [3-deployment.md]. To certify that a build is compatible with NGINX+, each shared library needs to be tested with NGINX's certification test suite, then released to GitHub. For some background, refer to the [NGINX Plus Certified Modules Program documentation](https://www.nginx.com/partners/certified-module-program-documentation/#tech-doc-instructions-building). As described there:
 
 - [NGINX+ must be installed](https://docs.nginx.com/nginx/admin-guide/installing-nginx/installing-nginx-plus/) on each platform in the build.sh script.
 - The dynamic modules must be deployed to each supported platform. 

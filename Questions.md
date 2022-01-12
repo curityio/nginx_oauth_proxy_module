@@ -35,15 +35,14 @@ DEPLOYMENT
    - https://sourceforge.net/projects/pcre/files/pcre/8.44/pcre-8.44.tar.gz
  
 4. I have assumed that most customers use NGINX open source or NGINX+ and simply download a dynamic module?\
-   I expect NGINX+ is dominant due to better admin features and commercial support?
+   I expect NGINX+ is dominant due to better admin features and commercial support?\
    Initially I thought there were different open source releases but only Alpine seems easy to install.\
-   So I get the impression that all of our supported Linux versions determined by the NGINX+ page?
+   So I get the impression that all of our supported Linux versions determined by the NGINX+ page?\
    https://docs.nginx.com/nginx/admin-guide/installing-nginx/installing-nginx-plus/
 
 5. Do some customers build NGINX from source?\
    The phantom token module mentions a number of `--without` options that are not compatible.\
-   I will add something similar but wanted to discuss it first, so that I understand what is important.
-   
+   I will add something similar but wanted to discuss it first, so that I understand what is important.\
    This module uses this config option, required for SSL to work, and is this likely to be missing in some cases?
    - --with-http_ssl_module
 
@@ -67,7 +66,7 @@ IMPLEMENTATION
    https://github.com/curityio/token-handler-encryption-tests
 
 2. Right now all of the token handler work uses hex encoding for encrypted cookies.\
-   I was thinking this should be updated to base64url encoded (4 characters for every 3 bytes), since cookie size is an issue.\
+   I was thinking this should be updated to base64url encoded (4 characters for every 3 bytes), since keeping cookies small is important.\
    Base64 can have some characters that are not valid for cookies, and this is in line with JWEs and RFC7515.
 
 3. Should we return a JSON body in NGINX module error responses?\
