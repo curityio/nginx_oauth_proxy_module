@@ -67,9 +67,10 @@ GET /t
 ```
 
 View the `t/servroot/conf/nginx.conf` file to see the deployed configuration for a test.\
-If required, add `ngx_log_error` statements to C code, then look at test logs at `t/servroot/logs/error.log`.
+If required, add `ngx_log_error` statements to C code, then look at test logs at `t/servroot/logs/error.log`.\
+If you get cryptic permission errors or locked files, delete the `t/servroot` folder.
 
-## 5. Testing Interoperability
+## 5. Test Encryption Interoperability
 
 The following GitHub repo ensures that encryption is compliant across technologies:
 
@@ -77,7 +78,9 @@ The following GitHub repo ensures that encryption is compliant across technologi
 
 ## 6. Run NGINX Plus Certification Tests
 
-To certify that a build is compatible with NGINX+, each shared library needs to be tested with NGINX's certification test suite, then released to GitHub. All of this is done by the build system using Docker. For some background on this process, refer to the [NGINX Plus Certified Modules Program documentation](https://www.nginx.com/partners/certified-module-program-documentation/#tech-doc-instructions-building). As described there:
+Before final release, our build system produces a dynamic module for multiple NGINX+ platforms, as described in [3-deployment.md].\
+To certify that a build is compatible with NGINX+, each shared library needs to be tested with NGINX's certification test suite, then released to GitHub.\
+For some background, refer to the [NGINX Plus Certified Modules Program documentation](https://www.nginx.com/partners/certified-module-program-documentation/#tech-doc-instructions-building). As described there:
 
 - [NGINX+ must be installed](https://docs.nginx.com/nginx/admin-guide/installing-nginx/installing-nginx-plus/) on each platform in the build.sh script.
 - The dynamic modules must be deployed to each supported platform. 

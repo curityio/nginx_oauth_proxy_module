@@ -288,12 +288,6 @@ static ngx_int_t handler(ngx_http_request_t *request)
         return NGX_OK;
     }
 
-    /* DEBUG - to troubleshoot memory leaks, do nothing for POST requests */
-    /*if (ngx_strncasecmp(request->method_name.data, (u_char*)literal_post, ngx_strlen(literal_post)) == 0)
-    {
-        return NGX_OK;
-    }*/
-
     // Verify the web origin, which is sent by all modern browsers
     web_origin = search_headers_in(request, (u_char *)literal_origin, ngx_strlen(literal_origin));
     if (web_origin == NULL)
@@ -305,7 +299,6 @@ static ngx_int_t handler(ngx_http_request_t *request)
     ret_code = verify_web_origin(module_location_config, web_origin);
     if (ret_code != NGX_OK)
     {
-        add_cors_error_headers(request, web_origin);
         ngx_log_error(NGX_LOG_WARN, request->connection->log, 0, "The request was from an untrusted web origin");
         return NGX_HTTP_UNAUTHORIZED;
     }
@@ -319,11 +312,12 @@ static ngx_int_t handler(ngx_http_request_t *request)
         ret_code = apply_xsrf_checks(request, module_location_config, web_origin);
         if (ret_code != NGX_OK)
         {
+            add_cors_error_headers(request, web_origin);
             return ret_code;
         }
     }
 
-    // This returns 0 when there is a single cookie header or > 0 when there are multiple cookie headers
+    // This returns 0 when there is a single cookie header (HTTP 1.1) or > 0 when there are multiple cookie headers (HTTP 2.0)
     ret_code = get_cookie(request, &at_cookie_encrypted_hex, &module_location_config->cookie_prefix, (u_char *)"-at");
     if (ret_code == NGX_DECLINED)
     {
@@ -393,7 +387,6 @@ static ngx_int_t apply_xsrf_checks(ngx_http_request_t *request, const oauth_prox
     ret_code = get_cookie(request, &csrf_cookie_encrypted_hex, &config->cookie_prefix, (u_char *)literal_suffix);
     if (ret_code == NGX_DECLINED)
     {
-        add_cors_error_headers(request, web_origin);
         ngx_log_error(NGX_LOG_WARN, request->connection->log, 0, "No CSRF cookie was found in the incoming request");
         return NGX_HTTP_UNAUTHORIZED;
     }
@@ -412,7 +405,6 @@ static ngx_int_t apply_xsrf_checks(ngx_http_request_t *request, const oauth_prox
     ret_code = oauth_proxy_decrypt(request, &config->hex_encryption_key, &csrf_cookie_encrypted_hex, &csrf_token);
     if (ret_code != NGX_OK)
     {
-        add_cors_error_headers(request, web_origin);
         return ret_code;
     }
 
@@ -440,7 +432,7 @@ static ngx_str_t *search_headers_in(ngx_http_request_t *request, u_char *name, s
     h = part->elts;
 
     // Headers list array may consist of more than one part, so loop through all of it
-    for (i = 0; /* void */ ; i++) {
+    for (i = 0; ; i++) {
 
         if (i >= part->nelts) {
             if (part->next == NULL) {
@@ -489,29 +481,35 @@ static ngx_int_t get_cookie(ngx_http_request_t *request, ngx_str_t* cookie_value
  */
 static ngx_int_t add_authorization_header(ngx_http_request_t *request, const ngx_str_t* token_value)
 {
-    size_t header_value_len = 0;
+    ngx_table_elt_t *authorization_header = NULL;
     u_char *header_value = NULL;
+    size_t header_value_len = 0;
 
-    request->headers_in.authorization = ngx_list_push(&request->headers_in.headers);
-    if (request->headers_in.authorization == NULL)
+    authorization_header = ngx_list_push(&request->headers_in.headers);
+    if (authorization_header == NULL)
     {
         ngx_log_error(NGX_LOG_WARN, request->connection->log, 0, "OAuth proxy failed to allocate memory for the authorization header");
         return NGX_HTTP_INTERNAL_SERVER_ERROR;
     }
-
+    
     // The header size is unknown and could represent a large JWT, so allocate memory dynamically
     header_value_len = ngx_strlen("Bearer ") + token_value->len;
-    header_value = ngx_pcalloc(request->pool, header_value_len);
+    header_value = ngx_pcalloc(request->pool, header_value_len + 1);
     if (header_value == NULL)
     {
         ngx_log_error(NGX_LOG_WARN, request->connection->log, 0, "OAuth proxy failed to allocate memory for the authorization header value");
         return NGX_HTTP_INTERNAL_SERVER_ERROR;
     }
 
+    ngx_str_set(&authorization_header->key, "Authorization");
     ngx_snprintf(header_value, header_value_len, "Bearer %V", token_value);
-    ngx_str_set(&request->headers_in.authorization->key, "Authorization");
-    request->headers_in.authorization->value = (ngx_str_t)ngx_string(header_value);
-    request->headers_in.authorization->value.len = header_value_len;
+    header_value[header_value_len] = 0;
+
+    authorization_header->value.data = header_value;
+    authorization_header->value.len  = header_value_len;
+    authorization_header->hash = 1;
+    request->headers_in.authorization = authorization_header;
+
     return NGX_OK;
 }
 
@@ -533,13 +531,13 @@ static ngx_int_t add_cors_error_headers(ngx_http_request_t *request, const ngx_s
         return NGX_ERROR;
     }
 
-    allow_headers->key = (ngx_str_t)ngx_string("Access-Control-Allow-Origin");;
+    ngx_str_set(&allow_headers->key,   "Access-Control-Allow-Origin");
     allow_headers->value.data = web_origin->data;
     allow_headers->value.len = web_origin->len;
     allow_headers->hash = 1;
 
-    allow_credentials->key = (ngx_str_t)ngx_string("Access-Control-Allow-Credentials");
-    allow_credentials->value = (ngx_str_t)ngx_string("true");
+    ngx_str_set(&allow_credentials->key,   "Access-Control-Allow-Credentials");
+    ngx_str_set(&allow_credentials->value, "true");
     allow_credentials->hash = 1;
 
     return NGX_OK;

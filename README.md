@@ -196,7 +196,7 @@ Authorization Bearer 42665300-efe8-419d-be52-07b53e208f46
 ```
 
 With opaque reference tokens the encrypted cookies do not exceed NGINX default header sizes.\
-If large JWTs are used, then these NGINX properties may need to use larger than default values:
+If large JWTs are instead used, then these NGINX properties may need to use larger than default values:
 
 - proxy_buffers
 - proxy_buffer_size
@@ -245,8 +245,7 @@ It is likely to work with newer versions of NGINX, but only the above have been 
 ### Releases
 
 Pre-built binaries of this module are provided for the following versions of NGINX.\
-To use the module, download the .so file and deploy it to the modules folder of your NGINX system.\
-This [docker-compose file](./resources/docker-compose.yaml) has some deployment examples.
+Download the .so file for your platform and deploy it to the `/usr/lib/nginx/modules` folder of your NGINX servers.
 
 |                                   | NGINX 1.19.5 / NGINX Plus R23 | NGINX 1.19.10 / NGINX Plus R24    | NGINX 1.21.3 / NGINX Plus R25 |
 | ----------------------------------|:-----------------------------:|:---------------------------------:|:---------------------------------:|

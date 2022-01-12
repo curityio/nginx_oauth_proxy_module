@@ -37,7 +37,7 @@ tar xzvf OpenSSL_1_1_1m.tar.gz
 RUN CONFIG_OPTS="--with-openssl=../openssl-OpenSSL_1_1_1m" ./configure && make
 ```
 
-## 3. Test Deployed NGINX
+## 3. Test Deployed NGINX for Memory Leaks
 
 Run the following scripts to deploy NGINX with the dynamic module.\
 NGINX is run via valgrind, to detect any potential memory leaks:
@@ -48,7 +48,7 @@ NGINX is run via valgrind, to detect any potential memory leaks:
 ```
 
 Then run the following script in another terminal window.\
-This will run a number of HTTP requests and then output memory results:
+This will run a number of HTTP requests and then output valgrind results:
 
 ```bash
 ./resources/docker/test.sh

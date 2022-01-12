@@ -3,9 +3,14 @@
 ## Prerequisites
 
 A C compiler must be installed that meets the ISO C Standard (C99), such as gcc.\
-This is likely to be installed by default on macOS.
+The default compiler on macOS, or that installed by XCode, works fine.
 
-## 1. Intellisense Setup
+## 1. Install an IDE
+
+This project can be run in a basic manner with Visual Studio Code and the C/C++ Extension Pack.\
+When developing we recommend a more specialist tool such as CLion 2020.2 or newer.
+
+## 2. OpenSSL Setup
 
 Development IDEs expect to find OpenSSL headers in system locations.\
 To enable this you can build the OpenSSL code from source: 
@@ -23,7 +28,7 @@ Standard system locations will then be updated, for an improved developer experi
 /usr/local/bin/openssl
 ```
 
-## 2. Configure
+## 3. Configure
 
 Then run the base configure script as follows, to download NGINX source and point it to the OpenSSL location:
 
@@ -38,7 +43,7 @@ DYNAMIC_MODULE=n
 NGINX_DEBUG=y
 ```
 
-## 3. Make
+## 4. Make
 
 Whenever the code in the module changes, run the make command to rebuild NGINX:
 
@@ -46,7 +51,9 @@ Whenever the code in the module changes, run the make command to rebuild NGINX:
 make
 ```
 
-## 4. Make Install
+Custom options can be set in the IDE if needed, though those for this project need to be finalized.
+
+## 5. Make Install
 
 Pre-creating the nginx folder for development is recommended.\
 This enables nginx to be run as your own user account, which works better later when debugging:
@@ -56,7 +63,8 @@ sudo mkdir /usr/local/nginx
 sudo chown yourusername /usr/local/nginx
 ```
 
-Then deploy a working nginx system to the above location with this command:
+Whenever you want to update the local system after building code, this is run.\
+It deploys an entire NGINX system under the `/usr/local/nginx` folder:
 
 ```bash
 make install
@@ -64,7 +72,7 @@ make install
 
 ## 5. Run NGINX Locally
 
-Then deploy the development `nginx.conf` file and start NGINX locally:
+Deploy the development configuration in the `nginx.conf` file and start NGINX locally:
 
 ```bash
 cp ./resources/localhost/nginx.conf /usr/local/nginx/conf/nginx.conf
@@ -75,12 +83,9 @@ This nginx.conf file is configured to disable the daemon, so that logs are easil
 
 ## 6. Debug Code
 
-This project can be debugged in a basic manner in any IDE, such as Visual Studio Code with the C/C++ Extension Pack.\
 To perform printf debugging you can add `ngx_log_error` statements to the C code and then look at NGINX output.
-
-When developing we recommend a more specialist development tool such as CLion 2020.2 or newer.\
 Once nginx is running, select  `Run / Attach to Process`, and choose the `nginx worker process`.\
-Then set breakpoints, after which you can step through code carefully to check memory buffers:
+Then set breakpoints, after which you can step through code to check variable state carefully:
 
 ![Debugger](resources/debugger.png)
 
@@ -90,12 +95,9 @@ You can run curl requests against the nginx system in the same manner as the SPA
 
 ```bash
 AT_COOKIE='093d3fb879767f6ec2b1e7e359040fe6ba875734ee043c5cc484d3da8963a351e9aba1c5e273f3d1ea2914f83836fa434474d1720b3040f5f7237f34536b7389'
-CSRF_COOKIE='f61b300a79018b4b94f480086d63395148084af1f20c3e474623e60f34a181656b3a54725c1b4ddaeec9171f0398bde8c6c1e0e12d90bdb13397bf24678cd17a230a3df8e1771f9992e3bf2d6567ad920e1c25dc5e3e015679b5e673'
-CSRF_HEADER='pQguFsD6hFjnyYjaeC5KyijcWS6AvkJHiUmY7dLUsuTKsLAITLiJHVqsCdQpaGYO'
-curl -X POST http://localhost:8080/api \
+curl -X GET http://localhost:8080/api \
 -H "origin: https://www.example.com" \
--H "x-example-csrf: $CSRF_HEADER" \
--H "cookie: example-at=$AT_COOKIE; example-csrf=$CSRF_COOKIE"
+-H "cookie: example-at=$AT_COOKIE"
 ```
 
 The development target API is an internet mockbin API that echoes headers and shows the forwarded token:
