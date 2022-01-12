@@ -96,6 +96,14 @@ extern ngx_int_t oauth_proxy_decrypt(ngx_http_request_t *request, const ngx_str_
 /* Constants */
 static size_t MAX_COOKIE_PREFIX_LENGTH = 64;
 static size_t MAX_COOKIE_SUFFIX_LENGTH = 5; /* The longest cookie suffix is -csrf */
+static const char *literal_origin  = "origin";
+static const char *literal_options = "options";
+static const char *literal_post    = "post";
+static const char *literal_put     = "put";
+static const char *literal_patch   = "patch";
+static const char *literal_delete  = "delete";
+static const char *literal_http    = "http://";
+static const char *literal_https   = "https://";
 
 /* NGINX integration */
 static ngx_http_module_t oauth_proxy_module_context =
@@ -193,6 +201,7 @@ static ngx_int_t validate_configuration(ngx_conf_t *config, const oauth_proxy_co
 {
     ngx_str_t *trusted_web_origins = NULL;
     ngx_str_t trusted_web_origin;
+    
     ngx_uint_t i = 0;
 
     if (module_location_config != NULL && module_location_config->enabled)
@@ -237,8 +246,8 @@ static ngx_int_t validate_configuration(ngx_conf_t *config, const oauth_proxy_co
                 return NGX_ERROR;
             }
             
-            if (ngx_strncasecmp(trusted_web_origin.data, (u_char*)"http://",  7) != 0 &&
-                ngx_strncasecmp(trusted_web_origin.data, (u_char*)"https://", 8) != 0)
+            if (ngx_strncasecmp(trusted_web_origin.data, (u_char*)literal_http,  ngx_strlen(literal_http))  != 0 &&
+                ngx_strncasecmp(trusted_web_origin.data, (u_char*)literal_https, ngx_strlen(literal_https)) != 0)
             {
                 ngx_conf_log_error(NGX_LOG_WARN, config, 0, "An invalid trusted_web_origin configuration directive was provided: %V", &trusted_web_origin);
                 return NGX_ERROR;
@@ -255,7 +264,6 @@ static ngx_int_t validate_configuration(ngx_conf_t *config, const oauth_proxy_co
 static ngx_int_t handler(ngx_http_request_t *request)
 {
     oauth_proxy_configuration_t *module_location_config = NULL;
-    u_char *web_origin_header_name = NULL;
     ngx_str_t *web_origin = NULL;
     ngx_str_t at_cookie_encrypted_hex;
     ngx_str_t access_token;
@@ -269,7 +277,7 @@ static ngx_int_t handler(ngx_http_request_t *request)
     }
 
     // Pre-flight requests from SPAs will never return cookies or tokens, so return immediately
-    if (ngx_strncasecmp(request->method_name.data, (u_char*)"options", 7) == 0)
+    if (ngx_strncasecmp(request->method_name.data, (u_char*)literal_options, ngx_strlen(literal_options)) == 0)
     {
         return NGX_OK;
     }
@@ -280,9 +288,14 @@ static ngx_int_t handler(ngx_http_request_t *request)
         return NGX_OK;
     }
 
+    /* DEBUG - to troubleshoot memory leaks, do nothing for POST requests */
+    /*if (ngx_strncasecmp(request->method_name.data, (u_char*)literal_post, ngx_strlen(literal_post)) == 0)
+    {
+        return NGX_OK;
+    }*/
+
     // Verify the web origin, which is sent by all modern browsers
-    web_origin_header_name = (u_char *)"origin";
-    web_origin = search_headers_in(request, web_origin_header_name, ngx_strlen(web_origin_header_name));
+    web_origin = search_headers_in(request, (u_char *)literal_origin, ngx_strlen(literal_origin));
     if (web_origin == NULL)
     {
         ngx_log_error(NGX_LOG_WARN, request->connection->log, 0, "The request did not have an origin header");
@@ -298,10 +311,10 @@ static ngx_int_t handler(ngx_http_request_t *request)
     }
 
     // For data changing commands, apply double submit cookie checks in line with OWASP best practices
-    if (ngx_strncasecmp(request->method_name.data, (u_char *)"post",   4) == 0 ||
-        ngx_strncasecmp(request->method_name.data, (u_char *)"put",    3) == 0 ||
-        ngx_strncasecmp(request->method_name.data, (u_char *)"patch",  5) == 0 ||
-        ngx_strncasecmp(request->method_name.data, (u_char *)"delete", 6) == 0)
+    if (ngx_strncasecmp(request->method_name.data, (u_char *)literal_post,   ngx_strlen(literal_post))   == 0 ||
+        ngx_strncasecmp(request->method_name.data, (u_char *)literal_put,    ngx_strlen(literal_put))    == 0 ||
+        ngx_strncasecmp(request->method_name.data, (u_char *)literal_patch,  ngx_strlen(literal_patch))  == 0 ||
+        ngx_strncasecmp(request->method_name.data, (u_char *)literal_delete, ngx_strlen(literal_delete)) == 0)
     {
         ret_code = apply_xsrf_checks(request, module_location_config, web_origin);
         if (ret_code != NGX_OK)
@@ -370,10 +383,14 @@ static ngx_int_t apply_xsrf_checks(ngx_http_request_t *request, const oauth_prox
     u_char csrf_header_name[2 + MAX_COOKIE_PREFIX_LENGTH + MAX_COOKIE_SUFFIX_LENGTH + 1];
     ngx_str_t *csrf_header_value = NULL;
     ngx_str_t csrf_token;
+    const char *literal_prefix = "x-";
+    const char *literal_suffix = "-csrf";
+    size_t prefix_length = 2;
+    size_t suffix_length = 5;
     ngx_int_t ret_code = NGX_OK;
 
     // This returns 0 when there is a single cookie header or > 0 when there are multiple cookie headers
-    ret_code = get_cookie(request, &csrf_cookie_encrypted_hex, &config->cookie_prefix, (u_char *)"-csrf");
+    ret_code = get_cookie(request, &csrf_cookie_encrypted_hex, &config->cookie_prefix, (u_char *)literal_suffix);
     if (ret_code == NGX_DECLINED)
     {
         add_cors_error_headers(request, web_origin);
@@ -381,10 +398,10 @@ static ngx_int_t apply_xsrf_checks(ngx_http_request_t *request, const oauth_prox
         return NGX_HTTP_UNAUTHORIZED;
     }
 
-    ngx_memcpy(csrf_header_name, "x-", 2);
-    ngx_memcpy(csrf_header_name + 2, config->cookie_prefix.data, config->cookie_prefix.len);
-    ngx_memcpy(csrf_header_name + 2 + config->cookie_prefix.len, "-csrf", 5);
-    csrf_header_name[2 + config->cookie_prefix.len + 5] = 0;
+    ngx_memcpy(csrf_header_name, literal_prefix, prefix_length);
+    ngx_memcpy(csrf_header_name + prefix_length, config->cookie_prefix.data, config->cookie_prefix.len);
+    ngx_memcpy(csrf_header_name + prefix_length + config->cookie_prefix.len, literal_suffix, suffix_length);
+    csrf_header_name[2 + config->cookie_prefix.len + suffix_length] = 0;
     csrf_header_value = search_headers_in(request, csrf_header_name, ngx_strlen(csrf_header_name));
     if (csrf_header_value == NULL)
     {

@@ -37,18 +37,19 @@ tar xzvf OpenSSL_1_1_1m.tar.gz
 RUN CONFIG_OPTS="--with-openssl=../openssl-OpenSSL_1_1_1m" ./configure && make
 ```
 
-## 3. Test NGINX Open Source
+## 3. Test Deployed NGINX
 
-Run the following script to deploy all .so files and run test curl requests with cookies:
+Run the following scripts to deploy NGINX with the dynamic module.\
+NGINX is run via valgrind, to detect any potential memory leaks:
 
 ```bash
-./resources/nginx-opensource/deploy_and_test.sh
+./resources/docker/build.sh
+./resources/docker/deploy.sh
 ```
 
-## 4. Run NGINX Plus Certification Tests
-
-TODO: this will run the official tests and will require a test account and certificates:
+Then run the following script in another terminal window.\
+This will run a number of HTTP requests and then output memory results:
 
 ```bash
-./resources/nginx-opensource/deploy_and_test.sh
+./resources/docker/test.sh
 ```

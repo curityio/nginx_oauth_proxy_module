@@ -119,18 +119,6 @@ Access-Control-Allow-Origin: https://www.example.com
 Access-Control-Allow-Credentials: true
 ```
 
-## 8. Memory Leak Prevention
+The `run.sh` script from the following repository can be used to get encrypted values if needed:
 
-The project should use valgrind and CLion to perform memory profiling and detect any leaks: 
-- https://www.jetbrains.com/help/clion/memory-profiling-with-valgrind.html
-
-Installing valgrind for recent versions of macOS seems problematic though.\
-The main valgrind installation is only supported on Linux though there are efforts to support mac:
-
-```bash
-brew tap LouisBrunner/valgrind
-brew install --HEAD LouisBrunner/valgrind/valgrind
-```
-
-Support for BigSur and Monterey is not there yet however:
-https://stackoverflow.com/questions/69792467/memory-check-on-macos-12-monterey
+- [Token Handler Encryption Tests](https://github.com/curityio/token-handler-encryption-tests)

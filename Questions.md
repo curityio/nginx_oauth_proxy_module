@@ -2,7 +2,7 @@ REVIEW PROCESS
 --------------
 1. It is probably best to start with a call to discuss questions that any of us have
 
-2. Reviewers should cast their eye over the NGINX code, tests, deployment and docs\
+2. Reviewers should cast their eye over the NGINX code, tests, deployment and docs.\
    Add as many comments as you like to PRs or send me info, on what is missing
 
 3. I will deal with all of the review feedback points and update a number of related PME resources
@@ -28,33 +28,28 @@ DEPLOYMENT
    - https://ftp.pcre.org/pub/pcre/pcre-8.44.tar.gz
    - https://sourceforge.net/projects/pcre/files/pcre/8.44/pcre-8.44.tar.gz
  
-3. What are the most common customer deployment models?\
-   I would expect most of them to download an image such as 1.21.5-alpine, then copy in the module .so file.\
-   Do some of them build NGINX from source?\
-   I'm assuming that NGINX Plus is the main option used, due to better admin options etc?
- 
-4. Right now I am using nginx 1.21.3 only, and 1.21.5 is the latest version.\
-   How do we decide which specific versions to support?\
-   My preference is just to start with the current latest for the initial release.\
-   Are there official NGINX download links for each of the distros we support?
+3. I have assumed that most customers use NGINX+ and simply download a dynamic module?\
+   Open source NGINX only seems to be supported for Alpine.\
+   Are all of our supported distros and versions dictated by NGINX+?
+   https://docs.nginx.com/nginx/admin-guide/installing-nginx/installing-nginx-plus/
 
-5. What NGINX prerequisite flags are there in total that I need to document?\
-   The module adds this config option, required for SSL to work:
+4. Do some customers build NGINX from source?
+   The phantom token module mentions a number of `--without` options that are not compatible.\
+   Are these likely to happen and what do I need to look out for?
+   
+   This module uses this config option, required for SSL to work, and is this likely to be missing in some cases?
    - --with-http_ssl_module
 
-   It uses this option when building the module, to point to openssl source code:
+   I use this option when building the module, but do customers need to know?
    - --with-openssl=
 
-   The phantom token module mentions a number of `--without` options that are not compatible.\
-   Should I mention all of the same options in this module, or are some of them not relevant?
-
-6. Do we think there are any library dependency risks?\
+5. Do we think there are any library dependency risks?\
    Eg we build against openssl-1.1.1m and a customer NGINX container uses openssl-1.1.1k?\
-   Is there anything we do to deal with this for other dependencies?
+   Is there anything we do to deal with this for the phantom token module?
 
-7. Jenkins and NGINX online deployment\
-   I guess we will configure official builds in Jenkins once other details have been dealt with?\
-   Worth discussing any special requirements here?
+6. Certification and release process.
+   Is this managed by Jenkins - I had a look but could not see anything?
+   Do we ever run this from a development computer, and should I sign up for an account?
 
 IMPLEMENTATION
 --------------
@@ -80,7 +75,7 @@ IMPLEMENTATION
    I would prefer to do this since it gives us a better mechanism for informing the client.\
    Currently the demo SPA client just reads HTTP status codes though.
 
-5. Phantom token module enhancements.\
+5. Phantom token module and SPAs.\
    Pre flight OPTIONS requests should be ignored, since they can never have an Authorization header.\
    Error responses due to expiry have an empty body and a code / message in the www-authenticate response header.\
    The SPA should be able to read these details.\
@@ -90,7 +85,6 @@ IMPLEMENTATION
 
 6. Docs
    I have made the main README focused on using the module and understanding what it does.\
-   I am assuming that most readers will just want to grab a dynamic module and plug it in.\
    Meanwhile the resources folder has implementation details, which most users won't care about.\
    There was a lot of head scratching to figure this out, so I've split it into a few markdown files.\
    Let me know if you are not happy with this format.

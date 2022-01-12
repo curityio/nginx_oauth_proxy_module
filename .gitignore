@@ -66,3 +66,4 @@ openssl-*
 t/servroot
 .build.info
 build
+valgrind*
