@@ -14,8 +14,10 @@ NIKOS
 
 TASKS
 -----
-1. Set compiler flags, including C99 and release O8 / O6, and aim to statically link with openssl.\
+1. Set compiler flags, eg in the configure script.\
+   Include C99 and release O8 / O6, and aim to statically link with openssl.\
    If not possible then explain why, and also update docs.
+   CFLAGS=-std=c99
 
 2. Post questions on the security channel.\
    Cover both CSRF and encryption.

@@ -2,8 +2,6 @@
 
 set -e
 
-CFLAGS=-std=c99
-
 SRC_DIR=$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)
 
 NGINX_VERSION=${NGINX_VERSION:-1.21.3}
