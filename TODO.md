@@ -16,7 +16,8 @@ TASKS
 -----
 1. Set compiler flags, eg in the configure script.\
    Include C99 and release O8 / O6, and aim to statically link with openssl.\
-   If not possible then explain why, and also update docs.
+   If not possible then explain why, and also update docs.\
+   Current sizes of .so files are 109-137KB.\
    CFLAGS=-std=c99
 
 2. Post questions on the security channel.\
@@ -25,10 +26,11 @@ TASKS
 3. Update GitHub wiki with developer resources.\
    I may need to make my module temporarily public to enable the wiki.
 
-4. valgrind for phantom token in a minor PR
-   Fix any invalid location build issues also, or invalid locations
+4. valgrind for phantom token in a minor PR.\
+   Fix any invalid location build issues also, or invalid locations.
  
-5. Do I need to add `--without` comments to the README.\
+5. See if I need to add `--without` comments to the README.\
    Get Travis's viewpoint on this.
 
-6. Remove cookie related headers rather than passing them through
+6. Consider removing cookie related headers rather than passing them through
+   https://www.ruby-forum.com/t/removing-a-request-header-in-an-access-phase-handler/245742
