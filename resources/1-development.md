@@ -35,7 +35,7 @@ Standard system locations will then be updated:
 Then run the base configure script as follows, to download NGINX source and use these options on macOS:
 
 ```bash
-CONFIG_OPTS='--with-http_ssl_module --with-openssl=../openssl-OpenSSL_1_1_1m' ./configure 
+CONFIG_OPTS='--with-http_ssl_module --with-openssl=../openssl-OpenSSL_1_1_1m' ./configure
 ```
 
 Select these options to enable Perl tests to run and to enable debugging of the C code in an IDE such as CLion:

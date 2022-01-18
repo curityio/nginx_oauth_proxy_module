@@ -1,7 +1,8 @@
 NIKOS
 -----
-1. NGINX+ testing to discuss with Nikos.\
-   I would like to test each .so file I have built, but this requires certs and an account setup.
+1. NGINX+ certification testing to discuss with Nikos.\
+   I would also like to test each .so file I have built in Docker Compose.\
+   This requires certs and an account setup though.
 
 2. Discuss build system and process for releases.\
    Do any work that is needed here.
@@ -13,21 +14,17 @@ NIKOS
 
 TASKS
 -----
-1. Use an attributes file so that the module shows as C in GitHub
-
-2. Add a JSON body to error responses and update tests
-
-3. Set compiler flags, including C99 and release O8 / O6, and aim to statically link with openssl.\
+1. Set compiler flags, including C99 and release O8 / O6, and aim to statically link with openssl.\
    If not possible then explain why, and also update docs.
 
-4. Post questions on the security channel.\
+2. Post questions on the security channel.\
    Cover both CSRF and encryption.
 
-5. Update GitHub wiki with developer resources.\
+3. Update GitHub wiki with developer resources.\
    I may need to make my module temporarily public to enable the wiki.
 
-6. valgrind for phantom token in a minor PR
+4. valgrind for phantom token in a minor PR
    Fix any invalid location build issues also, or invalid locations
  
-7. Do I need to add `--without` options to the README.\
+5. Do I need to add `--without` options to the README.\
    Get Travis's viewpoint on this.
