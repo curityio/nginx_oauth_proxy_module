@@ -3,7 +3,7 @@
 ## Prerequisites
 
 A C compiler must be installed that meets the ISO C Standard (C99), such as gcc.\
-The default compiler on macOS, or that installed by XCode, works fine.
+The default compiler on macOS, or that installed by XCode, is usually fine.
 
 ## 1. Install an IDE
 
@@ -12,28 +12,30 @@ When developing we recommend a more specialist tool such as CLion 2020.2 or newe
 
 ## 2. OpenSSL Setup
 
-Development IDEs expect to find OpenSSL headers in system locations.\
-To enable this you can build the OpenSSL code from source: 
+On Docker images we build the code as a dynamic module using libssl-dev.\
+This does not work on macOS and I have found building OpenSSL from source to work best.\
+Development IDEs can then find OpenSSL headers in the correct system locations: 
 
 ```bash
 ./resources/localhost/openssl_install.sh
 ```
 
-Standard system locations will then be updated, for an improved developer experience:
+Standard system locations will then be updated:
 
 ```text
 /usr/local/include/openssl/*
 /usr/local/lib/libcrypto*
 /usr/local/lib/libssl*
 /usr/local/bin/openssl
+/usr/local/share/man
 ```
 
 ## 3. Configure
 
-Then run the base configure script as follows, to download NGINX source and point it to the OpenSSL location:
+Then run the base configure script as follows, to download NGINX source and use these options on macOS:
 
 ```bash
-CONFIG_OPTS='--with-openssl=../openssl-OpenSSL_1_1_1m' ./configure 
+CONFIG_OPTS='--with-http_ssl_module --with-openssl=../openssl-OpenSSL_1_1_1m' ./configure 
 ```
 
 Select these options to enable Perl tests to run and to enable debugging of the C code in an IDE such as CLion:
@@ -100,7 +102,7 @@ curl -X GET http://localhost:8080/api \
 -H "cookie: example-at=$AT_COOKIE"
 ```
 
-The development target API is an internet mockbin API that echoes headers and shows the forwarded token:
+The development target API is an internet mockbin API that echoes headers and shows the forwarded access token:
 
 ```json
 {
