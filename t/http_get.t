@@ -133,8 +133,8 @@ origin: https://www.example.com
 --- error_log
 No AT cookie was found in the incoming request
 
-=== TEST HTTP_GET_6: GET errors return CORS headers so that Javascript can read error details
-# The SPA will receive a cryptic network error without these CORS headers
+=== TEST HTTP_GET_6: GET errors returns JSON data and CORS headers
+# Error responses must be SPA friendly, to prevent cryptic network errors or unuseful responses
 
 --- config
 location /t {
@@ -154,8 +154,11 @@ origin: https://www.example.com
 --- error_code: 401
 
 --- response_headers
-Access-Control-Allow-Origin: https://www.example.com
-Access-Control-Allow-Credentials: true
+access-control-allow-origin: https://www.example.com
+access-control-allow-credentials: true
+
+--- response_body_like chomp
+{"code": "unauthorized_request", "message": "Access denied due to missing or invalid credentials"}
 
 === TEST HTTP_GET_7: GET with a valid cookie returns 200 and an Authorization header
 # Ensure that the happy path for a GET request works
@@ -188,4 +191,3 @@ $data;
 
 --- response_headers eval
 "authorization: Bearer " . $main::at_opaque
-

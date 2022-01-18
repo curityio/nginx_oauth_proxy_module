@@ -67,7 +67,7 @@ do
   if [ "$HTTP_STATUS" != '401' ]; then
     echo "*** POST did not receive a 401 response as expected ..."
   else
-    echo "*** Invalid POST failed as expected ..."
+    echo "*** POST failed as expected ..."
   fi
 done
 

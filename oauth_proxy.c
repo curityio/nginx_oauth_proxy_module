@@ -326,9 +326,7 @@ static ngx_int_t handler(ngx_http_request_t *request)
     ret_code = oauth_proxy_decrypt(request, &module_location_config->hex_encryption_key, &at_cookie_encrypted_hex, &access_token);
     if (ret_code != NGX_OK)
     {
-        ret_code = write_error_response(request, ret_code, web_origin);
-        ngx_log_error(NGX_LOG_WARN, request->connection->log, 0, "*** ret_code is %d", ret_code);
-        return ret_code;
+        return write_error_response(request, ret_code, web_origin);
     }
 
     // Finally, update the authorization header in the headers in, to forward to the API via proxy_pass
@@ -561,19 +559,20 @@ static ngx_int_t write_error_response(ngx_http_request_t *request, ngx_int_t sta
             // The error interface supports only two responses, though more error codes will be added in futrure if needed by SPAs
             if (status == NGX_HTTP_INTERNAL_SERVER_ERROR)
             {
-                ngx_str_set(&code, "unauthorized_request");
-                ngx_str_set(&message, "Access denied due to missing or invalid credentials");
+                ngx_str_set(&code, "server_error");
+                ngx_str_set(&message, "Problem encountered processing the request");
             }
             else
             {
-                ngx_str_set(&code, "server_error");
-                ngx_str_set(&message, "Problem encountered processing the request");
+                ngx_str_set(&code, "unauthorized_request");
+                ngx_str_set(&message, "Access denied due to missing or invalid credentials");
             }
 
             errorFormat = "{\"code\": \"%V\", \"message\": \"%V\"}";
             errorLen = ngx_strlen(errorFormat) + code.len + message.len - 4;
             ngx_snprintf(jsonErrorData, sizeof(jsonErrorData) - 1, errorFormat, &code, &message);
             jsonErrorData[errorLen] = 0;
+            ngx_log_error(NGX_LOG_WARN, request->connection->log, 0, "*** ERROR: %s", jsonErrorData);
 
             request->headers_out.status = status;
             request->headers_out.content_length_n = errorLen;

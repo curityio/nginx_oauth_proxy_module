@@ -11,7 +11,3 @@ cd "$(dirname "${BASH_SOURCE[0]}")"
 #
 echo 'Running NGINX and the OAuth Proxy dynamic module to Docker via valgrind ...'
 docker-compose up --force-recreate --remove-orphans
-if [ $? -ne 0 ]; then
-  echo '*** Problem encountered running Docker compose'
-  exit 1
-fi

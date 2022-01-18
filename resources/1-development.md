@@ -116,13 +116,6 @@ The development target API is an internet mockbin API that echoes headers and sh
 }
 ```
 
-If the module instead returns an error, response CORS headers enable the SPA to read the response details:
-
-```text
-Access-Control-Allow-Origin: https://www.example.com
-Access-Control-Allow-Credentials: true
-```
-
 The `run.sh` script from the following repository can be used to get encrypted values if needed:
 
 - [Token Handler Encryption Tests](https://github.com/curityio/token-handler-encryption-tests)

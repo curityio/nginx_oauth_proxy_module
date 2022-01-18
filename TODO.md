@@ -26,5 +26,7 @@ TASKS
 4. valgrind for phantom token in a minor PR
    Fix any invalid location build issues also, or invalid locations
  
-5. Do I need to add `--without` options to the README.\
+5. Do I need to add `--without` comments to the README.\
    Get Travis's viewpoint on this.
+
+6. Remove cookie related headers rather than passing them through

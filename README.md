@@ -220,11 +220,16 @@ The common failure scenarios are summarized below:
 | Encryption Key Renewal | Expected reconfiguration leading to input being rejected | 401 |
 | Server Error | A technical problem occurs in the module logic | 500 |
 
-For error responses the module adds these CORS headers so that the SPA can read the response:
+For OAuth Proxy errors, the response contains a JSON body and CORS headers so that the SPA can read the details:
 
 ```text
-Access-Control-Allow-Origin: https://www.example.com
-Access-Control-Allow-Credentials: true
+{
+    "code": "unauthorized_request", 
+    "message": "Access denied due to missing or invalid credentials"
+}
+
+access-control-allow-origin: https://www.example.com
+access-control-allow-credentials: true
 ```
 
 #### SPA Error Handling
