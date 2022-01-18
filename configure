@@ -61,9 +61,6 @@ else
   CONFIG_OPTS+=(--add-module=$SRC_DIR)
 fi
 
-# The OAuth Proxy plugin requires this module
-CONFIG_OPTS+=(--with-http_ssl_module)
-
 BUILD_INFO=("NGINX_SRC_DIR=$NGINX_SRC_DIR" "NGINX_VERSION=$NGINX_VERSION" "NGINX_DEBUG=$NGINX_DEBUG" "DYNAMIC_MODULE=$DYNAMIC_MODULE")
 printf '%s\n' "${BUILD_INFO[@]}" >$BUILD_INFO_FILE
 cd $NGINX_SRC_DIR && ./configure "${CONFIG_OPTS[@]}" $*
