@@ -1,36 +1,28 @@
-NIKOS
------
-1. NGINX+ certification testing to discuss with Nikos.\
-   I would also like to test each .so file I have built in Docker Compose.\
-   This requires certs and an account setup though.
-
-2. Discuss build system and process for releases.\
-   Do any work that is needed here.
-
-3. Ask Nikos if we thinks all of the same dependencies look fine for my plugin.\
-   I have updated the pcre download URL since the one in the phantom token module no longer exists:
-   - https://ftp.pcre.org/pub/pcre/pcre-8.44.tar.gz
-   - https://sourceforge.net/projects/pcre/files/pcre/8.44/pcre-8.44.tar.gz
-
 TASKS
 -----
-1. Set compiler flags, eg in the configure script.\
-   Include C99 and release O8 / O6, and aim to statically link with openssl.\
-   If not possible then explain why, and also update docs.\
-   Current sizes of .so files are 109-137KB.\
+1. Update cookie encryption wire format and run valgrind
+   Fix up all tests
+
+2. Finalize compiler flags, eg in the configure script.\
+   Include -std=c99, O8 or O6, and strictest warnings.\
+   Either statically link with openssl or explain why not possible.\
+   Current sizes of .so files are 109-137KB - check after static linking.\
    CFLAGS=-std=c99
 
-2. Post questions on the security channel.\
-   Cover both CSRF and encryption.
+3. Form a CSRF question and get my arguments lined up.\
+   Then post it on the security channel.
 
-3. Update GitHub wiki with developer resources.\
+4. NGINX+ certification testing to do, maybe via a trial version.\
+   See if I can test each .so file I have built in Docker Compose.\
+   Then upload some initial releases for NGINX 1.21.3.\
+   Talk to Travis about supported releases.
+
+5. Update GitHub wiki with developer resources.\
    I may need to make my module temporarily public to enable the wiki.
 
-4. valgrind for phantom token in a minor PR.\
-   Fix any invalid location build issues also, or invalid locations.
- 
-5. See if I need to add `--without` comments to the README.\
+6. See if I need to add `--without` comments to the README.\
    Get Travis's viewpoint on this.
 
-6. Consider removing cookie related headers rather than passing them through
+7. Consider removing cookie related headers rather than passing them through.\
+   This should really remove only our cookies and leave others in place.\
    https://www.ruby-forum.com/t/removing-a-request-header-in-an-access-phase-handler/245742
