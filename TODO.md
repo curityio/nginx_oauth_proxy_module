@@ -1,12 +1,3 @@
-COMPILER
---------
-1. Strictest compiler optimizations and warnings in configure.\
-   Include -std=c99, O8 or O6, and strictest warnings.\
-   Make it fail early on.
-
-2. Either statically link with openssl or explain why not possible.\
-   Current sizes of .so files are 109-137KB - check after static linking.\
-
 BASE64URL
 ---------
 1. Update decryption source file to use non nginx types.\
@@ -22,6 +13,17 @@ BASE64URL
 5. Explain byte patterns
 
 6. Merge the branch
+
+COMPILER
+--------
+1. Strictest compiler optimizations and warnings in configure.\
+   Include -std=c99, O8 or O6, and strictest warnings, then make it fail.\
+   They do not seem to stick due to use of automake by NGINX.\
+   At least document the results.
+
+2. Statically link with openssl.\
+   Current sizes of .so files are 109-137KB - check after static linking.\
+   If not possible then at least explain why.
 
 DOC
 ---
