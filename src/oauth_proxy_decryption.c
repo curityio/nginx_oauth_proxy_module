@@ -21,7 +21,11 @@
 #include <ngx_string.h>
 
 /* Forward declarations */
-static ngx_int_t bytes_from_hex(u_char *bytes, const u_char *hex, size_t hex_len);
+int  bytes_from_hex(unsigned char *bytes, const unsigned char *hex, size_t hex_len);
+int  base64_url_encode_len(int len);
+void base64_url_encode(char *encoded, const unsigned char *string, int len);
+int  base64_url_decode_len(const char *bufcoded);
+void base64_url_decode(char *bufplain, const char *bufcoded);
 
 /* Encryption related constants */
 const int GCM_IV_SIZE = 12;
@@ -32,7 +36,7 @@ const int AES_KEY_SIZE_BYTES = 32;
  * Performs AES256-GCM authenticated decryption of secure cookies, using the hex encryption key from configuration
  * https://wiki.openssl.org/index.php/EVP_Authenticated_Encryption_and_Decryption
  */
-ngx_int_t oauth_proxy_decrypt(ngx_http_request_t *request, const ngx_str_t *encryption_key_hex, const ngx_str_t *encrypted_hex, ngx_str_t *plaintext)
+ngx_int_t decrypt_cookie(ngx_http_request_t *request, const ngx_str_t *encryption_key_hex, const ngx_str_t *encrypted_hex, ngx_str_t *plaintext)
 {
     EVP_CIPHER_CTX *ctx = NULL;
     u_char encryption_key_bytes[AES_KEY_SIZE_BYTES];
@@ -196,54 +200,4 @@ ngx_int_t oauth_proxy_decrypt(ngx_http_request_t *request, const ngx_str_t *encr
     }
 
     return ret_code;
-}
-
-/*
- * Convert each pair of hex characters to a byte value
- */
-static ngx_int_t bytes_from_hex(u_char *bytes, const u_char *hex, size_t hex_len)
-{
-    size_t i = 0;
-
-    if (hex_len %2 != 0)
-    {
-       return -1;
-    }
-
-    for (i = 0; i < hex_len; i++)
-    {
-        char c = hex[i];
-        u_char d;
-
-        if (c >= '0' && c <= '9')
-        {
-            d = (c - '0');
-        }
-        else if (c >= 'A' && c <= 'F')
-        {
-            d = (10 + (c - 'A'));
-        }
-        else if (c >= 'a' && c <= 'f')
-        {
-            d = (10 + (c - 'a'));
-        }
-        else
-        {
-            // invalid character
-            return NGX_ERROR;
-        }
-        
-        if (i % 2 == 0)
-        {
-            // low order byte is set first
-            bytes[i / 2] = 16 * d;
-        }
-        else
-        {
-            // high order byte is then added to the low order byte
-            bytes[i / 2] += d;
-        }
-    }
-
-    return NGX_OK;
 }
