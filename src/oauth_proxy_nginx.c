@@ -75,7 +75,7 @@ static ngx_command_t oauth_proxy_module_directives[] =
     ngx_null_command /* command termination */
 };
 
-/* Forward declarations of plumbing functions */
+/* Forward declarations of NGINX functions */
 static void *create_location_configuration(ngx_conf_t *config);
 static char *merge_location_configuration(ngx_conf_t *main_config, void *parent, void *child);
 static ngx_int_t post_configuration(ngx_conf_t *config);
@@ -90,8 +90,8 @@ static ngx_int_t get_cookie(ngx_http_request_t *request, ngx_str_t* cookie_value
 static ngx_int_t add_authorization_header(ngx_http_request_t *request, const ngx_str_t* token_value);
 static ngx_int_t write_error_response(ngx_http_request_t *request, ngx_int_t status, const ngx_str_t *web_origin);
 
-/* Imports from the decryption source file */
-extern ngx_int_t decrypt_cookie(ngx_http_request_t *request, const ngx_str_t* encryption_key_hex, const ngx_str_t* encrypted_hex, ngx_str_t *plain_text);
+/* Imports from the decryption module */
+extern ngx_int_t decrypt_cookie(ngx_http_request_t *request, ngx_str_t *plain_text, const ngx_str_t* ciphertext, const ngx_str_t* encryption_key_hex);
 
 /* Constants */
 static size_t MAX_COOKIE_PREFIX_LENGTH = 64;
@@ -323,7 +323,7 @@ static ngx_int_t handler(ngx_http_request_t *request)
     }
 
     // Try to decrypt the access token cookie to get the access token
-    ret_code = decrypt_cookie(request, &module_location_config->hex_encryption_key, &at_cookie_encrypted_hex, &access_token);
+    ret_code = decrypt_cookie(request, &access_token, &at_cookie_encrypted_hex, &module_location_config->hex_encryption_key);
     if (ret_code != NGX_OK)
     {
         return write_error_response(request, ret_code, web_origin);
@@ -396,7 +396,7 @@ static ngx_int_t apply_csrf_checks(ngx_http_request_t *request, const oauth_prox
         return NGX_HTTP_UNAUTHORIZED;
     }
 
-    ret_code = decrypt_cookie(request, &config->hex_encryption_key, &csrf_cookie_encrypted_hex, &csrf_token);
+    ret_code = decrypt_cookie(request, &csrf_token, &csrf_cookie_encrypted_hex, &config->hex_encryption_key);
     if (ret_code != NGX_OK)
     {
         return ret_code;
@@ -572,7 +572,6 @@ static ngx_int_t write_error_response(ngx_http_request_t *request, ngx_int_t sta
             errorLen = ngx_strlen(errorFormat) + code.len + message.len - 4;
             ngx_snprintf(jsonErrorData, sizeof(jsonErrorData) - 1, errorFormat, &code, &message);
             jsonErrorData[errorLen] = 0;
-            ngx_log_error(NGX_LOG_WARN, request->connection->log, 0, "*** ERROR: %s", jsonErrorData);
 
             request->headers_out.status = status;
             request->headers_out.content_length_n = errorLen;

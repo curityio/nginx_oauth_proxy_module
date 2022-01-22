@@ -96,7 +96,7 @@ Then set breakpoints, after which you can step through code to check variable st
 You can run curl requests against the nginx system in the same manner as the SPA:
 
 ```bash
-AT_COOKIE='093d3fb879767f6ec2b1e7e359040fe6ba875734ee043c5cc484d3da8963a351e9aba1c5e273f3d1ea2914f83836fa434474d1720b3040f5f7237f34536b7389'
+AT_COOKIE='AcYBf995tTBVsLtQLvOuLUZXHm2c-XqP8t7SKmhBiQtzy5CAw4h_RF6rXyg6kHrvhb8x4WaLQC6h3mw6a3O3Q9A'
 curl -X GET http://localhost:8080/api \
 -H "origin: https://www.example.com" \
 -H "cookie: example-at=$AT_COOKIE"
@@ -115,7 +115,3 @@ The development target API is an internet mockbin API that echoes headers and sh
   }
 }
 ```
-
-The `run.sh` script from the following repository can be used to get encrypted values if needed:
-
-- [Token Handler Encryption Tests](https://github.com/curityio/token-handler-encryption-tests)

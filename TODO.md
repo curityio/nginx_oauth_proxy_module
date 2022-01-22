@@ -1,18 +1,27 @@
 BASE64URL
 ---------
-1. Update decryption source file to use non nginx types.\
-   Use a typedef for the logger.\
-   typedef void (*logger)(void *, const char *, va_list);
+ENC KEY FOR TESTS
+4e4636356d65563e4c73233847503e3b21436e6f7629724950526f4b5e2e4e50
 
-2. Update encryption based on interop repo
+AT_COOKIE
+='AcYBf995tTBVsLtQLvOuLUZXHm2c-XqP8t7SKmhBiQtzy5CAw4h_RF6rXyg6kHrvhb8x4WaLQC6h3mw6a3O3Q9A'
 
-3. Fix up all tests
+CSRF token for tests:
+AfctuC2zuBeZoQHfbopmpQyOADYU6Tp9raMEA-2EhWp4I3HtoiAtoP-H2U_PIrF7O0ZQ0nwE7VmWcl3BAY6bGlv4_EGqToyh4lOqynkSlBByxixJY-kA3bIFufJl
 
-4. Calculate encoded size correctly
+2. Get rid of // comments
 
-5. Explain byte patterns
+2. Fix up all tests
 
-6. Merge the branch
+3. Merge the branch
+
+DOC
+---
+1. Update GitHub wiki with developer resources.\
+   I may need to make my module temporarily public to enable the wiki.
+
+2. See if I need to add `--without` comments to the README.\
+   Get Travis's viewpoint on this.
 
 COMPILER
 --------
@@ -25,20 +34,6 @@ COMPILER
    Current sizes of .so files are 109-137KB - check after static linking.\
    If not possible then at least explain why.
 
-DOC
----
-1. Update GitHub wiki with developer resources.\
-   I may need to make my module temporarily public to enable the wiki.
-
-2. See if I need to add `--without` comments to the README.\
-   Get Travis's viewpoint on this.
-
-HEADERS
--------
-1. Remove cookie related headers rather than passing them through.\
-   This should really remove only our cookies and leave others in place.\
-   https://www.ruby-forum.com/t/removing-a-request-header-in-an-access-phase-handler/245742
-
 CERTIFICATION
 -------------
 1. Form and post a CSRF question on security channel
@@ -47,3 +42,10 @@ CERTIFICATION
    See if I can test each .so file I have built in Docker Compose.\
    Then upload some initial releases for NGINX 1.21.3.\
    Talk to Travis about supported releases.
+
+HEADERS
+-------
+1. Remove cookie related headers rather than passing them through.\
+   This should really remove only our cookies and leave others in place.\
+   https://www.ruby-forum.com/t/removing-a-request-header-in-an-access-phase-handler/245742
+

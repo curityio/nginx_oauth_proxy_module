@@ -15,12 +15,11 @@
  */
 
 /* 
- * Adapted from the Apache open source base64 repo:
+ * Adapted from the Apache open source repo:
  * https://svn.apache.org/repos/asf/apr/apr/trunk/encoding/apr_base64.c
  */
 
-/*
- * Licensed to the Apache Software Foundation (ASF) under one or more
+/* Licensed to the Apache Software Foundation (ASF) under one or more
  * contributor license agreements.  See the NOTICE file distributed with
  * this work for additional information regarding copyright ownership.
  * The ASF licenses this file to You under the Apache License, Version 2.0
@@ -38,46 +37,21 @@
 
 #include <stdio.h>
 
-/* For base64url use the URL and Filename Safe alphabet
-   https://datatracker.ietf.org/doc/html/rfc4648#section-5 */
-static const char basis_64[] = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789-_";
-
-/* TODO: explain bytes properly
-
-   Base64 alphabet: https://datatracker.ietf.org/doc/html/rfc4648#section-4
-
-   Std base64:
-   Ascii for + is 43
-   Ascii for / is 47
-
-   base64url:
-   Ascii for - is 45
-   Ascii for _ is 95
-
- * Characters of interest
-   0=A
-   25=Z
-   26=a
-   51=z
-   52=0
-   61=9
-   62=+
-   62=/
-   64 is =
-   Hence the mapping table
-*/
-
-/* TODO: explain table properly
-
-   During decoding each byte value is looked up until value 64 (non base64url character) is found
+/* Decoding ASCII table with valid entries for base64url
    
-   Zero based byte 45 (12th in row 3) below is ascii 45 '-', valid base64url so set to 62
-   Byte 46 (14th in row 3) below is ascii 47, '/', not valid base64url so set to 64
-   Byte 96 (16th in row 6) below is ascii '_', valid base64url so set to 63 */
-static const unsigned char pr2six[256] = {
+   In base64url:
+   - Ascii 43 (+) is replaced with Ascii 45 (-)
+   - Ascii 47 (/) is replaced with Ascii 95 (_)
+
+   Therefore:
+   - The Apache value from zero based position 43 was copied to byte 45, then byte 43 was set to 64
+   - The Apache value from zero based position 47 was copied to byte 95, then byte 47 was set to 64
+ */
+static const unsigned char pr2six[256] =
+{
     64, 64, 64, 64, 64, 64, 64, 64, 64, 64, 64, 64, 64, 64, 64, 64,
     64, 64, 64, 64, 64, 64, 64, 64, 64, 64, 64, 64, 64, 64, 64, 64,
-    64, 64, 64, 64, 64, 64, 64, 64, 64, 64, 64, 64, 64, 62, 64, 63,
+    64, 64, 64, 64, 64, 64, 64, 64, 64, 64, 64, 64, 64, 62, 64, 64,
     52, 53, 54, 55, 56, 57, 58, 59, 60, 61, 64, 64, 64, 64, 64, 64,
     64,  0,  1,  2,  3,  4,  5,  6,  7,  8,  9, 10, 11, 12, 13, 14,
     15, 16, 17, 18, 19, 20, 21, 22, 23, 24, 25, 64, 64, 64, 64, 63,
@@ -94,97 +68,9 @@ static const unsigned char pr2six[256] = {
 };
 
 /*
- * Calculate an encoded length from a decoded length
- */
-int base64_url_encode_len(int len)
-{
-    // TODO: this is not right
-    return ((len + 2) / 3 * 4) + 1;
-}
-
-/*
- * Encode bytes to base64url
- */
-void base64_url_encode(char *encoded, const unsigned char *string, int len)
-{
-    int i = 0;
-    char *p = NULL;
-
-    p = encoded;
-    for (i = 0; i < len - 2; i += 3)
-    {
-        *p++ = basis_64[(string[i] >> 2) & 0x3F];
-        *p++ = basis_64[((string[i] & 0x3) << 4) | ((int) (string[i + 1] & 0xF0) >> 4)];
-        *p++ = basis_64[((string[i + 1] & 0xF) << 2) | ((int) (string[i + 2] & 0xC0) >> 6)];
-        *p++ = basis_64[string[i + 2] & 0x3F];
-    }
-    
-    if (i < len)
-    {
-        *p++ = basis_64[(string[i] >> 2) & 0x3F];
-        if (i == (len - 1))
-        {
-            *p++ = basis_64[((string[i] & 0x3) << 4)];
-
-            /* Do not pad base64url
-            *p++ = '='; */
-        }
-        else
-        {
-            *p++ = basis_64[((string[i] & 0x3) << 4) | ((int) (string[i + 1] & 0xF0) >> 4)];
-            *p++ = basis_64[((string[i + 1] & 0xF) << 2)];
-        }
-
-        /* Do not pad base64url
-	    *p++ = '='; */
-    }
-
-    *p++ = '\0';
-}
-
-/*
- * Calculate a decoded length from a string
- */
-int base64_url_decode_len(const char *bufcoded)
-{
-    int nbytesdecoded = 0;
-    const unsigned char *bufin = NULL;
-    int nprbytes = 0;
-
-    bufin = (const unsigned char *) bufcoded;
-    printf("start: %s\n", bufcoded);
-    printf("*** char %d, mapped to %d\n", *bufin, pr2six[*bufin]);
-    while (pr2six[*(bufin++)] <= 63)
-        printf("*** char %d, mapped to %d\n", *bufin, pr2six[*bufin]);
-    printf("*** end");
-
-    nprbytes = (bufin - (const unsigned char *) bufcoded) - 1;
-    nbytesdecoded = (((int)nprbytes + 3) / 4) * 3;
-
-    // TODO: explain truncation logic
-    /* https://datatracker.ietf.org/doc/html/rfc4648#section-4 */
-    if (nprbytes % 4 == 2)
-    /*if (nprbytes % 3 == 1)*/
-    {
-        /* This compensates for the two == padding characters added to payloads of this form */
-        //printf("nprbytes subtracting 2\n");
-        nbytesdecoded -= 2;
-
-    } else if (nprbytes % 4 == 3)
-    /*} else if (nprbytes % 3 == 2)*/
-    {
-        /* This compensates for the = padding character added to payloads of this form */
-        //printf("nprbytes subtracting 1\n");
-        nbytesdecoded -= 1;
-    }
-
-    return nbytesdecoded + 1;
-}
-
-/*
  * Decode bytes from base64url
  */
-void base64_url_decode(char *bufplain, const char *bufcoded)
+int base64_url_decode(char *bufplain, const char *bufcoded)
 {
     int nbytesdecoded = 0;
     const unsigned char *bufin = NULL;
@@ -225,6 +111,7 @@ void base64_url_decode(char *bufplain, const char *bufcoded)
 
     nbytesdecoded -= (4 - (int)nprbytes) & 3;
     bufplain[nbytesdecoded] = '\0';
+    return nbytesdecoded;
 }
 
 /*
@@ -258,18 +145,18 @@ int bytes_from_hex(unsigned char *bytes, const unsigned char *hex, size_t hex_le
         }
         else
         {
-            // invalid character
+            /* Invalid character */
             return 1;
         }
         
         if (i % 2 == 0)
         {
-            // low order byte is set first
+            /* Low order byte is set first */
             bytes[i / 2] = 16 * d;
         }
         else
         {
-            // high order byte is then added to the low order byte
+            /* High order byte is then added to the low order byte */
             bytes[i / 2] += d;
         }
     }

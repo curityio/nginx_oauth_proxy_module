@@ -20,36 +20,35 @@
 #include <ngx_http.h>
 #include <ngx_string.h>
 
-/* Forward declarations */
+/* Imports from the encoding module */
 int  bytes_from_hex(unsigned char *bytes, const unsigned char *hex, size_t hex_len);
-int  base64_url_encode_len(int len);
-void base64_url_encode(char *encoded, const unsigned char *string, int len);
-int  base64_url_decode_len(const char *bufcoded);
-void base64_url_decode(char *bufplain, const char *bufcoded);
+int  base64_url_decode(char *bufplain, const char *bufcoded);
 
-/* Encryption related constants */
-const int GCM_IV_SIZE = 12;
-const int GCM_TAG_SIZE = 16;
-const int AES_KEY_SIZE_BYTES = 32;
+/* For encryption related constants to be used in array sizes, use #defines as valid C */
+#define VERSION_SIZE 1
+#define GCM_IV_SIZE 12
+#define GCM_TAG_SIZE 16
+#define AES_KEY_SIZE_BYTES 32
+#define CURRENT_VERSION 1
 
 /*
  * Performs AES256-GCM authenticated decryption of secure cookies, using the hex encryption key from configuration
  * https://wiki.openssl.org/index.php/EVP_Authenticated_Encryption_and_Decryption
  */
-ngx_int_t decrypt_cookie(ngx_http_request_t *request, const ngx_str_t *encryption_key_hex, const ngx_str_t *encrypted_hex, ngx_str_t *plaintext)
+ngx_int_t decrypt_cookie(ngx_http_request_t *request, ngx_str_t *plaintext, const ngx_str_t *ciphertext, const ngx_str_t *encryption_key_hex)
 {
     EVP_CIPHER_CTX *ctx = NULL;
     u_char encryption_key_bytes[AES_KEY_SIZE_BYTES];
     u_char *ciphertext_bytes = NULL;
     u_char *plaintext_bytes = NULL;
-    u_char iv_hex[GCM_IV_SIZE * 2 + 1];
     u_char iv_bytes[GCM_IV_SIZE];
-    u_char tag_hex[GCM_TAG_SIZE * 2 + 1];
     u_char tag_bytes[GCM_TAG_SIZE];
-    int ciphertext_len = 0;
+    int decoded_size = 0;
+    int ciphertext_byte_size = 0;
     int plaintext_len  = 0;
-    int len            = 0;
-    int evp_result     = 0;
+    int offset = 0;
+    int len = 0;
+    int evp_result = 0;
     ngx_int_t ret_code = NGX_OK;
 
     ctx = EVP_CIPHER_CTX_new();
@@ -61,27 +60,19 @@ ngx_int_t decrypt_cookie(ngx_http_request_t *request, const ngx_str_t *encryptio
 
     if (ret_code == NGX_OK)
     {
-        ret_code = bytes_from_hex(encryption_key_bytes, encryption_key_hex->data, AES_KEY_SIZE_BYTES * 2);
-        if (ret_code != NGX_OK)
+        ret_code = bytes_from_hex(encryption_key_bytes, encryption_key_hex->data, encryption_key_hex->len);
+        if (ret_code != 0)
         {
             ngx_log_error(NGX_LOG_WARN, request->connection->log, 0, "The configured encryption key is not valid hex");
-        }
-    }
-
-    if (ret_code == NGX_OK)
-    {
-        ciphertext_len = encrypted_hex->len / 2 - (GCM_IV_SIZE + GCM_TAG_SIZE);
-        if (ciphertext_len <= 0)
-        {
-            ngx_log_error(NGX_LOG_WARN, request->connection->log, 0, "The encrypted hex payload had an invalid length");
             ret_code = NGX_HTTP_UNAUTHORIZED;
         }
     }
 
-    // The cookie ciphertext size is unknown and could represent a large JWT, so allocate memory dynamically
+    /* The cookie ciphertext size could represent a large JWT, so allocate memory dynamically
+       In base64url the plaintext is always smaller than the ciphertext, but here we just ensure sufficient size */
     if (ret_code == NGX_OK)
     {
-        ciphertext_bytes = ngx_pcalloc(request->pool, ciphertext_len);
+        ciphertext_bytes = ngx_pcalloc(request->pool, ciphertext->len + 1);
         if (ciphertext_bytes == NULL)
         {
             ngx_log_error(NGX_LOG_WARN, request->connection->log, 0, "Problem encountered allocating memory for ciphertext bytes");
@@ -89,52 +80,43 @@ ngx_int_t decrypt_cookie(ngx_http_request_t *request, const ngx_str_t *encryptio
         }
     }
 
-    // In AES-GCM the plaintext and ciphertext sizes are the same but we add a character for the null terminator
+    /* Decode and get the exact encrypted byte sizes */
     if (ret_code == NGX_OK)
     {
-        plaintext_bytes = ngx_pcalloc(request->pool, ciphertext_len + 1);
+        decoded_size = base64_url_decode((char *)ciphertext_bytes, (const char *)ciphertext->data);
+        ciphertext_byte_size = decoded_size - (VERSION_SIZE + GCM_IV_SIZE + GCM_TAG_SIZE);
+        if (ciphertext_byte_size <= 0)
+        {
+            ngx_log_error(NGX_LOG_WARN, request->connection->log, 0, "Invalid data length after decoding from base64");
+            ret_code = NGX_HTTP_UNAUTHORIZED;
+        }
+        else
+        {
+            if (ciphertext_bytes[0] != CURRENT_VERSION)
+            {
+                ngx_log_error(NGX_LOG_WARN, request->connection->log, 0, "The received cookie has an invalid format");
+                ret_code = NGX_HTTP_UNAUTHORIZED;
+            }
+        }
+    }
+
+    if (ret_code == NGX_OK)
+    {
+        plaintext_bytes = ngx_pcalloc(request->pool, ciphertext_byte_size + 1);
         if (plaintext_bytes == NULL)
         {
             ngx_log_error(NGX_LOG_WARN, request->connection->log, 0, "Problem encountered allocating memory for plaintext bytes");
             ret_code = NGX_HTTP_INTERNAL_SERVER_ERROR;
         }
     }
-    
-    // The IV part of the payload is the first 12 hex characters
+
     if (ret_code == NGX_OK)
     {
-        ngx_memcpy(iv_hex, encrypted_hex->data, GCM_IV_SIZE * 2);
-        iv_hex[GCM_IV_SIZE * 2] = 0;
-        ret_code = bytes_from_hex(iv_bytes, iv_hex, GCM_IV_SIZE * 2);
-        if (ret_code != NGX_OK)
-        {
-            ngx_log_error(NGX_LOG_WARN, request->connection->log, 0, "The IV section of the encrypted payload is not valid hex");
-            ret_code = NGX_HTTP_UNAUTHORIZED;
-        }
-    }
+        offset = VERSION_SIZE;
+        memcpy(iv_bytes, ciphertext_bytes + offset, GCM_IV_SIZE);
 
-    // The actual ciphertext is the large middle part of the payload
-    if (ret_code == NGX_OK)
-    {   
-        ret_code = bytes_from_hex(ciphertext_bytes, encrypted_hex->data + GCM_IV_SIZE * 2, encrypted_hex->len - (GCM_IV_SIZE + GCM_TAG_SIZE) * 2);
-        if (ret_code != NGX_OK)
-        {
-            ngx_log_error(NGX_LOG_WARN, request->connection->log, 0, "The ciphertext section of the encrypted payload is not valid hex");
-            ret_code = NGX_HTTP_UNAUTHORIZED;
-        }
-    }
-
-    // The tag part of the payload is the last 16 hex characters
-    if (ret_code == NGX_OK)
-    {
-        ngx_memcpy(tag_hex, encrypted_hex->data + encrypted_hex->len - GCM_TAG_SIZE * 2, GCM_TAG_SIZE * 2);
-        tag_hex[GCM_TAG_SIZE * 2] = 0;
-        ret_code = bytes_from_hex(tag_bytes, tag_hex, GCM_TAG_SIZE * 2);
-        if (ret_code != NGX_OK)
-        {
-            ngx_log_error(NGX_LOG_WARN, request->connection->log, 0, "The tag section of the encrypted payload is not valid hex");
-            ret_code = NGX_HTTP_UNAUTHORIZED;
-        }
+        offset = decoded_size - GCM_TAG_SIZE;
+        memcpy(tag_bytes, ciphertext_bytes + offset, GCM_TAG_SIZE);
     }
 
     if (ret_code == NGX_OK)
@@ -150,7 +132,8 @@ ngx_int_t decrypt_cookie(ngx_http_request_t *request, const ngx_str_t *encryptio
 
     if (ret_code == NGX_OK)
     {
-        evp_result = EVP_DecryptUpdate(ctx, plaintext_bytes, &len, ciphertext_bytes, ciphertext_len);
+        offset = VERSION_SIZE + GCM_IV_SIZE;
+        evp_result = EVP_DecryptUpdate(ctx, plaintext_bytes, &len, ciphertext_bytes + offset, ciphertext_byte_size);
         if (evp_result == 0)
         {
             ngx_log_error(NGX_LOG_WARN, request->connection->log, 0, "Problem encountered processing ciphertext, error number: %d", evp_result);
