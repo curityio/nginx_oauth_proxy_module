@@ -1,20 +1,3 @@
-BASE64URL
----------
-ENC KEY FOR TESTS
-4e4636356d65563e4c73233847503e3b21436e6f7629724950526f4b5e2e4e50
-
-AT_COOKIE
-='AcYBf995tTBVsLtQLvOuLUZXHm2c-XqP8t7SKmhBiQtzy5CAw4h_RF6rXyg6kHrvhb8x4WaLQC6h3mw6a3O3Q9A'
-
-CSRF token for tests:
-AfctuC2zuBeZoQHfbopmpQyOADYU6Tp9raMEA-2EhWp4I3HtoiAtoP-H2U_PIrF7O0ZQ0nwE7VmWcl3BAY6bGlv4_EGqToyh4lOqynkSlBByxixJY-kA3bIFufJl
-
-2. Get rid of // comments
-
-2. Fix up all tests
-
-3. Merge the branch
-
 DOC
 ---
 1. Update GitHub wiki with developer resources.\

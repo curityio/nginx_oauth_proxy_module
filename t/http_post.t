@@ -10,10 +10,10 @@ use Test::Nginx::Socket 'no_plan';
 
 SKIP: {
     our $at_opaque = "42665300-efe8-419d-be52-07b53e208f46";
-    our $at_opaque_cookie = "093d3fb879767f6ec2b1e7e359040fe6ba875734ee043c5cc484d3da8963a351e9aba1c5e273f3d1ea2914f83836fa434474d1720b3040f5f7237f34536b7389";
+    our $at_opaque_cookie = "AcYBf995tTBVsLtQLvOuLUZXHm2c-XqP8t7SKmhBiQtzy5CAw4h_RF6rXyg6kHrvhb8x4WaLQC6h3mw6a3O3Q9A";
     
     our $csrf_token = "pQguFsD6hFjnyYjaeC5KyijcWS6AvkJHiUmY7dLUsuTKsLAITLiJHVqsCdQpaGYO";
-    our $csrf_cookie = "f61b300a79018b4b94f480086d63395148084af1f20c3e474623e60f34a181656b3a54725c1b4ddaeec9171f0398bde8c6c1e0e12d90bdb13397bf24678cd17a230a3df8e1771f9992e3bf2d6567ad920e1c25dc5e3e015679b5e673";
+    our $csrf_cookie = "AfctuC2zuBeZoQHfbopmpQyOADYU6Tp9raMEA-2EhWp4I3HtoiAtoP-H2U_PIrF7O0ZQ0nwE7VmWcl3BAY6bGlv4_EGqToyh4lOqynkSlBByxixJY-kA3bIFufJl";
     
     run_tests();
 }

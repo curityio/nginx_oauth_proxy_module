@@ -264,26 +264,26 @@ static ngx_int_t handler(ngx_http_request_t *request)
     ngx_str_t access_token;
     ngx_int_t ret_code = NGX_OK;
     
-    // Return immediately for locations where the module is not used
+    /* Return immediately for locations where the module is not used */
     module_location_config = ngx_http_get_module_loc_conf(request, ngx_curity_http_oauth_proxy_module);
     if (!module_location_config->enabled)
     {
         return NGX_DECLINED;
     }
 
-    // Pre-flight requests from SPAs will never return cookies or tokens, so return immediately
+    /* Pre-flight requests from SPAs will never return cookies or tokens, so return immediately */
     if (request->method == NGX_HTTP_OPTIONS)
     {
         return NGX_OK;
     }
 
-    // Pass the request through if it has an Authorization header, eg from a mobile client that uses the same route as an SPA
+    /* Pass the request through if it has an Authorization header, eg from a mobile client that uses the same route as an SPA */
     if (module_location_config->allow_tokens && request->headers_in.authorization && request->headers_in.authorization->value.len > 0)
     {
         return NGX_OK;
     }
 
-    // Verify the web origin, which is sent by all modern browsers
+    /* Verify the web origin, which is sent by all modern browsers */
     web_origin = search_headers_in(request, (u_char *)literal_origin, ngx_strlen(literal_origin));
     if (web_origin == NULL)
     {
@@ -300,7 +300,7 @@ static ngx_int_t handler(ngx_http_request_t *request)
         return write_error_response(request, ret_code, NULL);
     }
 
-    // For data changing commands, apply double submit cookie checks in line with OWASP best practices
+    /* For data changing commands, apply double submit cookie checks in line with OWASP best practices */
     if (request->method == NGX_HTTP_POST   ||
         request->method == NGX_HTTP_PUT    ||
         request->method == NGX_HTTP_PATCH  ||
@@ -313,7 +313,7 @@ static ngx_int_t handler(ngx_http_request_t *request)
         }
     }
 
-    // This returns 0 when there is a single cookie header (HTTP 1.1) or > 0 when there are multiple cookie headers (HTTP 2.0)
+    /* This returns 0 when there is a single cookie header (HTTP 1.1) or > 0 when there are multiple cookie headers (HTTP 2.0) */
     ret_code = get_cookie(request, &at_cookie_encrypted_hex, &module_location_config->cookie_prefix, (u_char *)"-at");
     if (ret_code == NGX_DECLINED)
     {
@@ -322,14 +322,14 @@ static ngx_int_t handler(ngx_http_request_t *request)
         return write_error_response(request, ret_code, web_origin);
     }
 
-    // Try to decrypt the access token cookie to get the access token
+    /* Try to decrypt the access token cookie to get the access token */
     ret_code = decrypt_cookie(request, &access_token, &at_cookie_encrypted_hex, &module_location_config->hex_encryption_key);
     if (ret_code != NGX_OK)
     {
         return write_error_response(request, ret_code, web_origin);
     }
 
-    // Finally, update the authorization header in the headers in, to forward to the API via proxy_pass
+    /* Finally, update the authorization header in the headers in, to forward to the API via proxy_pass */
     ret_code = add_authorization_header(request, &access_token);
     if (ret_code != NGX_OK)
     {
@@ -377,7 +377,7 @@ static ngx_int_t apply_csrf_checks(ngx_http_request_t *request, const oauth_prox
     size_t suffix_length = 5;
     ngx_int_t ret_code = NGX_OK;
 
-    // This returns 0 when there is a single cookie header or > 0 when there are multiple cookie headers
+    /* This returns 0 when there is a single cookie header or > 0 when there are multiple cookie headers */
     ret_code = get_cookie(request, &csrf_cookie_encrypted_hex, &config->cookie_prefix, (u_char *)literal_suffix);
     if (ret_code == NGX_DECLINED)
     {
@@ -421,16 +421,16 @@ static ngx_str_t *search_headers_in(ngx_http_request_t *request, u_char *name, s
     ngx_table_elt_t *h = NULL;
     ngx_uint_t i = 0;
 
-    // Get the first part of the list. There is usual only one part
+    /* Get the first part of the list. There is usual only one part */
     part = &request->headers_in.headers.part;
     h = part->elts;
 
-    // Headers list array may consist of more than one part, so loop through all of it
+    /* Headers list array may consist of more than one part, so loop through all of it */
     for (i = 0; ; i++) {
 
         if (i >= part->nelts) {
             if (part->next == NULL) {
-                // The last part, search is done
+                /* The last part, search is done */
                 break;
             }
 
@@ -439,12 +439,12 @@ static ngx_str_t *search_headers_in(ngx_http_request_t *request, u_char *name, s
             i = 0;
         }
 
-        // Just compare the lengths and then the names case insensitively
+        /* Just compare the lengths and then the names case insensitively */
         if (len != h[i].key.len || ngx_strcasecmp(name, h[i].key.data) != 0) {
             continue;
         }
 
-        // Stop the search at the first matched header
+        /* Stop the search at the first matched header */
         return &h[i].value;
     }
 
@@ -486,7 +486,7 @@ static ngx_int_t add_authorization_header(ngx_http_request_t *request, const ngx
         return NGX_HTTP_INTERNAL_SERVER_ERROR;
     }
     
-    // The header size is unknown and could represent a large JWT, so allocate memory dynamically
+    /* The header size is unknown and could represent a large JWT, so allocate memory dynamically */
     header_value_len = ngx_strlen("Bearer ") + token_value->len;
     header_value = ngx_pcalloc(request->pool, header_value_len + 1);
     if (header_value == NULL)
@@ -522,7 +522,7 @@ static ngx_int_t write_error_response(ngx_http_request_t *request, ngx_int_t sta
     const char *errorFormat = NULL;
     size_t errorLen = 0;
 
-    // When there is a valid web origin, add CORS headers so that Javascript can read the response
+    /* When there is a valid web origin, add CORS headers so that Javascript can read the response */
     if (web_origin != NULL)
     {
         allow_headers     = ngx_list_push(&request->headers_out.headers);
@@ -545,7 +545,7 @@ static ngx_int_t write_error_response(ngx_http_request_t *request, ngx_int_t sta
         }
     }
 
-    // Always add the JSON body unless it is not valid to set one
+    /* Always add the JSON body unless it is not valid to set one */
     if (request->method != NGX_HTTP_HEAD)
     {
         body = ngx_calloc_buf(request->pool);
@@ -556,7 +556,7 @@ static ngx_int_t write_error_response(ngx_http_request_t *request, ngx_int_t sta
         }
         else
         {
-            // The error interface supports only two responses, though more error codes will be added in futrure if needed by SPAs
+            /* The error interface supports only two responses, though more error codes will be added in futrure if needed by SPAs */
             if (status == NGX_HTTP_INTERNAL_SERVER_ERROR)
             {
                 ngx_str_set(&code, "server_error");
@@ -586,7 +586,7 @@ static ngx_int_t write_error_response(ngx_http_request_t *request, ngx_int_t sta
             output.buf = body;
             output.next = NULL;
 
-            // When setting a body ourself we must return the result of the filter, to prevent a 'header already sent' error
+            /* When setting a body ourself we must return the result of the filter, to prevent a 'header already sent' error */
             return ngx_http_output_filter(request, &output);
         }
     }
