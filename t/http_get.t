@@ -10,8 +10,7 @@ use Test::Nginx::Socket 'no_plan';
 
 SKIP: {
     our $at_opaque = "42665300-efe8-419d-be52-07b53e208f46";
-    our $at_opaque_cookie = "093d3fb879767f6ec2b1e7e359040fe6ba875734ee043c5cc484d3da8963a351e9aba1c5e273f3d1ea2914f83836fa434474d1720b3040f5f7237f34536b7389";
-    
+    our $at_opaque_cookie = "AcYBf995tTBVsLtQLvOuLUZXHm2c-XqP8t7SKmhBiQtzy5CAw4h_RF6rXyg6kHrvhb8x4WaLQC6h3mw6a3O3Q9A";
     run_tests();
 }
 
