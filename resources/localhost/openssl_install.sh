@@ -2,8 +2,6 @@
 
 ######################################################################################################
 # Install OpenSSL on a development computer, for the best developer experience and use of intellisense
-# This also enables local programming against OpenSSL, such as in the encryption tests repo:
-# - https://github.com/curityio/token-handler-encryption-tests
 ######################################################################################################
 
 cd "$(dirname "${BASH_SOURCE[0]}")"

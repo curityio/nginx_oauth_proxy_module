@@ -7,8 +7,7 @@ RUN apt-get update && \
 COPY configure /tmp
 COPY config /tmp
 COPY Makefile /tmp
-COPY oauth_proxy.c /tmp
-COPY oauth_proxy_decrypt.c /tmp
+COPY src/*.c /tmp/src/
 ARG NGINX_VERSION
 ENV NGINX_VERSION=$NGINX_VERSION
 ADD nginx-$NGINX_VERSION.tar.gz /tmp/
@@ -25,8 +24,7 @@ RUN apt-get update && \
 COPY configure /tmp
 COPY config /tmp
 COPY Makefile /tmp
-COPY oauth_proxy.c /tmp
-COPY oauth_proxy_decrypt.c /tmp
+COPY src/*.c /tmp/src/
 ARG NGINX_VERSION
 ENV NGINX_VERSION=$NGINX_VERSION
 ADD nginx-$NGINX_VERSION.tar.gz /tmp/
@@ -45,8 +43,7 @@ RUN yum install -y \
 COPY configure /tmp
 COPY config /tmp
 COPY Makefile /tmp
-COPY oauth_proxy.c /tmp
-COPY oauth_proxy_decrypt.c /tmp
+COPY src/*.c /tmp/src/
 ARG NGINX_VERSION
 ENV NGINX_VERSION=$NGINX_VERSION
 ADD nginx-$NGINX_VERSION.tar.gz /tmp/
@@ -63,8 +60,7 @@ RUN yum install -y \
 COPY configure /tmp
 COPY config /tmp
 COPY Makefile /tmp
-COPY oauth_proxy.c /tmp
-COPY oauth_proxy_decrypt.c /tmp
+COPY src/*.c /tmp/src/
 ARG NGINX_VERSION
 ENV NGINX_VERSION=$NGINX_VERSION
 ADD nginx-$NGINX_VERSION.tar.gz /tmp/
@@ -81,8 +77,7 @@ RUN apt update && apt install -y \
 COPY configure /tmp
 COPY config /tmp
 COPY Makefile /tmp
-COPY oauth_proxy.c /tmp
-COPY oauth_proxy_decrypt.c /tmp
+COPY src/*.c /tmp/src/
 ARG NGINX_VERSION
 ENV NGINX_VERSION=$NGINX_VERSION
 ADD nginx-$NGINX_VERSION.tar.gz /tmp/
@@ -101,8 +96,7 @@ RUN apt update && apt install -y \
 COPY configure /tmp
 COPY config /tmp
 COPY Makefile /tmp
-COPY oauth_proxy.c /tmp
-COPY oauth_proxy_decrypt.c /tmp
+COPY src/*.c /tmp/src/
 ARG NGINX_VERSION
 ENV NGINX_VERSION=$NGINX_VERSION
 ADD nginx-$NGINX_VERSION.tar.gz /tmp/
@@ -121,8 +115,7 @@ RUN yum install -y \
 COPY configure /tmp
 COPY config /tmp
 COPY Makefile /tmp
-COPY oauth_proxy.c /tmp
-COPY oauth_proxy_decrypt.c /tmp
+COPY src/*.c /tmp/src/
 ARG NGINX_VERSION
 ENV NGINX_VERSION=$NGINX_VERSION
 ADD nginx-$NGINX_VERSION.tar.gz /tmp/
@@ -139,8 +132,7 @@ RUN yum install -y \
 COPY configure /tmp
 COPY config /tmp
 COPY Makefile /tmp
-COPY oauth_proxy.c /tmp
-COPY oauth_proxy_decrypt.c /tmp
+COPY src/*.c /tmp/src/
 ARG NGINX_VERSION
 ENV NGINX_VERSION=$NGINX_VERSION
 ADD nginx-$NGINX_VERSION.tar.gz /tmp/
@@ -158,8 +150,7 @@ RUN apk add --no-cache --virtual .build-deps \
 COPY configure /tmp
 COPY config /tmp
 COPY Makefile /tmp
-COPY oauth_proxy.c /tmp
-COPY oauth_proxy_decrypt.c /tmp
+COPY src/*.c /tmp/src/
 ARG NGINX_VERSION
 ENV NGINX_VERSION=$NGINX_VERSION
 ADD nginx-$NGINX_VERSION.tar.gz /tmp/
