@@ -35,7 +35,7 @@
  * limitations under the License.
  */
 
-#include <stdio.h>
+#include <ngx_core.h>
 
 /* Decoding ASCII table with valid entries for base64url
    
@@ -47,7 +47,7 @@
    - The Apache value from zero based position 43 was copied to byte 45, then byte 43 was set to 64
    - The Apache value from zero based position 47 was copied to byte 95, then byte 47 was set to 64
  */
-static const unsigned char pr2six[256] =
+static const u_char pr2six[256] =
 {
     64, 64, 64, 64, 64, 64, 64, 64, 64, 64, 64, 64, 64, 64, 64, 64,
     64, 64, 64, 64, 64, 64, 64, 64, 64, 64, 64, 64, 64, 64, 64, 64,
@@ -70,46 +70,46 @@ static const unsigned char pr2six[256] =
 /*
  * Decode bytes from base64url
  */
-int base64_url_decode(char *bufplain, const char *bufcoded)
+int base64_url_decode(u_char *bufplain, const u_char *bufcoded)
 {
     int nbytesdecoded = 0;
-    const unsigned char *bufin = NULL;
-    unsigned char *bufout = NULL;
+    const u_char *bufin = NULL;
+    u_char *bufout = NULL;
     int nprbytes = 0;
 
-    bufin = (const unsigned char *) bufcoded;
+    bufin = bufcoded;
     while (pr2six[*(bufin++)] <= 63)
         ;
     
-    nprbytes = (bufin - (const unsigned char *) bufcoded) - 1;
+    nprbytes = (bufin - bufcoded) - 1;
     nbytesdecoded = (((int)nprbytes + 3) / 4) * 3;
 
-    bufout = (unsigned char *) bufplain;
-    bufin = (const unsigned char *) bufcoded;
+    bufout = bufplain;
+    bufin = bufcoded;
 
     while (nprbytes > 4)
     {
-        *(bufout++) = (unsigned char) (pr2six[*bufin] << 2 | pr2six[bufin[1]] >> 4);
-        *(bufout++) = (unsigned char) (pr2six[bufin[1]] << 4 | pr2six[bufin[2]] >> 2);
-        *(bufout++) = (unsigned char) (pr2six[bufin[2]] << 6 | pr2six[bufin[3]]);
+        *(bufout++) = (u_char) (pr2six[*bufin] << 2 | pr2six[bufin[1]] >> 4);
+        *(bufout++) = (u_char) (pr2six[bufin[1]] << 4 | pr2six[bufin[2]] >> 2);
+        *(bufout++) = (u_char) (pr2six[bufin[2]] << 6 | pr2six[bufin[3]]);
         bufin += 4;
         nprbytes -= 4;
     }
 
     if (nprbytes > 1)
     {
-	    *(bufout++) = (unsigned char) (pr2six[*bufin] << 2 | pr2six[bufin[1]] >> 4);
+	    *(bufout++) = (u_char) (pr2six[*bufin] << 2 | pr2six[bufin[1]] >> 4);
     }
     if (nprbytes > 2)
     {
-	    *(bufout++) = (unsigned char) (pr2six[bufin[1]] << 4 | pr2six[bufin[2]] >> 2);
+	    *(bufout++) = (u_char) (pr2six[bufin[1]] << 4 | pr2six[bufin[2]] >> 2);
     }
     if (nprbytes > 3)
     {
-	    *(bufout++) = (unsigned char) (pr2six[bufin[2]] << 6 | pr2six[bufin[3]]);
+	    *(bufout++) = (u_char) (pr2six[bufin[2]] << 6 | pr2six[bufin[3]]);
     }
 
-    nbytesdecoded -= (4 - (int)nprbytes) & 3;
+    nbytesdecoded -= (4 - nprbytes) & 3;
     bufplain[nbytesdecoded] = '\0';
     return nbytesdecoded;
 }
@@ -117,11 +117,11 @@ int base64_url_decode(char *bufplain, const char *bufcoded)
 /*
  * Convert each pair of hex characters to a byte value
  */
-int bytes_from_hex(unsigned char *bytes, const unsigned char *hex, size_t hex_len)
+int bytes_from_hex(u_char *bytes, const u_char *hex, size_t hex_len)
 {
     size_t i = 0;
     char c = 0;
-    unsigned char d = 0;
+    u_char d = 0;
 
     if (hex_len %2 != 0)
     {

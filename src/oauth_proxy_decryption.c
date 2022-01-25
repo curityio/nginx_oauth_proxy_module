@@ -21,8 +21,8 @@
 #include <ngx_string.h>
 
 /* Imports from the encoding module */
-int  bytes_from_hex(unsigned char *bytes, const unsigned char *hex, size_t hex_len);
-int  base64_url_decode(char *bufplain, const char *bufcoded);
+int  bytes_from_hex(u_char *bytes, const u_char *hex, size_t hex_len);
+int  base64_url_decode(u_char *bufplain, const u_char *bufcoded);
 
 /* For encryption related constants to be used in array sizes, use #defines as valid C */
 #define VERSION_SIZE 1
@@ -83,7 +83,7 @@ ngx_int_t decrypt_cookie(ngx_http_request_t *request, ngx_str_t *plaintext, cons
     /* Decode and get the exact encrypted byte sizes */
     if (ret_code == NGX_OK)
     {
-        decoded_size = base64_url_decode((char *)ciphertext_bytes, (const char *)ciphertext->data);
+        decoded_size = base64_url_decode(ciphertext_bytes, ciphertext->data);
         ciphertext_byte_size = decoded_size - (VERSION_SIZE + GCM_IV_SIZE + GCM_TAG_SIZE);
         if (ciphertext_byte_size <= 0)
         {
