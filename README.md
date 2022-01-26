@@ -22,7 +22,7 @@ A typical flow for an SPA calling an API would work like this:
 - The incoming HTTP Authorization Header is then updated with the JWT access token
 - The API must then verify the JWT in a zero trust manner, on every request
 
-## Configuration Directives
+## Required Configuration Directives
 
 All of the directives are required for locations where the module is enabled.\
 NGINX will fail to load if the configuration for any locations fail validation:
@@ -37,64 +37,124 @@ NGINX will fail to load if the configuration for any locations fail validation:
 
 The module is disabled by default but can be enabled for paths you choose.
 
-#### oauth_proxy_allow_tokens
+#### oauth_proxy_cookie_name_prefix
 
-> **Syntax**: **`oauth_proxy_allow_tokens`** `on` | `off`
+> **Syntax**: **`oauth_proxy_cookie_name_prefix`** `string`
 >
-> **Default**: *`off`*                                                                
+> **Default**: *``*
 >
-> **Context**: `location`                                                   
+> **Context**: `location`
 
-When set to `on`, requests that already have an authorization header can bypass cookie validation.\
-This enables the same API routes to be shared between SPAs and mobile clients.\
-If set to `off` then all locations for which the module is configured must contain secure cookies.
+The prefix used in the SPA's cookie name, typically representing a company or product name.\
+The value supplied must not be empty, and `example` would lead to full cookie names such as `cookie-at`.
 
-#### oauth_proxy_cookie_prefix
+#### oauth_proxy_encryption_key
 
-> **Syntax**: **`oauth_proxy_cookie_prefix`** _`string`_
+> **Syntax**: **`oauth_proxy_encryption_key`** `string`
 >
-> **Default**: *``*                                                                
+> **Default**: *``*
 >
-> **Context**: `location`                                                   
+> **Context**: `location`
 
-A cookie prefix name must be provided, such as a company and / or product name.\
-The value of `example` used in this README can be replaced with your own custom value.\
-The maximum allowed length of the prefix is 64 characters.
-
-#### oauth_proxy_hex_encryption_key
-
-> **Syntax**: **`oauth_proxy_hex_encryption_key`** _`string`_
->
-> **Default**: *``*                                                                
->
-> **Context**: `location`                                                   
-
-This must be exactly 64 hexadecimal characters, representing the 32 bytes of the encryption key.
-This provides an encryption key that is compliant with the AES256-GCM standard.\
-A random encryption key in the correct format can be generated via the following command:
-
-```bash
-openssl rand 32 | xxd -p -c 64
-```
+This must be a 32 byte encryption key expressed as 64 hex characters.\
+It is used to decrypt AES256 encrypted secure cookies.\
+The key is initially generated with a tool such as `openssl`, as explained in Curity tutorials.
 
 #### oauth_proxy_trusted_web_origins
 
-> **Syntax**: **`oauth_proxy_trusted_web_origins`** _`string`_
+> **Syntax**: **`oauth_proxy_trusted_web_origins`** `string[]`
 >
-> **Default**: *``*                                                                
+> **Default**: *[]*
 >
-> **Context**: `location`                                                   
+> **Context**: `location`
 
-An array of at least one trusted web origins where SPA clients will run in the browser.\
-Multiple subdomains can be configured, though a single value is the most common use case:
+A whitelist of at least one web origin from which the plugin will accept requests.\
+Multiple origins could be used in special cases where cookies are shared across subdomains.
 
-```nginx
-location / {
-   ...
-   oauth_proxy_trusted_web_origins "https://webapp1.example.com";
-   oauth_proxy_trusted_web_origins "https://webapp2.example.com";
-}
-```
+#### oauth_proxy_cors_enabled
+
+> **Syntax**: **`oauth_proxy_cors_enabled`** `boolean`
+>
+> **Default**: *true*
+>
+> **Context**: `location`
+
+When enabled, the OAuth proxy returns CORS response headers on behalf of the API.\
+When an origin header is received that is in the trusted_web_origins whitelist, response headers are written.\
+The [access-control-allow-origin](https://developer.mozilla.org/en-US/docs/Web/HTTP/Headers/Access-Control-Allow-Origin) header is returned, so that the SPA can call the API.\
+The [access-control-allow-credentials](https://developer.mozilla.org/en-US/docs/Web/HTTP/Headers/Access-Control-Allow-Credentials) header is returned, so that the SPA can send secured cookies to the API.
+
+## Optional Configuration Directives
+
+#### oauth_proxy_allow_tokens
+
+> **Syntax**: **`oauth_proxy_allow_tokens`** `boolean`
+>
+> **Default**: *false*
+>
+> **Context**: `location`
+
+If set to true, then requests that already have a bearer token are passed straight through to APIs.\
+This can be useful when web and mobile clients share the same API routes.
+
+#### oauth_proxy_remove_cookie_headers
+
+> **Syntax**: **`oauth_proxy_remove_cookie_headers`** `boolean`
+>
+> **Default**: *true*
+>
+> **Context**: `location`
+
+If set to true, then cookie and CSRF headers are not forwarded to APIs.\
+This provides cleaner requests to APIs, which only receive a JWT in the HTTP Authorization header.
+
+#### oauth_proxy_cors_allowed_methods
+
+> **Syntax**: **`oauth_proxy_cors_allowed_methods`** `string[]`
+>
+> **Default**: *['OPTIONS', 'GET', 'HEAD', 'POST', 'PUT', 'PATCH', 'DELETE']*
+>
+> **Context**: `location`
+
+When CORS is enabled, these values are returned in the [access-control-allow-methods](https://developer.mozilla.org/en-US/docs/Web/HTTP/Headers/Access-Control-Allow-Methods) response header.\
+The SPA is then allowed to call a particular API endpoint with those HTTP methods (eg GET, POST).\
+A '*' wildcard value should not be configured here, since it will not work with credentialed requests.
+
+#### oauth_proxy_cors_allowed_headers
+
+> **Syntax**: **`oauth_proxy_cors_allowed_headers`** `string[]`
+>
+> **Default**: *['x-example-csrf']*
+>
+> **Context**: `location`
+
+When CORS is enabled, the plugin returns these values in the [access-contol-allow-headers](https://developer.mozilla.org/en-US/docs/Web/HTTP/Headers/Access-Control-Allow-Headers) response header.\
+Include here any additional [non-safelisted request headers](https://developer.mozilla.org/en-US/docs/Glossary/CORS-safelisted_request_header) that the SPA needs to send in API requests.\
+To implement POST requests, the values configured should include the CSRF request header name, eg `x-example-csrf`.\
+A '*' wildcard value should not be configured here, since it will not work with credentialed requests.
+
+#### oauth_proxy_cors_exposed_headers
+
+> **Syntax**: **`oauth_proxy_cors_exposed_headers`** `string[]`
+>
+> **Default**: *[]*
+>
+> **Context**: `location`
+
+When CORS is enabled, the plugin returns these values in the [access-contol-expose-headers](https://developer.mozilla.org/en-US/docs/Web/HTTP/Headers/Access-Control-Expose-Headers) response header.\
+Include here any additional [non-safelisted response headers](https://developer.mozilla.org/en-US/docs/Glossary/CORS-safelisted_response_header) that the SPA needs to read from API responses.\
+A '*' wildcard value should not be configured here, since it will not work with credentialed requests.
+
+#### oauth_proxy_cors_max_age
+
+> **Syntax**: **`oauth_proxy_cors_max_age`** `number`
+>
+> **Default**: *86400*
+>
+> **Context**: `location`
+
+When CORS is enabled, the plugin returns this value in the [access-contol-max-age](https://developer.mozilla.org/en-US/docs/Web/HTTP/Headers/Access-Control-Max-Age) response header.\
+When a value is configured, this prevents excessive pre-flight OPTIONS requests to improve efficiency.
 
 ## Sample Configurations
 
@@ -115,10 +175,11 @@ The following location decrypts cookies, then forwards an access token to the do
 location /products {
 
     oauth_proxy on;
-    oauth_proxy_allow_tokens on;
     oauth_proxy_cookie_prefix "example";
-    oauth_proxy_hex_encryption_key "4e4636356d65563e4c73233847503e3b21436e6f7629724950526f4b5e2e4e50";
+    oauth_proxy_encryption_key "4e4636356d65563e4c73233847503e3b21436e6f7629724950526f4b5e2e4e50";
     oauth_proxy_trusted_web_origin "https://www.example.com";
+    oauth_proxy_cors_enabled on;
+    oauth_proxy_allow_tokens on;
 
     proxy_pass "https://productsapi.example.com";
 }
@@ -132,10 +193,11 @@ Parent and child locations can be used, in which case children inherit the paren
 location /api {
 
     oauth_proxy on;
-    oauth_proxy_allow_tokens on;
     oauth_proxy_cookie_prefix "example";
-    oauth_proxy_hex_encryption_key "4e4636356d65563e4c73233847503e3b21436e6f7629724950526f4b5e2e4e50";
+    oauth_proxy_encryption_key "4e4636356d65563e4c73233847503e3b21436e6f7629724950526f4b5e2e4e50";
     oauth_proxy_trusted_web_origin "https://www.example.com";
+    oauth_proxy_cors_enabled on;
+    oauth_proxy_allow_tokens on;
     
     location /api/products {
         proxy_pass "https://productsapi.example.com";

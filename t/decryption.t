@@ -29,10 +29,11 @@ __DATA__
 --- config
 location /t {
     oauth_proxy on;
-    oauth_proxy_allow_tokens on;
     oauth_proxy_cookie_prefix "example";
-    oauth_proxy_hex_encryption_key "7b99279ab87533d3c238db874a842a91ee26a76027f3c03c317504963d2c9926";
+    oauth_proxy_encryption_key "7b99279ab87533d3c238db874a842a91ee26a76027f3c03c317504963d2c9926";
     oauth_proxy_trusted_web_origin "https://www.example.com";
+    oauth_proxy_cors_enabled on;
+    oauth_proxy_allow_tokens on;
 }
 
 --- request
@@ -53,10 +54,11 @@ cookie: example-at=x
 --- config
 location /t {
     oauth_proxy on;
-    oauth_proxy_allow_tokens on;
     oauth_proxy_cookie_prefix "example";
-    oauth_proxy_hex_encryption_key "7b99279ab87533d3c238db874a842a91ee26a76027f3c03c317504963d2c9926";
+    oauth_proxy_encryption_key "7b99279ab87533d3c238db874a842a91ee26a76027f3c03c317504963d2c9926";
     oauth_proxy_trusted_web_origin "https://www.example.com";
+    oauth_proxy_cors_enabled on;
+    oauth_proxy_allow_tokens on;
 
     proxy_pass http://localhost:1984/target;
 }
@@ -86,10 +88,11 @@ $data;
 --- config
 location /t {
     oauth_proxy on;
-    oauth_proxy_allow_tokens on;
     oauth_proxy_cookie_prefix "example";
-    oauth_proxy_hex_encryption_key "7b99279ab87533d3c238db874a842a91ee26a76027f3c03c317504963d2c9926";
+    oauth_proxy_encryption_key "7b99279ab87533d3c238db874a842a91ee26a76027f3c03c317504963d2c9926";
     oauth_proxy_trusted_web_origin "https://www.example.com";
+    oauth_proxy_cors_enabled on;
+    oauth_proxy_allow_tokens on;
 
     proxy_pass http://localhost:1984/target;
 }
@@ -119,10 +122,11 @@ $data;
 --- config
 location /t {
     oauth_proxy on;
-    oauth_proxy_allow_tokens on;
     oauth_proxy_cookie_prefix "example";
-    oauth_proxy_hex_encryption_key "7b99279ab87533d3c238db874a842a91ee26a76027f3c03c317504963d2c9926";
+    oauth_proxy_encryption_key "7b99279ab87533d3c238db874a842a91ee26a76027f3c03c317504963d2c9926";
     oauth_proxy_trusted_web_origin "https://www.example.com";
+    oauth_proxy_cors_enabled on;
+    oauth_proxy_allow_tokens on;
 }
 
 --- request
@@ -146,10 +150,11 @@ Problem encountered decrypting data
 --- config
 location /t {
     oauth_proxy on;
-    oauth_proxy_allow_tokens off;
     oauth_proxy_cookie_prefix "example";
-    oauth_proxy_hex_encryption_key "7b99279ab87533d3c238db874a842a91ee26a76027f3c03c317504963d2c9926";
+    oauth_proxy_encryption_key "7b99279ab87533d3c238db874a842a91ee26a76027f3c03c317504963d2c9926";
     oauth_proxy_trusted_web_origin "https://www.example.com";
+    oauth_proxy_cors_enabled on;
+    oauth_proxy_allow_tokens on;
 }
 
 --- request
@@ -176,10 +181,11 @@ Problem encountered decrypting data
 --- config
 location /t {
     oauth_proxy on;
-    oauth_proxy_allow_tokens off;
     oauth_proxy_cookie_prefix "example";
-    oauth_proxy_hex_encryption_key "7b99279ab87533d3c238db874a842a91ee26a76027f3c03c317504963d2c9926";
+    oauth_proxy_encryption_key "7b99279ab87533d3c238db874a842a91ee26a76027f3c03c317504963d2c9926";
     oauth_proxy_trusted_web_origin "https://www.example.com";
+    oauth_proxy_cors_enabled on;
+    oauth_proxy_allow_tokens on;
 }
 
 --- request
@@ -206,10 +212,11 @@ Problem encountered decrypting data
 --- config
 location /t {
     oauth_proxy on;
-    oauth_proxy_allow_tokens off;
     oauth_proxy_cookie_prefix "example";
-    oauth_proxy_hex_encryption_key "7b99279ab87533d3c238db874a842a91ee26a76027f3c03c317504963d2c9926";
+    oauth_proxy_encryption_key "7b99279ab87533d3c238db874a842a91ee26a76027f3c03c317504963d2c9926";
     oauth_proxy_trusted_web_origin "https://www.example.com";
+    oauth_proxy_cors_enabled on;
+    oauth_proxy_allow_tokens on;
 }
 
 --- request

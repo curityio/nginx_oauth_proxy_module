@@ -34,9 +34,10 @@ GET /t
 --- config
 location /t {
     oauth_proxy on;
-    oauth_proxy_allow_tokens on;
-    oauth_proxy_hex_encryption_key "4e4636356d65563e4c73233847503e3b21436e6f7629724950526f4b5e2e4e50";
+    oauth_proxy_encryption_key "4e4636356d65563e4c73233847503e3b21436e6f7629724950526f4b5e2e4e50";
     oauth_proxy_trusted_web_origin "https://www.example.com";
+    oauth_proxy_cors_enabled on;
+    oauth_proxy_allow_tokens on;
 }
 
 --- must_die
@@ -50,10 +51,11 @@ The cookie_prefix configuration directive was not provided
 --- config
 location /t {
     oauth_proxy on;
-    oauth_proxy_allow_tokens on;
     oauth_proxy_cookie_prefix "abcdefghijklmnopqrstuvwxyz-0123456789-abcdefghijklmnopqrstuvwxyz-0123456789";
-    oauth_proxy_hex_encryption_key "4e4636356d65563e4c73233847503e3b21436e6f7629724950526f4b5e2e4e50";
+    oauth_proxy_encryption_key "4e4636356d65563e4c73233847503e3b21436e6f7629724950526f4b5e2e4e50";
     oauth_proxy_trusted_web_origin "https://www.example.com";
+    oauth_proxy_cors_enabled on;
+    oauth_proxy_allow_tokens on;
 }
 
 --- ONLY
@@ -69,15 +71,16 @@ The cookie_prefix configuration directive has a maximum length of 64 characters
 --- config
 location /t {
     oauth_proxy on;
-    oauth_proxy_allow_tokens on;
     oauth_proxy_cookie_prefix "example";
     oauth_proxy_trusted_web_origin "https://www.example.com";
+    oauth_proxy_cors_enabled on;
+    oauth_proxy_allow_tokens on;
 }
 
 --- must_die
 
 --- error_log
-The hex_encryption_key configuration directive was not provided
+The encryption_key configuration directive was not provided
 
 === TEST CONFIG_5: NGINX quits when an invalid length 256 bit encryption key is configured
 # This ensures that input has an expected length before using it
@@ -85,16 +88,17 @@ The hex_encryption_key configuration directive was not provided
 --- config
 location /t {
     oauth_proxy on;
-    oauth_proxy_allow_tokens on;
     oauth_proxy_cookie_prefix "example";
-    oauth_proxy_hex_encryption_key "4e4636356d6";
+    oauth_proxy_encryption_key "4e4636356d6";
     oauth_proxy_trusted_web_origin "https://www.example.com";
+    oauth_proxy_cors_enabled on;
+    oauth_proxy_allow_tokens on;
 }
 
 --- must_die
 
 --- error_log
-The hex_encryption_key configuration directive must contain 64 hex characters
+The encryption_key configuration directive must contain 64 hex characters
 
 === TEST CONFIG_6: NGINX quits when no trusted web origins are configured
 # The plugin is only used for SPAs so it makes sense to always have at least one
@@ -102,9 +106,10 @@ The hex_encryption_key configuration directive must contain 64 hex characters
 --- config
 location /t {
     oauth_proxy on;
-    oauth_proxy_allow_tokens on;
     oauth_proxy_cookie_prefix "example";
-    oauth_proxy_hex_encryption_key "4e4636356d65563e4c73233847503e3b21436e6f7629724950526f4b5e2e4e50";
+    oauth_proxy_encryption_key "4e4636356d65563e4c73233847503e3b21436e6f7629724950526f4b5e2e4e50";
+    oauth_proxy_cors_enabled on;
+    oauth_proxy_allow_tokens on;
 }
 
 --- must_die
@@ -118,10 +123,11 @@ The trusted_web_origin configuration directive was not provided for any web orig
 --- config
 location /t {
     oauth_proxy on;
-    oauth_proxy_allow_tokens on;
     oauth_proxy_cookie_prefix "example";
-    oauth_proxy_hex_encryption_key "4e4636356d65563e4c73233847503e3b21436e6f7629724950526f4b5e2e4e50";
+    oauth_proxy_encryption_key "4e4636356d65563e4c73233847503e3b21436e6f7629724950526f4b5e2e4e50";
     oauth_proxy_trusted_web_origin "htt://www.example.com";
+    oauth_proxy_cors_enabled on;
+    oauth_proxy_allow_tokens on;
 }
 
 --- must_die
@@ -135,10 +141,11 @@ An invalid trusted_web_origin configuration directive was provided: htt://www.ex
 --- config
 location /t {
     oauth_proxy on;
-    oauth_proxy_allow_tokens on;
     oauth_proxy_cookie_prefix "example";
-    oauth_proxy_hex_encryption_key "4e4636356d65563e4c73233847503e3b21436e6f7629724950526f4b5e2e4e50";
+    oauth_proxy_encryption_key "4e4636356d65563e4c73233847503e3b21436e6f7629724950526f4b5e2e4e50";
     oauth_proxy_trusted_web_origin "http://www.example.com";
+    oauth_proxy_cors_enabled on;
+    oauth_proxy_allow_tokens on;
     return 200;
 }
 location /target {
@@ -156,11 +163,12 @@ GET /t
 --- config
 location /t {
     oauth_proxy on;
-    oauth_proxy_allow_tokens on;
     oauth_proxy_cookie_prefix "example";
-    oauth_proxy_hex_encryption_key "4e4636356d65563e4c73233847503e3b21436e6f7629724950526f4b5e2e4e50";
+    oauth_proxy_encryption_key "4e4636356d65563e4c73233847503e3b21436e6f7629724950526f4b5e2e4e50";
     oauth_proxy_trusted_web_origin "https://webapp1.example.com";
     oauth_proxy_trusted_web_origin "https://webapp2.example.com";
+    oauth_proxy_cors_enabled on;
+    oauth_proxy_allow_tokens on;
     return 200;
 }
 
@@ -175,18 +183,20 @@ GET /t
 --- config
 location /api1 {
     oauth_proxy on;
-    oauth_proxy_allow_tokens on;
     oauth_proxy_cookie_prefix "example";
-    oauth_proxy_hex_encryption_key "4e4636356d65563e4c73233847503e3b21436e6f7629724950526f4b5e2e4e50";
+    oauth_proxy_encryption_key "4e4636356d65563e4c73233847503e3b21436e6f7629724950526f4b5e2e4e50";
     oauth_proxy_trusted_web_origin "https://www.domain1.com";
+    oauth_proxy_cors_enabled on;
+    oauth_proxy_allow_tokens on;
     return 500;
 }
 location /api2 {
     oauth_proxy on;
-    oauth_proxy_allow_tokens on;
     oauth_proxy_cookie_prefix "example";
-    oauth_proxy_hex_encryption_key "4e4636356d65563e4c73233847503e3b21436e6f7629724950526f4b5e2e4e50";
+    oauth_proxy_encryption_key "4e4636356d65563e4c73233847503e3b21436e6f7629724950526f4b5e2e4e50";
     oauth_proxy_trusted_web_origin "https://www.domain2.com";
+    oauth_proxy_cors_enabled on;
+    oauth_proxy_allow_tokens on;
     return 200;
 }
 
@@ -203,14 +213,14 @@ location /api1 {
     oauth_proxy on;
     oauth_proxy_allow_tokens on;
     oauth_proxy_cookie_prefix "example";
-    oauth_proxy_hex_encryption_key "4e4636356d65563e4c73233847503e3b21436e6f7629724950526f4b5e2e4e50";
+    oauth_proxy_encryption_key "4e4636356d65563e4c73233847503e3b21436e6f7629724950526f4b5e2e4e50";
     oauth_proxy_trusted_web_origin "https://www.domain1.com";
     return 200;
 }
 location /api2 {
     oauth_proxy on;
     oauth_proxy_allow_tokens on;
-    oauth_proxy_hex_encryption_key "4e4636356d65563e4c73233847503e3b21436e6f7629724950526f4b5e2e4e50";
+    oauth_proxy_encryption_key "4e4636356d65563e4c73233847503e3b21436e6f7629724950526f4b5e2e4e50";
     oauth_proxy_trusted_web_origin "https://www.domain2.com";
     return 200;
 }
@@ -228,7 +238,7 @@ location /root {
     oauth_proxy on;
     oauth_proxy_allow_tokens on;
     oauth_proxy_cookie_prefix "example";
-    oauth_proxy_hex_encryption_key "4e4636356d65563e4c73233847503e3b21436e6f7629724950526f4b5e2e4e50";
+    oauth_proxy_encryption_key "4e4636356d65563e4c73233847503e3b21436e6f7629724950526f4b5e2e4e50";
     oauth_proxy_trusted_web_origin "https://www.example.com";
 
     location /root/api {

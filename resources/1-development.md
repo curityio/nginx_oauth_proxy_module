@@ -91,7 +91,7 @@ Then set breakpoints, after which you can step through code to check variable st
 
 ![Debugger](debugging.png)
 
-## 7. Act as an SPA Client
+## 8. Act as an SPA Client
 
 You can run curl requests against the nginx system in the same manner as the SPA:
 

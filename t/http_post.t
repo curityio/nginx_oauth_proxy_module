@@ -28,7 +28,7 @@ location /t {
     oauth_proxy on;
     oauth_proxy_allow_tokens off;
     oauth_proxy_cookie_prefix "example";
-    oauth_proxy_hex_encryption_key "4e4636356d65563e4c73233847503e3b21436e6f7629724950526f4b5e2e4e50";
+    oauth_proxy_encryption_key "4e4636356d65563e4c73233847503e3b21436e6f7629724950526f4b5e2e4e50";
     oauth_proxy_trusted_web_origin "https://www.example.com";
 }
 
@@ -54,7 +54,7 @@ location /t {
     oauth_proxy on;
     oauth_proxy_allow_tokens off;
     oauth_proxy_cookie_prefix "example";
-    oauth_proxy_hex_encryption_key "4e4636356d65563e4c73233847503e3b21436e6f7629724950526f4b5e2e4e50";
+    oauth_proxy_encryption_key "4e4636356d65563e4c73233847503e3b21436e6f7629724950526f4b5e2e4e50";
     oauth_proxy_trusted_web_origin "https://www.example.com";
 }
 
@@ -80,7 +80,7 @@ location /t {
     oauth_proxy on;
     oauth_proxy_allow_tokens off;
     oauth_proxy_cookie_prefix "example";
-    oauth_proxy_hex_encryption_key "4e4636356d65563e4c73233847503e3b21436e6f7629724950526f4b5e2e4e50";
+    oauth_proxy_encryption_key "4e4636356d65563e4c73233847503e3b21436e6f7629724950526f4b5e2e4e50";
     oauth_proxy_trusted_web_origin "https://www.example.com";
 }
 
@@ -107,7 +107,7 @@ location /t {
     oauth_proxy on;
     oauth_proxy_allow_tokens off;
     oauth_proxy_cookie_prefix "example";
-    oauth_proxy_hex_encryption_key "4e4636356d65563e4c73233847503e3b21436e6f7629724950526f4b5e2e4e50";
+    oauth_proxy_encryption_key "4e4636356d65563e4c73233847503e3b21436e6f7629724950526f4b5e2e4e50";
     oauth_proxy_trusted_web_origin "https://www.example.com";
 
     proxy_pass http://localhost:1984/target;
@@ -140,7 +140,7 @@ location /api1 {
     oauth_proxy on;
     oauth_proxy_allow_tokens off;
     oauth_proxy_cookie_prefix "example";
-    oauth_proxy_hex_encryption_key "4e4636356d65563e4c73233847503e3b21436e6f7629724950526f4b5e2e4e50";
+    oauth_proxy_encryption_key "4e4636356d65563e4c73233847503e3b21436e6f7629724950526f4b5e2e4e50";
     oauth_proxy_trusted_web_origin "https://www.example.com";
 
     proxy_pass http://localhost:1984/target;
@@ -149,7 +149,7 @@ location /api2 {
     oauth_proxy on;
     oauth_proxy_allow_tokens off;
     oauth_proxy_cookie_prefix "example";
-    oauth_proxy_hex_encryption_key "4e4636356d65563e4c73233847503e3b21436e6f7629724950526f4b5e2e4e50";
+    oauth_proxy_encryption_key "4e4636356d65563e4c73233847503e3b21436e6f7629724950526f4b5e2e4e50";
     oauth_proxy_trusted_web_origin "https://www.example.com";
 
     proxy_pass http://localhost:1984/target;
@@ -182,7 +182,7 @@ location /api1 {
     oauth_proxy on;
     oauth_proxy_allow_tokens off;
     oauth_proxy_cookie_prefix "example1";
-    oauth_proxy_hex_encryption_key "7b99279ab87533d3c238db874a842a91ee26a76027f3c03c317504963d2c9926";
+    oauth_proxy_encryption_key "7b99279ab87533d3c238db874a842a91ee26a76027f3c03c317504963d2c9926";
     oauth_proxy_trusted_web_origin "https://www.example1.com";
 
     proxy_pass http://localhost:1984/target;
@@ -191,7 +191,7 @@ location /api2 {
     oauth_proxy on;
     oauth_proxy_allow_tokens off;
     oauth_proxy_cookie_prefix "example2";
-    oauth_proxy_hex_encryption_key "4e4636356d65563e4c73233847503e3b21436e6f7629724950526f4b5e2e4e50";
+    oauth_proxy_encryption_key "4e4636356d65563e4c73233847503e3b21436e6f7629724950526f4b5e2e4e50";
     oauth_proxy_trusted_web_origin "https://www.example2.com";
 
     proxy_pass http://localhost:1984/target;
@@ -224,7 +224,7 @@ location /api {
     oauth_proxy on;
     oauth_proxy_allow_tokens off;
     oauth_proxy_cookie_prefix "example";
-    oauth_proxy_hex_encryption_key "4e4636356d65563e4c73233847503e3b21436e6f7629724950526f4b5e2e4e50";
+    oauth_proxy_encryption_key "4e4636356d65563e4c73233847503e3b21436e6f7629724950526f4b5e2e4e50";
     oauth_proxy_trusted_web_origin "https://www.example.com";
 
     location /api/products {
@@ -259,7 +259,7 @@ location /api {
     oauth_proxy on;
     oauth_proxy_allow_tokens off;
     oauth_proxy_cookie_prefix "example";
-    oauth_proxy_hex_encryption_key "4e4636356d65563e4c73233847503e3b21436e6f7629724950526f4b5e2e4e50";
+    oauth_proxy_encryption_key "4e4636356d65563e4c73233847503e3b21436e6f7629724950526f4b5e2e4e50";
     oauth_proxy_trusted_web_origin "https://www.example.com";
 
     location /api/products {
@@ -295,7 +295,7 @@ location /api {
     oauth_proxy on;
     oauth_proxy_allow_tokens off;
     oauth_proxy_cookie_prefix "myveryveryverylongcompanyname-myveryveryveryverylongproductname";
-    oauth_proxy_hex_encryption_key "4e4636356d65563e4c73233847503e3b21436e6f7629724950526f4b5e2e4e50";
+    oauth_proxy_encryption_key "4e4636356d65563e4c73233847503e3b21436e6f7629724950526f4b5e2e4e50";
     oauth_proxy_trusted_web_origin "https://www.example.com";
 
     location /api/products {

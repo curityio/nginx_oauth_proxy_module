@@ -23,10 +23,11 @@
 typedef struct
 {
     ngx_flag_t enabled;
-    ngx_flag_t allow_tokens;
     ngx_str_t cookie_prefix;
-    ngx_str_t hex_encryption_key;
+    ngx_str_t encryption_key;
     ngx_array_t *trusted_web_origins;
+    ngx_flag_t cors_enabled;
+    ngx_flag_t allow_tokens;
 } oauth_proxy_configuration_t;
 
 /* Configuration directives */
@@ -38,6 +39,14 @@ static ngx_command_t oauth_proxy_module_directives[] =
         ngx_conf_set_flag_slot,
         NGX_HTTP_LOC_CONF_OFFSET,
         offsetof(oauth_proxy_configuration_t, enabled),
+        NULL
+    },
+    {
+        ngx_string("oauth_proxy_cors_enabled"),
+        NGX_HTTP_LOC_CONF | NGX_CONF_TAKE1,
+        ngx_conf_set_flag_slot,
+        NGX_HTTP_LOC_CONF_OFFSET,
+        offsetof(oauth_proxy_configuration_t, cors_enabled),
         NULL
     },
     {
@@ -57,11 +66,11 @@ static ngx_command_t oauth_proxy_module_directives[] =
         NULL
     },
     {
-        ngx_string("oauth_proxy_hex_encryption_key"),
+        ngx_string("oauth_proxy_encryption_key"),
         NGX_HTTP_LOC_CONF | NGX_CONF_TAKE1,
         ngx_conf_set_str_slot,
         NGX_HTTP_LOC_CONF_OFFSET,
-        offsetof(oauth_proxy_configuration_t, hex_encryption_key),
+        offsetof(oauth_proxy_configuration_t, encryption_key),
         NULL
     },
     {
@@ -144,8 +153,9 @@ static void *create_location_configuration(ngx_conf_t *config)
     }
 
     location_config->enabled             = NGX_CONF_UNSET_UINT;
-    location_config->allow_tokens        = NGX_CONF_UNSET_UINT;
     location_config->trusted_web_origins = NGX_CONF_UNSET_PTR;
+    location_config->cors_enabled        = NGX_CONF_UNSET_UINT;
+    location_config->allow_tokens        = NGX_CONF_UNSET_UINT;
     return location_config;
 }
 
@@ -158,10 +168,11 @@ static char *merge_location_configuration(ngx_conf_t *main_config, void *parent,
     ngx_int_t validation_result = NGX_OK;
 
     ngx_conf_merge_off_value(child_config->enabled,             parent_config->enabled,             0);
-    ngx_conf_merge_off_value(child_config->allow_tokens,        parent_config->allow_tokens,        0);
     ngx_conf_merge_str_value(child_config->cookie_prefix,       parent_config->cookie_prefix,       "");
-    ngx_conf_merge_str_value(child_config->hex_encryption_key,  parent_config->hex_encryption_key,  "");
+    ngx_conf_merge_str_value(child_config->encryption_key,      parent_config->encryption_key,      "");
     ngx_conf_merge_ptr_value(child_config->trusted_web_origins, parent_config->trusted_web_origins, NULL);
+    ngx_conf_merge_off_value(child_config->cors_enabled,        parent_config->cors_enabled,        0);
+    ngx_conf_merge_off_value(child_config->allow_tokens,        parent_config->allow_tokens,        0);
 
     validation_result = validate_configuration(main_config, child_config);
     if (validation_result != NGX_OK)
@@ -213,15 +224,15 @@ static ngx_int_t validate_configuration(ngx_conf_t *config, const oauth_proxy_co
             return NGX_ERROR;
         }
 
-        if (module_location_config->hex_encryption_key.len == 0)
+        if (module_location_config->encryption_key.len == 0)
         {
-            ngx_conf_log_error(NGX_LOG_WARN, config, 0, "The hex_encryption_key configuration directive was not provided");
+            ngx_conf_log_error(NGX_LOG_WARN, config, 0, "The encryption_key configuration directive was not provided");
             return NGX_ERROR;
         }
 
-        if (module_location_config->hex_encryption_key.len != 64)
+        if (module_location_config->encryption_key.len != 64)
         {
-            ngx_conf_log_error(NGX_LOG_WARN, config, 0, "The hex_encryption_key configuration directive must contain 64 hex characters");
+            ngx_conf_log_error(NGX_LOG_WARN, config, 0, "The encryption_key configuration directive must contain 64 hex characters");
             return NGX_ERROR;
         }
 
@@ -323,7 +334,7 @@ static ngx_int_t handler(ngx_http_request_t *request)
     }
 
     /* Try to decrypt the access token cookie to get the access token */
-    ret_code = decrypt_cookie(request, &access_token, &at_cookie_encrypted_hex, &module_location_config->hex_encryption_key);
+    ret_code = decrypt_cookie(request, &access_token, &at_cookie_encrypted_hex, &module_location_config->encryption_key);
     if (ret_code != NGX_OK)
     {
         return write_error_response(request, ret_code, web_origin);
@@ -396,7 +407,7 @@ static ngx_int_t apply_csrf_checks(ngx_http_request_t *request, const oauth_prox
         return NGX_HTTP_UNAUTHORIZED;
     }
 
-    ret_code = decrypt_cookie(request, &csrf_token, &csrf_cookie_encrypted_hex, &config->hex_encryption_key);
+    ret_code = decrypt_cookie(request, &csrf_token, &csrf_cookie_encrypted_hex, &config->encryption_key);
     if (ret_code != NGX_OK)
     {
         return ret_code;
