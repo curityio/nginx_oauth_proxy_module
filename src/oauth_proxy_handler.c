@@ -30,6 +30,7 @@ static ngx_int_t apply_csrf_checks(ngx_http_request_t *request, const oauth_prox
 static ngx_str_t *get_origin_header(ngx_http_request_t *request);
 static ngx_str_t *search_headers_in(ngx_http_request_t *request, u_char *name, size_t len);
 static ngx_int_t get_cookie(ngx_http_request_t *request, ngx_str_t* cookie_value, const ngx_str_t* cookie_name_prefix, const u_char *cookie_suffix);
+void get_csrf_header_name(u_char *csrf_header_name, const oauth_proxy_configuration_t *config);
 static ngx_int_t add_authorization_header(ngx_http_request_t *request, const ngx_str_t* token_value);
 static ngx_int_t add_cors_response_headers(ngx_http_request_t *request, const oauth_proxy_configuration_t *config);
 static ngx_int_t write_error_response(ngx_http_request_t *request, ngx_int_t status, const oauth_proxy_configuration_t *config);
@@ -129,6 +130,23 @@ ngx_int_t handler(ngx_http_request_t *request)
 
     return NGX_OK;
 }
+
+/*
+ * Get the CSRF header name into the supplied buffer
+ */
+void get_csrf_header_name(u_char *csrf_header_name, const oauth_proxy_configuration_t *config)
+{
+    const char *literal_prefix = "x-";
+    const char *literal_suffix = "-csrf";
+    size_t prefix_length = 2;
+    size_t suffix_length = 5;
+
+    ngx_memcpy(csrf_header_name, literal_prefix, prefix_length);
+    ngx_memcpy(csrf_header_name + prefix_length, config->cookie_name_prefix.data, config->cookie_name_prefix.len);
+    ngx_memcpy(csrf_header_name + prefix_length + config->cookie_name_prefix.len, literal_suffix, suffix_length);
+    csrf_header_name[2 + config->cookie_name_prefix.len + suffix_length] = 0;
+}
+
 /*
  * Ensure that incoming requests have the origin header that all modern browsers send
  */
@@ -162,24 +180,17 @@ static ngx_int_t apply_csrf_checks(ngx_http_request_t *request, const oauth_prox
     u_char csrf_header_name[2 + MAX_COOKIE_PREFIX_LENGTH + MAX_COOKIE_SUFFIX_LENGTH + 1];
     ngx_str_t *csrf_header_value = NULL;
     ngx_str_t csrf_token;
-    const char *literal_prefix = "x-";
-    const char *literal_suffix = "-csrf";
-    size_t prefix_length = 2;
-    size_t suffix_length = 5;
     ngx_int_t ret_code = NGX_OK;
 
     /* This returns 0 when there is a single cookie header or > 0 when there are multiple cookie headers */
-    ret_code = get_cookie(request, &csrf_cookie_encrypted_hex, &config->cookie_name_prefix, (u_char *)literal_suffix);
+    ret_code = get_cookie(request, &csrf_cookie_encrypted_hex, &config->cookie_name_prefix, (u_char *)"-csrf");
     if (ret_code == NGX_DECLINED)
     {
         ngx_log_error(NGX_LOG_WARN, request->connection->log, 0, "No CSRF cookie was found in the incoming request");
         return NGX_HTTP_UNAUTHORIZED;
     }
 
-    ngx_memcpy(csrf_header_name, literal_prefix, prefix_length);
-    ngx_memcpy(csrf_header_name + prefix_length, config->cookie_name_prefix.data, config->cookie_name_prefix.len);
-    ngx_memcpy(csrf_header_name + prefix_length + config->cookie_name_prefix.len, literal_suffix, suffix_length);
-    csrf_header_name[2 + config->cookie_name_prefix.len + suffix_length] = 0;
+    get_csrf_header_name(csrf_header_name, config);
     csrf_header_value = search_headers_in(request, csrf_header_name, ngx_strlen(csrf_header_name));
     if (csrf_header_value == NULL)
     {

@@ -1,14 +1,22 @@
-DOC
+CORS
 ---
-1. Move developer resources to a Wiki folder and tidy up.
+0. Fix up failing tests
+
+1. Output all CORS headers
+
+2. Do a utils.c source file and think more about dependencies
+
+3. Do equivalent GET tests to LUA
+
+4. Move developer resources to a Wiki folder and tidy up doc
+
+5. Do LUA POST and DECRYPTION tests
+
+6. Config tests
 
 CODE
 ----
-Do the following code in LUA first:
-
-1. Set outgoing CORS headers to set, then update README with new config settings.
-
-2. Remove cookie related headers rather than passing them through.\
+1. Remove cookie related headers rather than passing them through.\
    In C this is tricky, and we should not remove non Curity cookies:\
    https://www.ruby-forum.com/t/removing-a-request-header-in-an-access-phase-handler/245742
 
@@ -28,11 +36,6 @@ NGINX+
 1. NGINX+ certification testing to do, maybe via a trial version.\
    See if I can test each .so file I have built in Docker Compose.
 
-FINALIZATION
-------------
-1. See if I need to add `--without` comments to the README.\
-   Get Travis's viewpoint on this.
+2. Do an initial release for all NGINX versions
 
-2. Build the initial release and upload .so files for three NGINX versions
-
-3. Consider an encrypt utility for tests, since there are now no links to the interop repo
+3. Discuss `--without` comments in  README with Travis

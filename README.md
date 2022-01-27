@@ -31,8 +31,6 @@ NGINX will fail to load if the configuration for any locations fail validation:
 
 > **Syntax**: **`oauth_proxy`** `on` | `off`
 >
-> **Default**: *`off`*
->
 > **Context**: `location`
 
 The module is disabled by default but can be enabled for paths you choose.
@@ -41,18 +39,14 @@ The module is disabled by default but can be enabled for paths you choose.
 
 > **Syntax**: **`oauth_proxy_cookie_name_prefix`** `string`
 >
-> **Default**: *``*
->
 > **Context**: `location`
 
 The prefix used in the SPA's cookie name, typically representing a company or product name.\
-The value supplied must not be empty, and `example` would lead to full cookie names such as `cookie-at`.
+The value supplied must not be empty, and `example` would lead to full cookie names such as `example-at`.
 
 #### oauth_proxy_encryption_key
 
 > **Syntax**: **`oauth_proxy_encryption_key`** `string`
->
-> **Default**: *``*
 >
 > **Context**: `location`
 
@@ -63,8 +57,6 @@ The key is initially generated with a tool such as `openssl`, as explained in Cu
 #### oauth_proxy_trusted_web_origins
 
 > **Syntax**: **`oauth_proxy_trusted_web_origins`** `string[]`
->
-> **Default**: *[]*
 >
 > **Context**: `location`
 
@@ -130,7 +122,7 @@ A '*' wildcard value should not be configured here, since it will not work with 
 
 When CORS is enabled, the plugin returns these values in the [access-contol-allow-headers](https://developer.mozilla.org/en-US/docs/Web/HTTP/Headers/Access-Control-Allow-Headers) response header.\
 Include here any additional [non-safelisted request headers](https://developer.mozilla.org/en-US/docs/Glossary/CORS-safelisted_request_header) that the SPA needs to send in API requests.\
-To implement POST requests, the values configured should include the CSRF request header name, eg `x-example-csrf`.\
+To implement data changing requests, include the CSRF request header name, eg `x-example-csrf`.\
 A '*' wildcard value should not be configured here, since it will not work with credentialed requests.
 
 #### oauth_proxy_cors_expose_headers

@@ -22,13 +22,14 @@
 
 /* Imports */
 ngx_int_t handler(ngx_http_request_t *request);
+void get_csrf_header_name(u_char *csrf_header_name, const oauth_proxy_configuration_t *config);
 
 /* Forward declarations */
 static void *create_location_configuration(ngx_conf_t *config);
 static char *merge_location_configuration(ngx_conf_t *main_config, void *parent, void *child);
 static ngx_int_t post_configuration(ngx_conf_t *config);
 static ngx_int_t apply_configuration_defaults(ngx_conf_t *main_config, oauth_proxy_configuration_t *config);
-static ngx_int_t create_nginx_string_array(ngx_conf_t *main_config, ngx_array_t **data, const char *values[], size_t num_values);
+static ngx_int_t create_nginx_string_array(ngx_conf_t *main_config, ngx_array_t **data, size_t num_values, ...);
 static ngx_int_t validate_configuration(ngx_conf_t *main_config, const oauth_proxy_configuration_t *module_location_config);
 
 /* Configuration directives */
@@ -222,18 +223,15 @@ static char *merge_location_configuration(ngx_conf_t *main_config, void *parent,
  */
 static ngx_int_t apply_configuration_defaults(ngx_conf_t *main_config, oauth_proxy_configuration_t *config)
 {
-    const char *default_allow_methods[] = {"OPTIONS", "GET", "HEAD", "POST", "PUT", "PATCH", "DELETE"};
-    const char *default_allow_headers[] = {};
-    const char *default_expose_headers[] = {};
-    size_t num_elements = 0;
+    u_char csrf_header_name[2 + MAX_COOKIE_PREFIX_LENGTH + MAX_COOKIE_SUFFIX_LENGTH + 1];
     ngx_int_t ret_code = NGX_OK;
 
     if (config->cors_enabled)
     {
         if (config->cors_allow_methods == NULL)
         {
-            num_elements = sizeof(default_allow_methods) / sizeof(default_allow_methods[0]);
-            ret_code = create_nginx_string_array(main_config, &config->cors_allow_methods, default_allow_methods, num_elements);
+            ret_code = create_nginx_string_array(main_config, &config->cors_allow_methods, 7,
+                                                "OPTIONS", "GET", "HEAD", "POST", "PUT", "PATCH", "DELETE");
             if (ret_code != NGX_OK)
             {
                 ngx_conf_log_error(NGX_LOG_WARN, main_config, 0, "Unable to allocate memory for cors_allow_methods");
@@ -243,8 +241,8 @@ static ngx_int_t apply_configuration_defaults(ngx_conf_t *main_config, oauth_pro
 
         if (config->cors_allow_headers == NULL)
         {
-            num_elements = sizeof(default_allow_headers) / sizeof(default_allow_headers[0]);
-            ret_code = create_nginx_string_array(main_config, &config->cors_allow_headers, default_allow_headers, num_elements);
+            get_csrf_header_name(csrf_header_name, config);
+            ret_code = create_nginx_string_array(main_config, &config->cors_allow_headers, 1, csrf_header_name);
             if (ret_code != NGX_OK)
             {
                 ngx_conf_log_error(NGX_LOG_WARN, main_config, 0, "Unable to allocate memory for cors_allow_headers");
@@ -254,8 +252,7 @@ static ngx_int_t apply_configuration_defaults(ngx_conf_t *main_config, oauth_pro
 
         if (config->cors_expose_headers == NULL)
         {
-            num_elements = sizeof(default_expose_headers) / sizeof(default_expose_headers[0]);
-            ret_code = create_nginx_string_array(main_config, &config->cors_expose_headers, default_expose_headers, num_elements);
+            ret_code = create_nginx_string_array(main_config, &config->cors_expose_headers, 0);
             if (ret_code != NGX_OK)
             {
                 ngx_conf_log_error(NGX_LOG_WARN, main_config, 0, "Unable to allocate memory for cors_expose_headers");
@@ -263,7 +260,7 @@ static ngx_int_t apply_configuration_defaults(ngx_conf_t *main_config, oauth_pro
             }
         }
 
-        if (config->cors_max_age == 0)
+        if (config->cors_max_age <= 0)
         {
             config->cors_max_age = 86400;
         }
@@ -275,9 +272,11 @@ static ngx_int_t apply_configuration_defaults(ngx_conf_t *main_config, oauth_pro
 /*
  * Do the plumbing to populate an array type from the pool
  */
-static ngx_int_t create_nginx_string_array(ngx_conf_t *main_config, ngx_array_t **data, const char *values[], size_t num_values)
+static ngx_int_t create_nginx_string_array(ngx_conf_t *main_config, ngx_array_t **data, size_t num_values, ...)
 {
-    ngx_str_t *item = NULL;
+    va_list args;
+    ngx_str_t *array_item = NULL;
+    const char *value = NULL;
     size_t i = 0;
 
     *data = ngx_array_create(main_config->pool, num_values, sizeof(ngx_str_t));
@@ -286,16 +285,19 @@ static ngx_int_t create_nginx_string_array(ngx_conf_t *main_config, ngx_array_t 
         return NGX_ERROR;
     }
 
+    va_start(args, num_values);
     for (i = 0; i < num_values; i++)
     {
-        item = ngx_array_push(*data);
-        if (item == NULL)
+        array_item = ngx_array_push(*data);
+        if (array_item == NULL)
         {
             return NGX_ERROR;
         }
-
-        ngx_str_set(item, values[i]);
+        
+        value = va_arg(args, const char *);
+        ngx_str_set(array_item, value);
     }
+    va_end(args);
 
     return NGX_OK;
 }
