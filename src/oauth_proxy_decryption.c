@@ -21,8 +21,8 @@
 #include <ngx_string.h>
 
 /* Imports from the encoding module */
-int  bytes_from_hex(u_char *bytes, const u_char *hex, size_t hex_len);
-int  base64_url_decode(u_char *bufplain, const u_char *bufcoded);
+int bytes_from_hex(u_char *bytes, const u_char *hex, size_t hex_len);
+int base64_url_decode(u_char *bufplain, const u_char *bufcoded);
 
 /* For encryption related constants to be used in array sizes, use #defines as valid C */
 #define VERSION_SIZE 1
