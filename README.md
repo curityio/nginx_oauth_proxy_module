@@ -108,9 +108,9 @@ This can be useful when web and mobile clients share the same API routes.
 If set to true, then cookie and CSRF headers are not forwarded to APIs.\
 This provides cleaner requests to APIs, which only receive a JWT in the HTTP Authorization header.
 
-#### oauth_proxy_cors_allowed_methods
+#### oauth_proxy_cors_allow_methods
 
-> **Syntax**: **`oauth_proxy_cors_allowed_methods`** `string[]`
+> **Syntax**: **`oauth_proxy_cors_allow_methods`** `string[]`
 >
 > **Default**: *['OPTIONS', 'GET', 'HEAD', 'POST', 'PUT', 'PATCH', 'DELETE']*
 >
@@ -120,9 +120,9 @@ When CORS is enabled, these values are returned in the [access-control-allow-met
 The SPA is then allowed to call a particular API endpoint with those HTTP methods (eg GET, POST).\
 A '*' wildcard value should not be configured here, since it will not work with credentialed requests.
 
-#### oauth_proxy_cors_allowed_headers
+#### oauth_proxy_cors_allow_headers
 
-> **Syntax**: **`oauth_proxy_cors_allowed_headers`** `string[]`
+> **Syntax**: **`oauth_proxy_cors_allow_headers`** `string[]`
 >
 > **Default**: *['x-example-csrf']*
 >
@@ -133,9 +133,9 @@ Include here any additional [non-safelisted request headers](https://developer.m
 To implement POST requests, the values configured should include the CSRF request header name, eg `x-example-csrf`.\
 A '*' wildcard value should not be configured here, since it will not work with credentialed requests.
 
-#### oauth_proxy_cors_exposed_headers
+#### oauth_proxy_cors_expose_headers
 
-> **Syntax**: **`oauth_proxy_cors_exposed_headers`** `string[]`
+> **Syntax**: **`oauth_proxy_cors_expose_headers`** `string[]`
 >
 > **Default**: *[]*
 >
