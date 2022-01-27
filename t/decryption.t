@@ -29,7 +29,7 @@ __DATA__
 --- config
 location /t {
     oauth_proxy on;
-    oauth_proxy_cookie_prefix "example";
+    oauth_proxy_cookie_name_prefix "example";
     oauth_proxy_encryption_key "7b99279ab87533d3c238db874a842a91ee26a76027f3c03c317504963d2c9926";
     oauth_proxy_trusted_web_origin "https://www.example.com";
     oauth_proxy_cors_enabled on;
@@ -54,7 +54,7 @@ cookie: example-at=x
 --- config
 location /t {
     oauth_proxy on;
-    oauth_proxy_cookie_prefix "example";
+    oauth_proxy_cookie_name_prefix "example";
     oauth_proxy_encryption_key "7b99279ab87533d3c238db874a842a91ee26a76027f3c03c317504963d2c9926";
     oauth_proxy_trusted_web_origin "https://www.example.com";
     oauth_proxy_cors_enabled on;
@@ -88,7 +88,7 @@ $data;
 --- config
 location /t {
     oauth_proxy on;
-    oauth_proxy_cookie_prefix "example";
+    oauth_proxy_cookie_name_prefix "example";
     oauth_proxy_encryption_key "7b99279ab87533d3c238db874a842a91ee26a76027f3c03c317504963d2c9926";
     oauth_proxy_trusted_web_origin "https://www.example.com";
     oauth_proxy_cors_enabled on;
@@ -122,7 +122,7 @@ $data;
 --- config
 location /t {
     oauth_proxy on;
-    oauth_proxy_cookie_prefix "example";
+    oauth_proxy_cookie_name_prefix "example";
     oauth_proxy_encryption_key "7b99279ab87533d3c238db874a842a91ee26a76027f3c03c317504963d2c9926";
     oauth_proxy_trusted_web_origin "https://www.example.com";
     oauth_proxy_cors_enabled on;
@@ -150,7 +150,7 @@ Problem encountered decrypting data
 --- config
 location /t {
     oauth_proxy on;
-    oauth_proxy_cookie_prefix "example";
+    oauth_proxy_cookie_name_prefix "example";
     oauth_proxy_encryption_key "7b99279ab87533d3c238db874a842a91ee26a76027f3c03c317504963d2c9926";
     oauth_proxy_trusted_web_origin "https://www.example.com";
     oauth_proxy_cors_enabled on;
@@ -181,7 +181,7 @@ Problem encountered decrypting data
 --- config
 location /t {
     oauth_proxy on;
-    oauth_proxy_cookie_prefix "example";
+    oauth_proxy_cookie_name_prefix "example";
     oauth_proxy_encryption_key "7b99279ab87533d3c238db874a842a91ee26a76027f3c03c317504963d2c9926";
     oauth_proxy_trusted_web_origin "https://www.example.com";
     oauth_proxy_cors_enabled on;
@@ -212,7 +212,7 @@ Problem encountered decrypting data
 --- config
 location /t {
     oauth_proxy on;
-    oauth_proxy_cookie_prefix "example";
+    oauth_proxy_cookie_name_prefix "example";
     oauth_proxy_encryption_key "7b99279ab87533d3c238db874a842a91ee26a76027f3c03c317504963d2c9926";
     oauth_proxy_trusted_web_origin "https://www.example.com";
     oauth_proxy_cors_enabled on;

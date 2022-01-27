@@ -27,7 +27,7 @@ __DATA__
 location /t {
     oauth_proxy on;
     oauth_proxy_allow_tokens off;
-    oauth_proxy_cookie_prefix "example";
+    oauth_proxy_cookie_name_prefix "example";
     oauth_proxy_encryption_key "4e4636356d65563e4c73233847503e3b21436e6f7629724950526f4b5e2e4e50";
     oauth_proxy_trusted_web_origin "https://www.example.com";
 }
@@ -53,7 +53,7 @@ No CSRF cookie was found in the incoming request
 location /t {
     oauth_proxy on;
     oauth_proxy_allow_tokens off;
-    oauth_proxy_cookie_prefix "example";
+    oauth_proxy_cookie_name_prefix "example";
     oauth_proxy_encryption_key "4e4636356d65563e4c73233847503e3b21436e6f7629724950526f4b5e2e4e50";
     oauth_proxy_trusted_web_origin "https://www.example.com";
 }
@@ -79,7 +79,7 @@ A data changing request did not have a CSRF header
 location /t {
     oauth_proxy on;
     oauth_proxy_allow_tokens off;
-    oauth_proxy_cookie_prefix "example";
+    oauth_proxy_cookie_name_prefix "example";
     oauth_proxy_encryption_key "4e4636356d65563e4c73233847503e3b21436e6f7629724950526f4b5e2e4e50";
     oauth_proxy_trusted_web_origin "https://www.example.com";
 }
@@ -106,7 +106,7 @@ The CSRF request header did not match the value in the encrypted CSRF cookie
 location /t {
     oauth_proxy on;
     oauth_proxy_allow_tokens off;
-    oauth_proxy_cookie_prefix "example";
+    oauth_proxy_cookie_name_prefix "example";
     oauth_proxy_encryption_key "4e4636356d65563e4c73233847503e3b21436e6f7629724950526f4b5e2e4e50";
     oauth_proxy_trusted_web_origin "https://www.example.com";
 
@@ -139,7 +139,7 @@ $data;
 location /api1 {
     oauth_proxy on;
     oauth_proxy_allow_tokens off;
-    oauth_proxy_cookie_prefix "example";
+    oauth_proxy_cookie_name_prefix "example";
     oauth_proxy_encryption_key "4e4636356d65563e4c73233847503e3b21436e6f7629724950526f4b5e2e4e50";
     oauth_proxy_trusted_web_origin "https://www.example.com";
 
@@ -148,7 +148,7 @@ location /api1 {
 location /api2 {
     oauth_proxy on;
     oauth_proxy_allow_tokens off;
-    oauth_proxy_cookie_prefix "example";
+    oauth_proxy_cookie_name_prefix "example";
     oauth_proxy_encryption_key "4e4636356d65563e4c73233847503e3b21436e6f7629724950526f4b5e2e4e50";
     oauth_proxy_trusted_web_origin "https://www.example.com";
 
@@ -181,7 +181,7 @@ $data;
 location /api1 {
     oauth_proxy on;
     oauth_proxy_allow_tokens off;
-    oauth_proxy_cookie_prefix "example1";
+    oauth_proxy_cookie_name_prefix "example1";
     oauth_proxy_encryption_key "7b99279ab87533d3c238db874a842a91ee26a76027f3c03c317504963d2c9926";
     oauth_proxy_trusted_web_origin "https://www.example1.com";
 
@@ -190,7 +190,7 @@ location /api1 {
 location /api2 {
     oauth_proxy on;
     oauth_proxy_allow_tokens off;
-    oauth_proxy_cookie_prefix "example2";
+    oauth_proxy_cookie_name_prefix "example2";
     oauth_proxy_encryption_key "4e4636356d65563e4c73233847503e3b21436e6f7629724950526f4b5e2e4e50";
     oauth_proxy_trusted_web_origin "https://www.example2.com";
 
@@ -223,7 +223,7 @@ $data;
 location /api {
     oauth_proxy on;
     oauth_proxy_allow_tokens off;
-    oauth_proxy_cookie_prefix "example";
+    oauth_proxy_cookie_name_prefix "example";
     oauth_proxy_encryption_key "4e4636356d65563e4c73233847503e3b21436e6f7629724950526f4b5e2e4e50";
     oauth_proxy_trusted_web_origin "https://www.example.com";
 
@@ -258,7 +258,7 @@ $data;
 location /api {
     oauth_proxy on;
     oauth_proxy_allow_tokens off;
-    oauth_proxy_cookie_prefix "example";
+    oauth_proxy_cookie_name_prefix "example";
     oauth_proxy_encryption_key "4e4636356d65563e4c73233847503e3b21436e6f7629724950526f4b5e2e4e50";
     oauth_proxy_trusted_web_origin "https://www.example.com";
 
@@ -294,7 +294,7 @@ $data;
 location /api {
     oauth_proxy on;
     oauth_proxy_allow_tokens off;
-    oauth_proxy_cookie_prefix "myveryveryverylongcompanyname-myveryveryveryverylongproductname";
+    oauth_proxy_cookie_name_prefix "myveryveryverylongcompanyname-myveryveryveryverylongproductname";
     oauth_proxy_encryption_key "4e4636356d65563e4c73233847503e3b21436e6f7629724950526f4b5e2e4e50";
     oauth_proxy_trusted_web_origin "https://www.example.com";
 

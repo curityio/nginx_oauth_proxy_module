@@ -22,7 +22,7 @@ __DATA__
 --- config
 location /t {
     oauth_proxy on;
-    oauth_proxy_cookie_prefix "example";
+    oauth_proxy_cookie_name_prefix "example";
     oauth_proxy_encryption_key "4e4636356d65563e4c73233847503e3b21436e6f7629724950526f4b5e2e4e50";
     oauth_proxy_trusted_web_origin "https://www.example.com";
     oauth_proxy_cors_enabled on;
@@ -49,7 +49,7 @@ authorization: bearer xxx
 --- config
 location /t {
     oauth_proxy on;
-    oauth_proxy_cookie_prefix "example";
+    oauth_proxy_cookie_name_prefix "example";
     oauth_proxy_encryption_key "4e4636356d65563e4c73233847503e3b21436e6f7629724950526f4b5e2e4e50";
     oauth_proxy_trusted_web_origin "https://www.example.com";
     oauth_proxy_cors_enabled on;
@@ -74,7 +74,7 @@ No AT cookie was found in the incoming request
 --- config
 location /t {
     oauth_proxy on;
-    oauth_proxy_cookie_prefix "example";
+    oauth_proxy_cookie_name_prefix "example";
     oauth_proxy_encryption_key "4e4636356d65563e4c73233847503e3b21436e6f7629724950526f4b5e2e4e50";
     oauth_proxy_trusted_web_origin "https://www.example.com";
     oauth_proxy_cors_enabled on;
@@ -95,7 +95,7 @@ The request did not have an origin header
 --- config
 location /t {
     oauth_proxy on;
-    oauth_proxy_cookie_prefix "example";
+    oauth_proxy_cookie_name_prefix "example";
     oauth_proxy_encryption_key "4e4636356d65563e4c73233847503e3b21436e6f7629724950526f4b5e2e4e50";
     oauth_proxy_trusted_web_origin "https://www.example.com";
     oauth_proxy_cors_enabled on;
@@ -119,7 +119,7 @@ The request was from an untrusted web origin
 --- config
 location /t {
     oauth_proxy on;
-    oauth_proxy_cookie_prefix "example";
+    oauth_proxy_cookie_name_prefix "example";
     oauth_proxy_encryption_key "4e4636356d65563e4c73233847503e3b21436e6f7629724950526f4b5e2e4e50";
     oauth_proxy_trusted_web_origin "https://www.example.com";
     oauth_proxy_cors_enabled on;
@@ -143,7 +143,7 @@ No AT cookie was found in the incoming request
 --- config
 location /t {
     oauth_proxy on;
-    oauth_proxy_cookie_prefix "example";
+    oauth_proxy_cookie_name_prefix "example";
     oauth_proxy_encryption_key "4e4636356d65563e4c73233847503e3b21436e6f7629724950526f4b5e2e4e50";
     oauth_proxy_trusted_web_origin "https://www.example.com";
     oauth_proxy_cors_enabled on;
@@ -171,7 +171,7 @@ access-control-allow-credentials: true
 --- config
 location /t {
     oauth_proxy on;
-    oauth_proxy_cookie_prefix "mycompany-myproduct";
+    oauth_proxy_cookie_name_prefix "mycompany-myproduct";
     oauth_proxy_encryption_key "4e4636356d65563e4c73233847503e3b21436e6f7629724950526f4b5e2e4e50";
     oauth_proxy_trusted_web_origin "https://www.example.com";
     oauth_proxy_cors_enabled on;

@@ -51,7 +51,7 @@ The cookie_prefix configuration directive was not provided
 --- config
 location /t {
     oauth_proxy on;
-    oauth_proxy_cookie_prefix "abcdefghijklmnopqrstuvwxyz-0123456789-abcdefghijklmnopqrstuvwxyz-0123456789";
+    oauth_proxy_cookie_name_prefix "abcdefghijklmnopqrstuvwxyz-0123456789-abcdefghijklmnopqrstuvwxyz-0123456789";
     oauth_proxy_encryption_key "4e4636356d65563e4c73233847503e3b21436e6f7629724950526f4b5e2e4e50";
     oauth_proxy_trusted_web_origin "https://www.example.com";
     oauth_proxy_cors_enabled on;
@@ -63,7 +63,7 @@ location /t {
 --- must_die
 
 --- error_log
-The cookie_prefix configuration directive has a maximum length of 64 characters
+The cookie_name_prefix configuration directive has a maximum length of 64 characters
 
 === TEST CONFIG_4: NGINX quits when no encryption key is configured
 # The plugin validates required parameters for each path
@@ -71,7 +71,7 @@ The cookie_prefix configuration directive has a maximum length of 64 characters
 --- config
 location /t {
     oauth_proxy on;
-    oauth_proxy_cookie_prefix "example";
+    oauth_proxy_cookie_name_prefix "example";
     oauth_proxy_trusted_web_origin "https://www.example.com";
     oauth_proxy_cors_enabled on;
     oauth_proxy_allow_tokens on;
@@ -88,7 +88,7 @@ The encryption_key configuration directive was not provided
 --- config
 location /t {
     oauth_proxy on;
-    oauth_proxy_cookie_prefix "example";
+    oauth_proxy_cookie_name_prefix "example";
     oauth_proxy_encryption_key "4e4636356d6";
     oauth_proxy_trusted_web_origin "https://www.example.com";
     oauth_proxy_cors_enabled on;
@@ -106,7 +106,7 @@ The encryption_key configuration directive must contain 64 hex characters
 --- config
 location /t {
     oauth_proxy on;
-    oauth_proxy_cookie_prefix "example";
+    oauth_proxy_cookie_name_prefix "example";
     oauth_proxy_encryption_key "4e4636356d65563e4c73233847503e3b21436e6f7629724950526f4b5e2e4e50";
     oauth_proxy_cors_enabled on;
     oauth_proxy_allow_tokens on;
@@ -123,7 +123,7 @@ The trusted_web_origin configuration directive was not provided for any web orig
 --- config
 location /t {
     oauth_proxy on;
-    oauth_proxy_cookie_prefix "example";
+    oauth_proxy_cookie_name_prefix "example";
     oauth_proxy_encryption_key "4e4636356d65563e4c73233847503e3b21436e6f7629724950526f4b5e2e4e50";
     oauth_proxy_trusted_web_origin "htt://www.example.com";
     oauth_proxy_cors_enabled on;
@@ -141,7 +141,7 @@ An invalid trusted_web_origin configuration directive was provided: htt://www.ex
 --- config
 location /t {
     oauth_proxy on;
-    oauth_proxy_cookie_prefix "example";
+    oauth_proxy_cookie_name_prefix "example";
     oauth_proxy_encryption_key "4e4636356d65563e4c73233847503e3b21436e6f7629724950526f4b5e2e4e50";
     oauth_proxy_trusted_web_origin "http://www.example.com";
     oauth_proxy_cors_enabled on;
@@ -163,7 +163,7 @@ GET /t
 --- config
 location /t {
     oauth_proxy on;
-    oauth_proxy_cookie_prefix "example";
+    oauth_proxy_cookie_name_prefix "example";
     oauth_proxy_encryption_key "4e4636356d65563e4c73233847503e3b21436e6f7629724950526f4b5e2e4e50";
     oauth_proxy_trusted_web_origin "https://webapp1.example.com";
     oauth_proxy_trusted_web_origin "https://webapp2.example.com";
@@ -183,7 +183,7 @@ GET /t
 --- config
 location /api1 {
     oauth_proxy on;
-    oauth_proxy_cookie_prefix "example";
+    oauth_proxy_cookie_name_prefix "example";
     oauth_proxy_encryption_key "4e4636356d65563e4c73233847503e3b21436e6f7629724950526f4b5e2e4e50";
     oauth_proxy_trusted_web_origin "https://www.domain1.com";
     oauth_proxy_cors_enabled on;
@@ -192,7 +192,7 @@ location /api1 {
 }
 location /api2 {
     oauth_proxy on;
-    oauth_proxy_cookie_prefix "example";
+    oauth_proxy_cookie_name_prefix "example";
     oauth_proxy_encryption_key "4e4636356d65563e4c73233847503e3b21436e6f7629724950526f4b5e2e4e50";
     oauth_proxy_trusted_web_origin "https://www.domain2.com";
     oauth_proxy_cors_enabled on;
@@ -212,7 +212,7 @@ GET /api2
 location /api1 {
     oauth_proxy on;
     oauth_proxy_allow_tokens on;
-    oauth_proxy_cookie_prefix "example";
+    oauth_proxy_cookie_name_prefix "example";
     oauth_proxy_encryption_key "4e4636356d65563e4c73233847503e3b21436e6f7629724950526f4b5e2e4e50";
     oauth_proxy_trusted_web_origin "https://www.domain1.com";
     return 200;
@@ -237,7 +237,7 @@ The cookie_prefix configuration directive was not provided
 location /root {
     oauth_proxy on;
     oauth_proxy_allow_tokens on;
-    oauth_proxy_cookie_prefix "example";
+    oauth_proxy_cookie_name_prefix "example";
     oauth_proxy_encryption_key "4e4636356d65563e4c73233847503e3b21436e6f7629724950526f4b5e2e4e50";
     oauth_proxy_trusted_web_origin "https://www.example.com";
 

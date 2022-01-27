@@ -1,5 +1,9 @@
-TRICKY CODE
------------
+DOC
+---
+1. Move developer resources to a Wiki folder and tidy up.
+
+CODE
+----
 Do the following code in LUA first:
 
 1. Set outgoing CORS headers to set, then update README with new config settings.
@@ -7,10 +11,6 @@ Do the following code in LUA first:
 2. Remove cookie related headers rather than passing them through.\
    In C this is tricky, and we should not remove non Curity cookies:\
    https://www.ruby-forum.com/t/removing-a-request-header-in-an-access-phase-handler/245742
-
-DOC
----
-1. Move developer resources to a Wiki file.
 
 COMPILER
 --------
