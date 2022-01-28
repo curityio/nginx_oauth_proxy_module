@@ -322,7 +322,6 @@ static ngx_int_t validate_configuration(ngx_conf_t *main_config, const oauth_pro
             return NGX_ERROR;
         }
 
-        ngx_conf_log_error(NGX_LOG_WARN, main_config, 0, "*** CHECKING LENGTH");
         if (module_location_config->cookie_name_prefix.len > max_cookie_name_size)
         {
             ngx_conf_log_error(NGX_LOG_WARN, main_config, 0, "The cookie_name_prefix configuration directive has a maximum length of %d characters", max_cookie_name_size);

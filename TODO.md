@@ -1,10 +1,15 @@
 CORS
 ---
-0. Fix up failing tests
+0. utils source file
 
-1. Output all CORS headers
+1. Output all CORS headers in C
+   Short circuit execution when cors_enabled and return a 200 without visiting the API
 
-2. Do a utils.c source file and think more about dependencies
+2. LUA POST and decrpytion tests
+
+3. Separate resources and wiki
+
+4. Do a utils.c source file and think more about dependencies
 
 3. Do equivalent GET tests to LUA
 

@@ -97,7 +97,7 @@ You can run curl requests against the nginx system in the same manner as the SPA
 
 ```bash
 AT_COOKIE='AcYBf995tTBVsLtQLvOuLUZXHm2c-XqP8t7SKmhBiQtzy5CAw4h_RF6rXyg6kHrvhb8x4WaLQC6h3mw6a3O3Q9A'
-curl -X GET http://localhost:8080/api \
+curl -i -X GET http://localhost:8080/api \
 -H "origin: https://www.example.com" \
 -H "cookie: example-at=$AT_COOKIE"
 ```

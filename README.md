@@ -67,7 +67,7 @@ Multiple origins could be used in special cases where cookies are shared across 
 
 > **Syntax**: **`oauth_proxy_cors_enabled`** `boolean`
 >
-> **Default**: *true*
+> **Default**: *on*
 >
 > **Context**: `location`
 
@@ -82,7 +82,7 @@ The [access-control-allow-credentials](https://developer.mozilla.org/en-US/docs/
 
 > **Syntax**: **`oauth_proxy_allow_tokens`** `boolean`
 >
-> **Default**: *false*
+> **Default**: *off*
 >
 > **Context**: `location`
 
@@ -93,7 +93,7 @@ This can be useful when web and mobile clients share the same API routes.
 
 > **Syntax**: **`oauth_proxy_remove_cookie_headers`** `boolean`
 >
-> **Default**: *true*
+> **Default**: *on*
 >
 > **Context**: `location`
 
