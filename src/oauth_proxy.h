@@ -12,6 +12,3 @@ typedef struct
     ngx_array_t *cors_expose_headers;
     ngx_int_t cors_max_age;
 } oauth_proxy_configuration_t;
-
-#define MAX_COOKIE_PREFIX_LENGTH 64
-#define MAX_COOKIE_SUFFIX_LENGTH 5

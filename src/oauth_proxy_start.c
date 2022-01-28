@@ -223,7 +223,7 @@ static char *merge_location_configuration(ngx_conf_t *main_config, void *parent,
  */
 static ngx_int_t apply_configuration_defaults(ngx_conf_t *main_config, oauth_proxy_configuration_t *config)
 {
-    u_char csrf_header_name[2 + MAX_COOKIE_PREFIX_LENGTH + MAX_COOKIE_SUFFIX_LENGTH + 1];
+    u_char csrf_header_name[128];
     ngx_int_t ret_code = NGX_OK;
 
     if (config->cors_enabled)
@@ -311,6 +311,7 @@ static ngx_int_t validate_configuration(ngx_conf_t *main_config, const oauth_pro
     ngx_str_t trusted_web_origin;
     const char *literal_http   = "http://";
     const char *literal_https  = "https://";
+    size_t max_cookie_name_size = 64;
     ngx_uint_t i = 0;
 
     if (module_location_config != NULL && module_location_config->enabled)
@@ -321,9 +322,10 @@ static ngx_int_t validate_configuration(ngx_conf_t *main_config, const oauth_pro
             return NGX_ERROR;
         }
 
-        if (module_location_config->cookie_name_prefix.len > MAX_COOKIE_PREFIX_LENGTH)
+        ngx_conf_log_error(NGX_LOG_WARN, main_config, 0, "*** CHECKING LENGTH");
+        if (module_location_config->cookie_name_prefix.len > max_cookie_name_size)
         {
-            ngx_conf_log_error(NGX_LOG_WARN, main_config, 0, "The cookie_name_prefix configuration directive has a maximum length of %d characters", MAX_COOKIE_PREFIX_LENGTH);
+            ngx_conf_log_error(NGX_LOG_WARN, main_config, 0, "The cookie_name_prefix configuration directive has a maximum length of %d characters", max_cookie_name_size);
             return NGX_ERROR;
         }
 

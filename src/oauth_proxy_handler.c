@@ -177,7 +177,7 @@ static ngx_int_t verify_web_origin(const oauth_proxy_configuration_t *config, co
 static ngx_int_t apply_csrf_checks(ngx_http_request_t *request, const oauth_proxy_configuration_t *config, const ngx_str_t *web_origin)
 {
     ngx_str_t csrf_cookie_encrypted_hex;
-    u_char csrf_header_name[2 + MAX_COOKIE_PREFIX_LENGTH + MAX_COOKIE_SUFFIX_LENGTH + 1];
+    u_char csrf_header_name[128];
     ngx_str_t *csrf_header_value = NULL;
     ngx_str_t csrf_token;
     ngx_int_t ret_code = NGX_OK;
@@ -268,7 +268,7 @@ static ngx_str_t *search_headers_in(ngx_http_request_t *request, u_char *name, s
  */
 static ngx_int_t get_cookie(ngx_http_request_t *request, ngx_str_t* cookie_value, const ngx_str_t* cookie_name_prefix, const u_char *cookie_suffix)
 {
-    u_char cookie_name[MAX_COOKIE_PREFIX_LENGTH + MAX_COOKIE_SUFFIX_LENGTH + 1];
+    u_char cookie_name[128];
     size_t suffix_len = 0;
     ngx_str_t cookie_name_str;
 
