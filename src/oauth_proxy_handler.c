@@ -20,26 +20,21 @@
 #include <ngx_string.h>
 #include "oauth_proxy.h"
 
-/* Imports from other modules */
-oauth_proxy_configuration_t* get_location_configuration(ngx_http_request_t *request);
-ngx_int_t decrypt_cookie(ngx_http_request_t *request, ngx_str_t *plain_text, const ngx_str_t* ciphertext, const ngx_str_t* encryption_key_hex);
-
 /* Forward declarations of implementation functions */
 static ngx_int_t verify_web_origin(const oauth_proxy_configuration_t *config, const ngx_str_t *web_origin);
 static ngx_int_t apply_csrf_checks(ngx_http_request_t *request, const oauth_proxy_configuration_t *config, const ngx_str_t *web_origin);
 static ngx_str_t *get_origin_header(ngx_http_request_t *request);
 static ngx_str_t *search_headers_in(ngx_http_request_t *request, u_char *name, size_t len);
 static ngx_int_t get_cookie(ngx_http_request_t *request, ngx_str_t* cookie_value, const ngx_str_t* cookie_name_prefix, const u_char *cookie_suffix);
-void get_csrf_header_name(u_char *csrf_header_name, const oauth_proxy_configuration_t *config);
 static ngx_int_t add_authorization_header(ngx_http_request_t *request, const ngx_str_t* token_value);
 static ngx_int_t add_cors_response_headers(ngx_http_request_t *request, const oauth_proxy_configuration_t *config, u_char is_error);
 static ngx_int_t add_cors_header(ngx_http_request_t *request, const char *name, u_char *value);
 static ngx_int_t write_error_response(ngx_http_request_t *request, ngx_int_t status, const oauth_proxy_configuration_t *config);
 
 /*
- * Called during HTTP requests to make cookie related checks and then to decrypt the cookie to get an access token
+ * The main exported handler method, called for each incoming API request
  */
-ngx_int_t handler(ngx_http_request_t *request)
+ngx_int_t oauth_proxy_handler_main(ngx_http_request_t *request)
 {
     oauth_proxy_configuration_t *module_location_config = NULL;
     ngx_str_t *web_origin = NULL;
@@ -48,7 +43,7 @@ ngx_int_t handler(ngx_http_request_t *request)
     ngx_int_t ret_code = NGX_OK;
     
     /* Return immediately for locations where the module is not used */
-    module_location_config = get_location_configuration(request);
+    module_location_config = oauth_proxy_module_get_location_configuration(request);
     if (!module_location_config->enabled)
     {
         return NGX_DECLINED;
@@ -110,7 +105,7 @@ ngx_int_t handler(ngx_http_request_t *request)
     }
 
     /* Try to decrypt the access token cookie to get the access token */
-    ret_code = decrypt_cookie(request, &access_token, &at_cookie_encrypted_hex, &module_location_config->encryption_key);
+    ret_code = oauth_proxy_decryption_decrypt_cookie(request, &access_token, &at_cookie_encrypted_hex, &module_location_config->encryption_key);
     if (ret_code != NGX_OK)
     {
         return write_error_response(request, ret_code, module_location_config);
@@ -130,22 +125,6 @@ ngx_int_t handler(ngx_http_request_t *request)
     }
 
     return NGX_OK;
-}
-
-/*
- * Get the CSRF header name into the supplied buffer
- */
-void get_csrf_header_name(u_char *csrf_header_name, const oauth_proxy_configuration_t *config)
-{
-    const char *literal_prefix = "x-";
-    const char *literal_suffix = "-csrf";
-    size_t prefix_length = 2;
-    size_t suffix_length = 5;
-
-    ngx_memcpy(csrf_header_name, literal_prefix, prefix_length);
-    ngx_memcpy(csrf_header_name + prefix_length, config->cookie_name_prefix.data, config->cookie_name_prefix.len);
-    ngx_memcpy(csrf_header_name + prefix_length + config->cookie_name_prefix.len, literal_suffix, suffix_length);
-    csrf_header_name[2 + config->cookie_name_prefix.len + suffix_length] = 0;
 }
 
 /*
@@ -191,7 +170,7 @@ static ngx_int_t apply_csrf_checks(ngx_http_request_t *request, const oauth_prox
         return NGX_HTTP_UNAUTHORIZED;
     }
 
-    get_csrf_header_name(csrf_header_name, config);
+    oauth_proxy_utils_get_csrf_header_name(csrf_header_name, config);
     csrf_header_value = search_headers_in(request, csrf_header_name, ngx_strlen(csrf_header_name));
     if (csrf_header_value == NULL)
     {
@@ -199,7 +178,7 @@ static ngx_int_t apply_csrf_checks(ngx_http_request_t *request, const oauth_prox
         return NGX_HTTP_UNAUTHORIZED;
     }
 
-    ret_code = decrypt_cookie(request, &csrf_token, &csrf_cookie_encrypted_hex, &config->encryption_key);
+    ret_code = oauth_proxy_decryption_decrypt_cookie(request, &csrf_token, &csrf_cookie_encrypted_hex, &config->encryption_key);
     if (ret_code != NGX_OK)
     {
         return ret_code;
@@ -326,17 +305,15 @@ static ngx_int_t add_authorization_header(ngx_http_request_t *request, const ngx
 static ngx_int_t add_cors_response_headers(ngx_http_request_t *request, const oauth_proxy_configuration_t *config, u_char is_error)
 {
     ngx_str_t *web_origin = NULL;
-    //char allowed_methods[128];
-    //char allowed_headers[512];
-    //char exposed_headers[512];
+    //char allow_methods_str[128];
+    //char allow_headers_str[512];
+    //char expose_headers_str[512];
     
-    ngx_log_error(NGX_LOG_WARN, request->connection->log, 0, "*** In CORS headers routine");
     web_origin = get_origin_header(request);
     if (web_origin != NULL && verify_web_origin(config, web_origin) == NGX_OK)
     {
         if (config->cors_enabled || is_error != 0)
         {
-            ngx_log_error(NGX_LOG_WARN, request->connection->log, 0, "*** Adding CORS headers");
             if (add_cors_header(request,  "access-control-allow-origin", web_origin->data) != NGX_OK)
             {
                 ngx_log_error(NGX_LOG_WARN, request->connection->log, 0, "OAuth proxy failed to add CORS allow_origin response header");
@@ -350,7 +327,7 @@ static ngx_int_t add_cors_response_headers(ngx_http_request_t *request, const oa
             }
         }
 
-        if (config->cors_enabled && 1 == 0)
+        if (config->cors_enabled)
         {
             if (config->cors_allow_methods->nelts > 0)
             {
@@ -443,11 +420,11 @@ static ngx_int_t write_error_response(ngx_http_request_t *request, ngx_int_t sta
             }
             else
             {
-                ngx_str_set(&code, "unauthorized_request");
+                ngx_str_set(&code, "unauthorized");
                 ngx_str_set(&message, "Access denied due to missing or invalid credentials");
             }
 
-            errorFormat = "{\"code\": \"%V\", \"message\": \"%V\"}";
+            errorFormat = "{\"code\":\"%V\", \"message\":\"%V\"}";
             errorLen = ngx_strlen(errorFormat) + code.len + message.len - 4;
             ngx_snprintf(jsonErrorData, sizeof(jsonErrorData) - 1, errorFormat, &code, &message);
             jsonErrorData[errorLen] = 0;

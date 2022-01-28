@@ -19,10 +19,7 @@
 #include <ngx_core.h>
 #include <ngx_http.h>
 #include <ngx_string.h>
-
-/* Imports from the encoding module */
-int bytes_from_hex(u_char *bytes, const u_char *hex, size_t hex_len);
-int base64_url_decode(u_char *bufplain, const u_char *bufcoded);
+#include "oauth_proxy.h"
 
 /* For encryption related constants to be used in array sizes, use #defines as valid C */
 #define VERSION_SIZE 1
@@ -35,7 +32,7 @@ int base64_url_decode(u_char *bufplain, const u_char *bufcoded);
  * Performs AES256-GCM authenticated decryption of secure cookies, using the hex encryption key from configuration
  * https://wiki.openssl.org/index.php/EVP_Authenticated_Encryption_and_Decryption
  */
-ngx_int_t decrypt_cookie(ngx_http_request_t *request, ngx_str_t *plaintext, const ngx_str_t *ciphertext, const ngx_str_t *encryption_key_hex)
+ngx_int_t oauth_proxy_decryption_decrypt_cookie(ngx_http_request_t *request, ngx_str_t *plaintext, const ngx_str_t *ciphertext, const ngx_str_t *encryption_key_hex)
 {
     EVP_CIPHER_CTX *ctx = NULL;
     u_char encryption_key_bytes[AES_KEY_SIZE_BYTES];
@@ -60,7 +57,7 @@ ngx_int_t decrypt_cookie(ngx_http_request_t *request, ngx_str_t *plaintext, cons
 
     if (ret_code == NGX_OK)
     {
-        ret_code = bytes_from_hex(encryption_key_bytes, encryption_key_hex->data, encryption_key_hex->len);
+        ret_code = oauth_proxy_encoding_bytes_from_hex(encryption_key_bytes, encryption_key_hex->data, encryption_key_hex->len);
         if (ret_code != 0)
         {
             ngx_log_error(NGX_LOG_WARN, request->connection->log, 0, "The configured encryption key is not valid hex");
@@ -83,7 +80,7 @@ ngx_int_t decrypt_cookie(ngx_http_request_t *request, ngx_str_t *plaintext, cons
     /* Decode and get the exact encrypted byte sizes */
     if (ret_code == NGX_OK)
     {
-        decoded_size = base64_url_decode(ciphertext_bytes, ciphertext->data);
+        decoded_size = oauth_proxy_encoding_base64_url_decode(ciphertext_bytes, ciphertext->data);
         ciphertext_byte_size = decoded_size - (VERSION_SIZE + GCM_IV_SIZE + GCM_TAG_SIZE);
         if (ciphertext_byte_size <= 0)
         {

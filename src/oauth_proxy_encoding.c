@@ -70,7 +70,7 @@ static const u_char pr2six[256] =
 /*
  * Decode bytes from base64url
  */
-int base64_url_decode(u_char *bufplain, const u_char *bufcoded)
+int oauth_proxy_encoding_base64_url_decode(u_char *bufplain, const u_char *bufcoded)
 {
     int nbytesdecoded = 0;
     const u_char *bufin = NULL;
@@ -117,7 +117,7 @@ int base64_url_decode(u_char *bufplain, const u_char *bufcoded)
 /*
  * Convert each pair of hex characters to a byte value
  */
-int bytes_from_hex(u_char *bytes, const u_char *hex, size_t hex_len)
+int oauth_proxy_encoding_bytes_from_hex(u_char *bytes, const u_char *hex, size_t hex_len)
 {
     size_t i = 0;
     char c = 0;

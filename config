@@ -4,10 +4,12 @@ company_name=curity
 ngx_addon_name=ngx_${company_name}_${protocol}_${addon_base_name}_module
 
 OAUTH_PROXY_SRCS="\
-$ngx_addon_dir/src/oauth_proxy_start.c \
+$ngx_addon_dir/src/oauth_proxy_module.c \
+$ngx_addon_dir/src/oauth_proxy_configuration.c \
 $ngx_addon_dir/src/oauth_proxy_handler.c \
 $ngx_addon_dir/src/oauth_proxy_decryption.c \
 $ngx_addon_dir/src/oauth_proxy_encoding.c \
+$ngx_addon_dir/src/oauth_proxy_utils.c \
 "
 
 if test -n "$ngx_module_link"; then

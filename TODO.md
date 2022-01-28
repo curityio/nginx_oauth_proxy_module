@@ -1,23 +1,16 @@
-CORS
----
-0. utils source file
-
-1. Output all CORS headers in C
+TASKS
+-----
+1. Complete CORS header processing
+   Eg for array to ngx_str_t
+   Update CONFIG tests
    Short circuit execution when cors_enabled and return a 200 without visiting the API
 
-2. LUA POST and decrpytion tests
+2. Separate C resources and wiki, to consolidate docs
+   Do a little Node API and get rid of mockbin
 
-3. Separate resources and wiki
-
-4. Do a utils.c source file and think more about dependencies
-
-3. Do equivalent GET tests to LUA
-
-4. Move developer resources to a Wiki folder and tidy up doc
-
-5. Do LUA POST and DECRYPTION tests
-
-6. Config tests
+3. Consolidate GET tests as for LUA
+   Run valgrind again
+   Merge code
 
 CODE
 ----

@@ -171,7 +171,7 @@ access-control-allow-origin: https://www.example.com
 access-control-allow-credentials: true
 
 --- response_body_like chomp
-{"code": "unauthorized_request", "message": "Access denied due to missing or invalid credentials"}
+{"code":"unauthorized", "message":"Access denied due to missing or invalid credentials"}
 
 === TEST HTTP_GET_7: GET with a valid cookie returns 200 and an Authorization header
 ###############################################################################################

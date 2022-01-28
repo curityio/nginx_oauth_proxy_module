@@ -278,7 +278,7 @@ For OAuth Proxy errors, the response contains a JSON body and CORS headers so th
 
 ```text
 {
-    "code": "unauthorized_request", 
+    "code": "unauthorized", 
     "message": "Access denied due to missing or invalid credentials"
 }
 
