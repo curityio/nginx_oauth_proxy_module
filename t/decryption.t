@@ -24,7 +24,9 @@ SKIP: {
 __DATA__
 
 === TEST DECRYPTION_1: A request with a cookie too small to be a valid encrypted payload returns 401
+####################################################################################
 # Verify that obviously invalid data is rejected and does not cause the code to fail
+####################################################################################
 
 --- config
 location /t {
@@ -33,7 +35,6 @@ location /t {
     oauth_proxy_encryption_key "7b99279ab87533d3c238db874a842a91ee26a76027f3c03c317504963d2c9926";
     oauth_proxy_trusted_web_origin "https://www.example.com";
     oauth_proxy_cors_enabled on;
-    oauth_proxy_allow_tokens on;
 }
 
 --- request
@@ -49,7 +50,9 @@ cookie: example-at=x
  Invalid data length after decoding from base64
 
 === TEST DECRYPTION_2: A POST with 2 valid cookies for an opaque access token succeeds
+##########################################################################
 # Verify that decryption when using opaque access tokens works as expected
+##########################################################################
 
 --- config
 location /t {
@@ -58,7 +61,6 @@ location /t {
     oauth_proxy_encryption_key "7b99279ab87533d3c238db874a842a91ee26a76027f3c03c317504963d2c9926";
     oauth_proxy_trusted_web_origin "https://www.example.com";
     oauth_proxy_cors_enabled on;
-    oauth_proxy_allow_tokens on;
 
     proxy_pass http://localhost:1984/target;
 }
@@ -83,7 +85,9 @@ $data;
 "authorization: Bearer " . $main::at_opaque
 
 === TEST DECRYPTION_3: A POST with 2 valid cookies for a JWT access token succeeds
+##############################################################################
 # Verify that decryption when using larger JWT access tokens works as expected
+##############################################################################
 
 --- config
 location /t {
@@ -92,7 +96,6 @@ location /t {
     oauth_proxy_encryption_key "7b99279ab87533d3c238db874a842a91ee26a76027f3c03c317504963d2c9926";
     oauth_proxy_trusted_web_origin "https://www.example.com";
     oauth_proxy_cors_enabled on;
-    oauth_proxy_allow_tokens on;
 
     proxy_pass http://localhost:1984/target;
 }
@@ -117,7 +120,9 @@ $data;
 "authorization: Bearer " . $main::at_jwt
 
 === TEST DECRYPTION_4: Handling a request encrypted with a malicious key fails with a 401
+########################################################################################
 # Verify that a request from an attacker sending their own encrypted JWT is not accepted
+########################################################################################
 
 --- config
 location /t {
@@ -126,7 +131,6 @@ location /t {
     oauth_proxy_encryption_key "7b99279ab87533d3c238db874a842a91ee26a76027f3c03c317504963d2c9926";
     oauth_proxy_trusted_web_origin "https://www.example.com";
     oauth_proxy_cors_enabled on;
-    oauth_proxy_allow_tokens on;
 }
 
 --- request
@@ -145,7 +149,9 @@ $data;
 Problem encountered decrypting data
 
 === TEST DECRYPTION_5: GET with a tampered IV in the encrypted payload is rejected
+##########################################################################################################
 # Verify that a request with an altered initialization vector is rejected when replacing the 5th character
+##########################################################################################################
 
 --- config
 location /t {
@@ -154,7 +160,6 @@ location /t {
     oauth_proxy_encryption_key "7b99279ab87533d3c238db874a842a91ee26a76027f3c03c317504963d2c9926";
     oauth_proxy_trusted_web_origin "https://www.example.com";
     oauth_proxy_cors_enabled on;
-    oauth_proxy_allow_tokens on;
 }
 
 --- request
@@ -176,7 +181,9 @@ $data;
 Problem encountered decrypting data
 
 === TEST DECRYPTION_6: GET with tampered ciphertext in the encrypted payload is rejected
+################################################################################################
 # Verify that a request with an altered ciphertext is rejected when replacing the 45th character
+################################################################################################
 
 --- config
 location /t {
@@ -185,7 +192,6 @@ location /t {
     oauth_proxy_encryption_key "7b99279ab87533d3c238db874a842a91ee26a76027f3c03c317504963d2c9926";
     oauth_proxy_trusted_web_origin "https://www.example.com";
     oauth_proxy_cors_enabled on;
-    oauth_proxy_allow_tokens on;
 }
 
 --- request
@@ -207,7 +213,9 @@ $data;
 Problem encountered decrypting data
 
 === TEST DECRYPTION_7: GET with tampered MAC in the encrypted payload is rejected
+#########################################################################################################################
 # Verify that a request with an altered message authenticaton code is rejected when replacing the 5th from last character
+#########################################################################################################################
 
 --- config
 location /t {
@@ -216,7 +224,6 @@ location /t {
     oauth_proxy_encryption_key "7b99279ab87533d3c238db874a842a91ee26a76027f3c03c317504963d2c9926";
     oauth_proxy_trusted_web_origin "https://www.example.com";
     oauth_proxy_cors_enabled on;
-    oauth_proxy_allow_tokens on;
 }
 
 --- request

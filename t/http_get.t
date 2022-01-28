@@ -17,7 +17,9 @@ SKIP: {
 __DATA__
 
 === TEST HTTP_GET_1: GET with an authorization header is allowed when enabled
+##########################################################################################################
 # Verify that mobile and SPA clients can use the same routes, where the first sends access tokens directly
+##########################################################################################################
 
 --- config
 location /t {
@@ -44,7 +46,9 @@ authorization: bearer xxx
 --- error_code: 200
 
 === TEST HTTP_GET_2: GET with an authorization header is rejected when not enabled
+#######################################################################################################
 # Verify that if a company wants to force mobile and SPA clients to use different routes they can do so
+#######################################################################################################
 
 --- config
 location /t {
@@ -69,7 +73,9 @@ authorization: bearer xxx
 No AT cookie was found in the incoming request
 
 === TEST HTTP_GET_3: GET without an origin header returns 401
+################################################################################################
 # SPA clients are expected to always send the origin header, as supported by all modern browsers
+################################################################################################
 
 --- config
 location /t {
@@ -78,7 +84,6 @@ location /t {
     oauth_proxy_encryption_key "4e4636356d65563e4c73233847503e3b21436e6f7629724950526f4b5e2e4e50";
     oauth_proxy_trusted_web_origin "https://www.example.com";
     oauth_proxy_cors_enabled on;
-    oauth_proxy_allow_tokens on;
 }
 
 --- request
@@ -90,7 +95,9 @@ GET /t
 The request did not have an origin header
 
 === TEST HTTP_GET_4: GET with an untrusted web origin header value returns 401
+##########################################################################
 # Verify that the request is rejected if a malicious site calls the plugin
+##########################################################################
 
 --- config
 location /t {
@@ -99,7 +106,6 @@ location /t {
     oauth_proxy_encryption_key "4e4636356d65563e4c73233847503e3b21436e6f7629724950526f4b5e2e4e50";
     oauth_proxy_trusted_web_origin "https://www.example.com";
     oauth_proxy_cors_enabled on;
-    oauth_proxy_allow_tokens on;
 }
 
 --- request
@@ -114,7 +120,9 @@ origin: https://www.malicious-site.com
 The request was from an untrusted web origin
 
 === TEST HTTP_GET_5: GET without a cookie or token credential returns 401
+##########################################################################
 # Verify that a 401 is received when there is no message credential at all
+##########################################################################
 
 --- config
 location /t {
@@ -123,7 +131,6 @@ location /t {
     oauth_proxy_encryption_key "4e4636356d65563e4c73233847503e3b21436e6f7629724950526f4b5e2e4e50";
     oauth_proxy_trusted_web_origin "https://www.example.com";
     oauth_proxy_cors_enabled on;
-    oauth_proxy_allow_tokens on;
 }
 
 --- request
@@ -138,7 +145,9 @@ origin: https://www.example.com
 No AT cookie was found in the incoming request
 
 === TEST HTTP_GET_6: GET errors returns JSON data and CORS headers
+###############################################################################################
 # Error responses must be SPA friendly, to prevent cryptic network errors or unuseful responses
+###############################################################################################
 
 --- config
 location /t {
@@ -147,7 +156,6 @@ location /t {
     oauth_proxy_encryption_key "4e4636356d65563e4c73233847503e3b21436e6f7629724950526f4b5e2e4e50";
     oauth_proxy_trusted_web_origin "https://www.example.com";
     oauth_proxy_cors_enabled on;
-    oauth_proxy_allow_tokens on;
 }
 
 --- request
@@ -166,7 +174,9 @@ access-control-allow-credentials: true
 {"code": "unauthorized_request", "message": "Access denied due to missing or invalid credentials"}
 
 === TEST HTTP_GET_7: GET with a valid cookie returns 200 and an Authorization header
-# Ensure that the happy path for a GET request works
+###############################################################################################
+# Ensure that the happy path for a GET request works, so that the API can get data from the API
+###############################################################################################
 
 --- config
 location /t {
@@ -175,7 +185,6 @@ location /t {
     oauth_proxy_encryption_key "4e4636356d65563e4c73233847503e3b21436e6f7629724950526f4b5e2e4e50";
     oauth_proxy_trusted_web_origin "https://www.example.com";
     oauth_proxy_cors_enabled on;
-    oauth_proxy_allow_tokens on;
     
     proxy_pass http://localhost:1984/target;
 }
