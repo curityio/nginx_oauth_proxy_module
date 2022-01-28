@@ -1,15 +1,15 @@
 TASKS
 -----
-1. Complete CORS header processing
-   Eg for array to ngx_str_t
-   Update CONFIG tests
+1. CORS headers not quite outputting correctly.
    Short circuit execution when cors_enabled and return a 200 without visiting the API
 
 2. Separate C resources and wiki, to consolidate docs
-   Do a little Node API and get rid of mockbin
 
-3. Consolidate GET tests as for LUA
-   Run valgrind again
+3. Update to a minimal REST API, without CORS headers
+
+4. Update GET, CORS and CONFIG tests in line with LUA
+
+5. Run valgrind and build all images
    Merge code
 
 CODE

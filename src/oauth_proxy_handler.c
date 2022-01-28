@@ -18,17 +18,15 @@
 #include <ngx_core.h>
 #include <ngx_http.h>
 #include <ngx_string.h>
+#include <stdlib.h>
 #include "oauth_proxy.h"
 
 /* Forward declarations of implementation functions */
 static ngx_int_t verify_web_origin(const oauth_proxy_configuration_t *config, const ngx_str_t *web_origin);
 static ngx_int_t apply_csrf_checks(ngx_http_request_t *request, const oauth_proxy_configuration_t *config, const ngx_str_t *web_origin);
 static ngx_str_t *get_origin_header(ngx_http_request_t *request);
-static ngx_str_t *search_headers_in(ngx_http_request_t *request, u_char *name, size_t len);
-static ngx_int_t get_cookie(ngx_http_request_t *request, ngx_str_t* cookie_value, const ngx_str_t* cookie_name_prefix, const u_char *cookie_suffix);
 static ngx_int_t add_authorization_header(ngx_http_request_t *request, const ngx_str_t* token_value);
 static ngx_int_t add_cors_response_headers(ngx_http_request_t *request, const oauth_proxy_configuration_t *config, u_char is_error);
-static ngx_int_t add_cors_header(ngx_http_request_t *request, const char *name, u_char *value);
 static ngx_int_t write_error_response(ngx_http_request_t *request, ngx_int_t status, const oauth_proxy_configuration_t *config);
 
 /*
@@ -96,7 +94,7 @@ ngx_int_t oauth_proxy_handler_main(ngx_http_request_t *request)
     }
 
     /* This returns 0 when there is a single cookie header (HTTP 1.1) or > 0 when there are multiple cookie headers (HTTP 2.0) */
-    ret_code = get_cookie(request, &at_cookie_encrypted_hex, &module_location_config->cookie_name_prefix, (u_char *)"-at");
+    ret_code = oauth_proxy_utils_get_cookie(request, &at_cookie_encrypted_hex, &module_location_config->cookie_name_prefix, (u_char *)"-at");
     if (ret_code == NGX_DECLINED)
     {
         ret_code = NGX_HTTP_UNAUTHORIZED;
@@ -125,6 +123,16 @@ ngx_int_t oauth_proxy_handler_main(ngx_http_request_t *request)
     }
 
     return NGX_OK;
+}
+
+/*
+ * Get the origin header used for CORS related logic
+ */
+static ngx_str_t *get_origin_header(ngx_http_request_t *request)
+{
+    char *literal_origin = "origin";
+
+    return oauth_proxy_utils_get_header_in(request, (u_char *)literal_origin, ngx_strlen(literal_origin));
 }
 
 /*
@@ -163,7 +171,7 @@ static ngx_int_t apply_csrf_checks(ngx_http_request_t *request, const oauth_prox
     ngx_int_t ret_code = NGX_OK;
 
     /* This returns 0 when there is a single cookie header or > 0 when there are multiple cookie headers */
-    ret_code = get_cookie(request, &csrf_cookie_encrypted_hex, &config->cookie_name_prefix, (u_char *)"-csrf");
+    ret_code = oauth_proxy_utils_get_cookie(request, &csrf_cookie_encrypted_hex, &config->cookie_name_prefix, (u_char *)"-csrf");
     if (ret_code == NGX_DECLINED)
     {
         ngx_log_error(NGX_LOG_WARN, request->connection->log, 0, "No CSRF cookie was found in the incoming request");
@@ -171,7 +179,7 @@ static ngx_int_t apply_csrf_checks(ngx_http_request_t *request, const oauth_prox
     }
 
     oauth_proxy_utils_get_csrf_header_name(csrf_header_name, config);
-    csrf_header_value = search_headers_in(request, csrf_header_name, ngx_strlen(csrf_header_name));
+    csrf_header_value = oauth_proxy_utils_get_header_in(request, csrf_header_name, ngx_strlen(csrf_header_name));
     if (csrf_header_value == NULL)
     {
         ngx_log_error(NGX_LOG_WARN, request->connection->log, 0, "A data changing request did not have a CSRF header");
@@ -194,75 +202,6 @@ static ngx_int_t apply_csrf_checks(ngx_http_request_t *request, const oauth_prox
 }
 
 /*
- * Get the origin header used for CORS related logic
- */
-static ngx_str_t *get_origin_header(ngx_http_request_t *request)
-{
-    char *literal_origin = "origin";
-
-    return search_headers_in(request, (u_char *)literal_origin, ngx_strlen(literal_origin));
-}
-
-/*
- * Find a header that is not in the standard headers_in structure
- * https://www.nginx.com/resources/wiki/start/topics/examples/headers_management/
- */
-static ngx_str_t *search_headers_in(ngx_http_request_t *request, u_char *name, size_t len)
-{
-    ngx_list_part_t *part = NULL;
-    ngx_table_elt_t *h = NULL;
-    ngx_uint_t i = 0;
-
-    /* Get the first part of the list. There is usual only one part */
-    part = &request->headers_in.headers.part;
-    h = part->elts;
-
-    /* Headers list array may consist of more than one part, so loop through all of it */
-    for (i = 0; ; i++) {
-
-        if (i >= part->nelts) {
-            if (part->next == NULL) {
-                /* The last part, search is done */
-                break;
-            }
-
-            part = part->next;
-            h = part->elts;
-            i = 0;
-        }
-
-        /* Just compare the lengths and then the names case insensitively */
-        if (len != h[i].key.len || ngx_strcasecmp(name, h[i].key.data) != 0) {
-            continue;
-        }
-
-        /* Stop the search at the first matched header */
-        return &h[i].value;
-    }
-
-    return NULL;
-}
-
-/*
- * Get a cookie and deal with string manipulation
- */
-static ngx_int_t get_cookie(ngx_http_request_t *request, ngx_str_t* cookie_value, const ngx_str_t* cookie_name_prefix, const u_char *cookie_suffix)
-{
-    u_char cookie_name[128];
-    size_t suffix_len = 0;
-    ngx_str_t cookie_name_str;
-
-    suffix_len = ngx_strlen(cookie_suffix);
-    ngx_memcpy(cookie_name, cookie_name_prefix->data, cookie_name_prefix->len);
-    ngx_memcpy(cookie_name + cookie_name_prefix->len, cookie_suffix, suffix_len);
-    cookie_name[cookie_name_prefix->len + suffix_len] = 0;
-
-    cookie_name_str.data = cookie_name;
-    cookie_name_str.len = ngx_strlen(cookie_name);
-    return ngx_http_parse_multi_header_lines(&request->headers_in.cookies, &cookie_name_str, cookie_value);
-}
-
-/*
  * Set the authorization header and deal with string manipulation
  */
 static ngx_int_t add_authorization_header(ngx_http_request_t *request, const ngx_str_t* token_value)
@@ -277,7 +216,7 @@ static ngx_int_t add_authorization_header(ngx_http_request_t *request, const ngx
         ngx_log_error(NGX_LOG_WARN, request->connection->log, 0, "OAuth proxy failed to allocate memory for the authorization header");
         return NGX_HTTP_INTERNAL_SERVER_ERROR;
     }
-    
+
     /* The header size is unknown and could represent a large JWT, so allocate memory dynamically */
     header_value_len = ngx_strlen("Bearer ") + token_value->len;
     header_value = ngx_pcalloc(request->pool, header_value_len + 1);
@@ -305,22 +244,21 @@ static ngx_int_t add_authorization_header(ngx_http_request_t *request, const ngx
 static ngx_int_t add_cors_response_headers(ngx_http_request_t *request, const oauth_proxy_configuration_t *config, u_char is_error)
 {
     ngx_str_t *web_origin = NULL;
-    //char allow_methods_str[128];
-    //char allow_headers_str[512];
-    //char expose_headers_str[512];
+    ngx_str_t allow_credentials_str;
     
     web_origin = get_origin_header(request);
     if (web_origin != NULL && verify_web_origin(config, web_origin) == NGX_OK)
     {
         if (config->cors_enabled || is_error != 0)
         {
-            if (add_cors_header(request,  "access-control-allow-origin", web_origin->data) != NGX_OK)
+            if (oauth_proxy_utils_add_header_out(request,  "access-control-allow-origin", web_origin) != NGX_OK)
             {
                 ngx_log_error(NGX_LOG_WARN, request->connection->log, 0, "OAuth proxy failed to add CORS allow_origin response header");
                 return NGX_HTTP_INTERNAL_SERVER_ERROR;
             }
 
-            if (add_cors_header(request,  "access-control-allow-credentials", (u_char *)"true") != NGX_OK)
+            ngx_str_set(&allow_credentials_str, "true");
+            if (oauth_proxy_utils_add_header_out(request,  "access-control-allow-credentials", &allow_credentials_str) != NGX_OK)
             {
                 ngx_log_error(NGX_LOG_WARN, request->connection->log, 0, "OAuth proxy failed to add CORS allow_credentials response header");
                 return NGX_HTTP_INTERNAL_SERVER_ERROR;
@@ -331,7 +269,7 @@ static ngx_int_t add_cors_response_headers(ngx_http_request_t *request, const oa
         {
             if (config->cors_allow_methods->nelts > 0)
             {
-                if (add_cors_header(request,  "access-control-allow-cors_allow_methods", (u_char *)"x") != NGX_OK)
+                if (oauth_proxy_utils_add_stringarray_header_out(request,  "access-control-allow-cors_allow_methods", config->cors_allow_methods) != NGX_OK)
                 {
                     ngx_log_error(NGX_LOG_WARN, request->connection->log, 0, "OAuth proxy failed to add CORS allow_methods response header");
                     return NGX_HTTP_INTERNAL_SERVER_ERROR;
@@ -340,7 +278,7 @@ static ngx_int_t add_cors_response_headers(ngx_http_request_t *request, const oa
 
             if (config->cors_allow_headers->nelts > 0)
             {
-                if (add_cors_header(request,  "access-control-allow-cors_allow_headers", (u_char *)"x") != NGX_OK)
+                if (oauth_proxy_utils_add_stringarray_header_out(request,  "access-control-allow-cors_allow_headers", config->cors_allow_headers) != NGX_OK)
                 {
                     ngx_log_error(NGX_LOG_WARN, request->connection->log, 0, "OAuth proxy failed to add CORS allow_headers response header");
                     return NGX_HTTP_INTERNAL_SERVER_ERROR;
@@ -349,14 +287,14 @@ static ngx_int_t add_cors_response_headers(ngx_http_request_t *request, const oa
 
             if (config->cors_expose_headers->nelts > 0)
             {
-                if (add_cors_header(request,  "access-control-allow-cors_expose_headers", (u_char *)"x") != NGX_OK)
+                if (oauth_proxy_utils_add_stringarray_header_out(request,  "access-control-allow-cors_expose_headers", config->cors_expose_headers) != NGX_OK)
                 {
                     ngx_log_error(NGX_LOG_WARN, request->connection->log, 0, "OAuth proxy failed to add CORS expose_headers response header");
                     return NGX_HTTP_INTERNAL_SERVER_ERROR;
                 }
             }
-            
-            if (add_cors_header(request,  "access-control-max_age", (u_char *)"86400") != NGX_OK)
+
+            if (oauth_proxy_utils_add_integer_header_out(request,  "access-control-max_age", config->cors_max_age) != NGX_OK)
             {
                 ngx_log_error(NGX_LOG_WARN, request->connection->log, 0, "OAuth proxy failed to add CORS max_age header");
                 return NGX_HTTP_INTERNAL_SERVER_ERROR;
@@ -364,27 +302,6 @@ static ngx_int_t add_cors_response_headers(ngx_http_request_t *request, const oa
         }
     }
 
-    return NGX_OK;
-}
-
-/*
- * Add a single CORS header
- */
-static ngx_int_t add_cors_header(ngx_http_request_t *request, const char *name, u_char *value)
-{
-    ngx_table_elt_t *header_element = NULL;
-
-    header_element = ngx_list_push(&request->headers_out.headers);
-    if (header_element == NULL)
-    {
-        return NGX_ERROR;
-    }
-
-    header_element->key.data = (u_char *)name;
-    header_element->key.len = ngx_strlen(name);
-    header_element->value.data = value;
-    header_element->value.len = ngx_strlen(value);
-    header_element->hash = 1;
     return NGX_OK;
 }
 
