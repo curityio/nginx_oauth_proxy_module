@@ -102,16 +102,14 @@ curl -i -X GET http://localhost:8080/api \
 -H "cookie: example-at=$AT_COOKIE"
 ```
 
-The development target API is an internet mockbin API that echoes headers and shows the forwarded access token:
+The target API then echoes back headers of interest, to show the received access token:
 
-```json
-{
-  "method": "GET"
-  "headers": {
-    "host": "mockbin.org",
-    "origin": "https://www.example.com",
-    "cookie": "example-at=093d3fb879767f6ec2b1e7e359040fe6ba875734ee043c5cc484d3da8963a351e9aba1c5e273f3d1ea2914f83836fa434474d1720b3040f5f7237f34536b7389",
-    "authorization": "Bearer 42665300-efe8-419d-be52-07b53e208f46",
-  }
-}
+```text
+Content-Type: application/json
+Content-Length: 42
+access-control-allow-origin: https://www.example.com
+access-control-allow-credentials: true
+authorization: Bearer 42665300-efe8-419d-be52-07b53e208f46
+
+{"message": "API was called successfully"}
 ```

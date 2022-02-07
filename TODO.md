@@ -1,22 +1,24 @@
 TASKS
 -----
-1. CORS headers not quite outputting correctly.
-   Short circuit execution when cors_enabled and return a 200 without visiting the API
+1. Get tests passing, then update GET, CORS and CONFIG tests in line with LUA
 
 2. Separate C resources and wiki, to consolidate docs
 
-3. Update to a minimal REST API, without CORS headers
+3. Remove headers rather than passing them through.\
+   In C this is tricky, and we should not remove non Curity cookies:\
+   https://www.ruby-forum.com/t/removing-a-request-header-in-an-access-phase-handler/245742
 
-4. Update GET, CORS and CONFIG tests in line with LUA
+4. Do CORS updates based on incoming request headers and change the vary header
 
-5. Run valgrind and build all images
+5. Run valgrind with built + deployed images
+   Run tests concurrently
    Merge code
 
 CODE
 ----
-1. Remove cookie related headers rather than passing them through.\
-   In C this is tricky, and we should not remove non Curity cookies:\
-   https://www.ruby-forum.com/t/removing-a-request-header-in-an-access-phase-handler/245742
+1. Review all memory access and code simplification
+
+
 
 COMPILER
 --------

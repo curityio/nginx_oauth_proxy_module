@@ -26,8 +26,9 @@ static ngx_int_t verify_web_origin(const oauth_proxy_configuration_t *config, co
 static ngx_int_t apply_csrf_checks(ngx_http_request_t *request, const oauth_proxy_configuration_t *config, const ngx_str_t *web_origin);
 static ngx_str_t *get_origin_header(ngx_http_request_t *request);
 static ngx_int_t add_authorization_header(ngx_http_request_t *request, const ngx_str_t* token_value);
-static ngx_int_t add_cors_response_headers(ngx_http_request_t *request, const oauth_proxy_configuration_t *config, u_char is_error);
+static ngx_int_t write_options_response(ngx_http_request_t *request, const oauth_proxy_configuration_t *module_location_config);
 static ngx_int_t write_error_response(ngx_http_request_t *request, ngx_int_t status, const oauth_proxy_configuration_t *config);
+static ngx_int_t add_cors_response_headers(ngx_http_request_t *request, const oauth_proxy_configuration_t *config, u_char is_error);
 
 /*
  * The main exported handler method, called for each incoming API request
@@ -52,8 +53,10 @@ ngx_int_t oauth_proxy_handler_main(ngx_http_request_t *request)
     {
         if (module_location_config->cors_enabled)
         {
-            add_cors_response_headers(request, module_location_config, 0);
+            /* Avoid needing to handling OPTIONS requests in the API */
+            return write_options_response(request, module_location_config);
         }
+
         return NGX_OK;
     }
 
@@ -239,70 +242,12 @@ static ngx_int_t add_authorization_header(ngx_http_request_t *request, const ngx
 }
 
 /*
- * When there is a valid web origin, add CORS headers so that Javascript can read the response
+ * Write an empty CORS response
  */
-static ngx_int_t add_cors_response_headers(ngx_http_request_t *request, const oauth_proxy_configuration_t *config, u_char is_error)
+static ngx_int_t write_options_response(ngx_http_request_t *request, const oauth_proxy_configuration_t *module_location_config)
 {
-    ngx_str_t *web_origin = NULL;
-    ngx_str_t allow_credentials_str;
-    
-    web_origin = get_origin_header(request);
-    if (web_origin != NULL && verify_web_origin(config, web_origin) == NGX_OK)
-    {
-        if (config->cors_enabled || is_error != 0)
-        {
-            if (oauth_proxy_utils_add_header_out(request,  "access-control-allow-origin", web_origin) != NGX_OK)
-            {
-                ngx_log_error(NGX_LOG_WARN, request->connection->log, 0, "OAuth proxy failed to add CORS allow_origin response header");
-                return NGX_HTTP_INTERNAL_SERVER_ERROR;
-            }
-
-            ngx_str_set(&allow_credentials_str, "true");
-            if (oauth_proxy_utils_add_header_out(request,  "access-control-allow-credentials", &allow_credentials_str) != NGX_OK)
-            {
-                ngx_log_error(NGX_LOG_WARN, request->connection->log, 0, "OAuth proxy failed to add CORS allow_credentials response header");
-                return NGX_HTTP_INTERNAL_SERVER_ERROR;
-            }
-        }
-
-        if (config->cors_enabled)
-        {
-            if (config->cors_allow_methods->nelts > 0)
-            {
-                if (oauth_proxy_utils_add_stringarray_header_out(request,  "access-control-allow-cors_allow_methods", config->cors_allow_methods) != NGX_OK)
-                {
-                    ngx_log_error(NGX_LOG_WARN, request->connection->log, 0, "OAuth proxy failed to add CORS allow_methods response header");
-                    return NGX_HTTP_INTERNAL_SERVER_ERROR;
-                }
-            }
-
-            if (config->cors_allow_headers->nelts > 0)
-            {
-                if (oauth_proxy_utils_add_stringarray_header_out(request,  "access-control-allow-cors_allow_headers", config->cors_allow_headers) != NGX_OK)
-                {
-                    ngx_log_error(NGX_LOG_WARN, request->connection->log, 0, "OAuth proxy failed to add CORS allow_headers response header");
-                    return NGX_HTTP_INTERNAL_SERVER_ERROR;
-                }
-            }
-
-            if (config->cors_expose_headers->nelts > 0)
-            {
-                if (oauth_proxy_utils_add_stringarray_header_out(request,  "access-control-allow-cors_expose_headers", config->cors_expose_headers) != NGX_OK)
-                {
-                    ngx_log_error(NGX_LOG_WARN, request->connection->log, 0, "OAuth proxy failed to add CORS expose_headers response header");
-                    return NGX_HTTP_INTERNAL_SERVER_ERROR;
-                }
-            }
-
-            if (oauth_proxy_utils_add_integer_header_out(request,  "access-control-max_age", config->cors_max_age) != NGX_OK)
-            {
-                ngx_log_error(NGX_LOG_WARN, request->connection->log, 0, "OAuth proxy failed to add CORS max_age header");
-                return NGX_HTTP_INTERNAL_SERVER_ERROR;
-            }
-        }
-    }
-
-    return NGX_OK;
+    add_cors_response_headers(request, module_location_config, 0);
+    return NGX_HTTP_NO_CONTENT;
 }
 
 /*
@@ -365,4 +310,80 @@ static ngx_int_t write_error_response(ngx_http_request_t *request, ngx_int_t sta
     }
 
     return status;
+}
+
+
+/*
+ * When there is a valid web origin, add CORS headers so that Javascript can read the response
+ */
+static ngx_int_t add_cors_response_headers(ngx_http_request_t *request, const oauth_proxy_configuration_t *config, u_char is_error)
+{
+    ngx_str_t *web_origin = NULL;
+    ngx_str_t origin_str;
+    ngx_str_t allow_credentials_str;
+    
+    web_origin = get_origin_header(request);
+    if (web_origin != NULL && verify_web_origin(config, web_origin) == NGX_OK)
+    {
+        if (config->cors_enabled || is_error != 0)
+        {
+            if (oauth_proxy_utils_add_header_out(request,  "access-control-allow-origin", web_origin) != NGX_OK)
+            {
+                ngx_log_error(NGX_LOG_WARN, request->connection->log, 0, "OAuth proxy failed to add CORS allow_origin response header");
+                return NGX_HTTP_INTERNAL_SERVER_ERROR;
+            }
+
+            ngx_str_set(&allow_credentials_str, "true");
+            if (oauth_proxy_utils_add_header_out(request,  "access-control-allow-credentials", &allow_credentials_str) != NGX_OK)
+            {
+                ngx_log_error(NGX_LOG_WARN, request->connection->log, 0, "OAuth proxy failed to add CORS allow_credentials response header");
+                return NGX_HTTP_INTERNAL_SERVER_ERROR;
+            }
+
+            ngx_str_set(&origin_str, "origin");
+            if (oauth_proxy_utils_add_header_out(request,  "vary", &origin_str) != NGX_OK)
+            {
+                ngx_log_error(NGX_LOG_WARN, request->connection->log, 0, "OAuth proxy failed to add CORS vary response header");
+                return NGX_HTTP_INTERNAL_SERVER_ERROR;
+            }
+        }
+
+        if (config->cors_enabled && request->method == NGX_HTTP_OPTIONS)
+        {
+            if (config->cors_allow_methods->nelts > 0)
+            {
+                if (oauth_proxy_utils_add_stringarray_header_out(request,  "access-control-allow-cors_allow_methods", config->cors_allow_methods) != NGX_OK)
+                {
+                    ngx_log_error(NGX_LOG_WARN, request->connection->log, 0, "OAuth proxy failed to add CORS allow_methods response header");
+                    return NGX_HTTP_INTERNAL_SERVER_ERROR;
+                }
+            }
+
+            if (config->cors_allow_headers->nelts > 0)
+            {
+                if (oauth_proxy_utils_add_stringarray_header_out(request,  "access-control-allow-cors_allow_headers", config->cors_allow_headers) != NGX_OK)
+                {
+                    ngx_log_error(NGX_LOG_WARN, request->connection->log, 0, "OAuth proxy failed to add CORS allow_headers response header");
+                    return NGX_HTTP_INTERNAL_SERVER_ERROR;
+                }
+            }
+
+            if (oauth_proxy_utils_add_integer_header_out(request,  "access-control-max_age", config->cors_max_age) != NGX_OK)
+            {
+                ngx_log_error(NGX_LOG_WARN, request->connection->log, 0, "OAuth proxy failed to add CORS max_age header");
+                return NGX_HTTP_INTERNAL_SERVER_ERROR;
+            }
+        }
+
+        if (config->cors_expose_headers->nelts > 0)
+        {
+            if (oauth_proxy_utils_add_stringarray_header_out(request,  "access-control-allow-cors_expose_headers", config->cors_expose_headers) != NGX_OK)
+            {
+                ngx_log_error(NGX_LOG_WARN, request->connection->log, 0, "OAuth proxy failed to add CORS expose_headers response header");
+                return NGX_HTTP_INTERNAL_SERVER_ERROR;
+            }
+        }
+    }
+
+    return NGX_OK;
 }

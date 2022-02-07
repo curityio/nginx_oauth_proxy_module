@@ -17,6 +17,8 @@ ngx_int_t oauth_proxy_utils_create_nginx_string_array(ngx_conf_t *main_config, n
     va_list args;
     ngx_str_t *array_item = NULL;
     u_char *value = NULL;
+    u_char *buffer = NULL;
+    size_t len = 0;
     size_t i = 0;
 
     *data = ngx_array_create(main_config->pool, num_values, sizeof(ngx_str_t));
@@ -35,8 +37,18 @@ ngx_int_t oauth_proxy_utils_create_nginx_string_array(ngx_conf_t *main_config, n
         }
         
         value = va_arg(args, u_char *);
-        array_item->data = value;
-        array_item->len = ngx_strlen(value);
+        len = ngx_strlen(value);
+        buffer = ngx_pcalloc(main_config->pool, len + 1);
+        if (buffer == NULL)
+        {
+            return NGX_ERROR;
+        }
+        
+        memcpy(buffer, value, len);
+        buffer[len] = 0;
+
+        array_item->data = buffer;
+        array_item->len = len;
     }
     va_end(args);
 
