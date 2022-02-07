@@ -89,17 +89,6 @@ The [access-control-allow-credentials](https://developer.mozilla.org/en-US/docs/
 If set to true, then requests that already have a bearer token are passed straight through to APIs.\
 This can be useful when web and mobile clients share the same API routes.
 
-#### oauth_proxy_remove_cookie_headers
-
-> **Syntax**: **`oauth_proxy_remove_cookie_headers`** `boolean`
->
-> **Default**: *on*
->
-> **Context**: `location`
-
-If set to true, then cookie and CSRF headers are not forwarded to APIs.\
-This provides cleaner requests to APIs, which only receive a JWT in the HTTP Authorization header.
-
 #### oauth_proxy_cors_allow_methods
 
 > **Syntax**: **`oauth_proxy_cors_allow_methods`** `string[]`
@@ -275,16 +264,7 @@ AES256-GCM uses authenticated encryption, so invalid cookies are rejected with a
 
 #### Error Responses
 
-The common failure scenarios are summarized below:
-
-| Failure Type | Description | Error Status |
-| ------------ | ----------- | ------------ |
-| Invalid Request | Incorrect or malicious details were sent by the client | 401 |
-| Incorrect Configuration | Invalid configuration leading to input being rejected | 401 |
-| Encryption Key Renewal | Expected reconfiguration leading to input being rejected | 401 |
-| Server Error | A technical problem occurs in the module logic | 500 |
-
-For OAuth Proxy errors, the response contains a JSON body and CORS headers so that the SPA can read the details:
+Error responses contain a JSON body and CORS headers so that the SPA can read the details:
 
 ```text
 {
@@ -296,11 +276,8 @@ access-control-allow-origin: https://www.example.com
 access-control-allow-credentials: true
 ```
 
-#### SPA Error Handling
-
-A 401 error response should be handled by the SPA as an access token expiry event.\
-The SPA should try a token refresh, and ask the user to re-authenticate if this fails.\
-This ensures that the SPA copes resiliently with both expiry and encryption key renewal.
+The code in the [Example SPA](https://github.com/curityio/web-oauth-via-bff) shows how to handle error responses.\
+The HTTP status code is usually sufficient, and the error code can inform the SPA of specific causes.
 
 ## Compatibility
 

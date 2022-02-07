@@ -50,9 +50,6 @@ static ngx_int_t apply_configuration_defaults(ngx_conf_t *main_config, oauth_pro
         if (config->cors_allow_headers == NULL)
         {
             oauth_proxy_utils_get_csrf_header_name(csrf_header_name, config);
-            ngx_conf_log_error(NGX_LOG_WARN, main_config, 0, "***CSRF HEADER NAME: %s", csrf_header_name);
-
-
             ret_code = oauth_proxy_utils_create_nginx_string_array(main_config, &config->cors_allow_headers, 1, csrf_header_name);
             if (ret_code != NGX_OK)
             {

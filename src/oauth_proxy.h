@@ -7,7 +7,6 @@ typedef struct
     ngx_array_t *trusted_web_origins;
     ngx_flag_t cors_enabled;
     ngx_flag_t allow_tokens;
-    ngx_flag_t remove_cookie_headers;
     ngx_array_t *cors_allow_methods;
     ngx_array_t *cors_allow_headers;
     ngx_array_t *cors_expose_headers;

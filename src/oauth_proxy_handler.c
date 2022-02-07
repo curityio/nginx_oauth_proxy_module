@@ -40,6 +40,8 @@ ngx_int_t oauth_proxy_handler_main(ngx_http_request_t *request)
     ngx_str_t at_cookie_encrypted_hex;
     ngx_str_t access_token;
     ngx_int_t ret_code = NGX_OK;
+
+    ngx_log_error(NGX_LOG_WARN, request->connection->log, 0, "*** IN HANDLER");
     
     /* Return immediately for locations where the module is not used */
     module_location_config = oauth_proxy_module_get_location_configuration(request);

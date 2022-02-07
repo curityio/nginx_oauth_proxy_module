@@ -1,20 +1,13 @@
 TASKS
 -----
-1. Remove headers rather than passing them through, then add GET tests 9 and 10
-   https://www.ruby-forum.com/t/removing-a-request-header-in-an-access-phase-handler/245742
-
-2. Fix build error
-   Merge code
-
-3. Do CORS updates based on incoming request headers and change the vary header
-   Do this for LUA and also for C
-
-4. SPA refinements to cope with changed encryption keys or redeployments
+1. C module updates based on incoming request headers and change the vary header
+   Ensure that tests pass
 
 FINALIZATION
 ------------
 1. Final review of all memory access code and aim for simplifications
    Valgrind results indicate some GC that needs to be better understood
+   Read up more on ngx_pcalloc etc
 
 2. Strictest compiler optimizations and warnings in configure.\
    Include -std=c99, O8 or O6, and strictest warnings, then make it fail.\
@@ -28,4 +21,11 @@ FINALIZATION
 4. NGINX+ certification testing to do, maybe via a trial version.\
    See if I can test each .so file I have built in Docker Compose.
 
-5. Do an initial release for all NGINX versions
+NOTES
+-----
+1. Removing cookie headers is complicated and feels inadvisable, so I have omitted this in the C module:
+   https://www.ruby-forum.com/t/removing-a-request-header-in-an-access-phase-handler/245742
+
+2. CentOS 8 is no longer supported so I have commented it out for now.
+   Return to this as part of NGINX certification testing:
+   https://techglimpse.com/failed-metadata-repo-appstream-centos-8/
