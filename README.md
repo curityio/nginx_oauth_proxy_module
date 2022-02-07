@@ -148,7 +148,7 @@ A '*' wildcard value should not be configured here, since it will not work with 
 When CORS is enabled, the plugin returns this value in the [access-contol-max-age](https://developer.mozilla.org/en-US/docs/Web/HTTP/Headers/Access-Control-Max-Age) response header.\
 When a value is configured, this prevents excessive pre-flight OPTIONS requests to improve efficiency.
 
-## Sample Configurations
+## Example Configurations
 
 #### Loading the Module
 
@@ -207,28 +207,38 @@ The plugin expects to receive up to two cookies, which use a custom prefix with 
 
 | Example Cookie Name | Fixed Suffix | Contains |
 | ------------------- | ------------ | -------- |
-| example-at | -at | An encrypted cookie containing either an opaque or JWT access token |
+| example-at | -at | An encrypted cookie containing an opaque or JWT access token |
 | example-csrf | -csrf | A CSRF cookie verified during data changing requests |
 
 Cookies are encrypted using AES256-GCM, with a hex encoding, in this format:
 
 | Cookie Section | Contains |
 | -------------- | -------- |
-| First 24 hex digits | This contains the 12 byte GCM initialization vector |
-| Last 32 hex digits | This contains the 16 byte GCM message authentication code |
-| Middle hex digits | This contains the ciphertext, whose length is that of the token being encrypted |
+| First byte | This contains a version number, currently always 1 |
+| Next 12 bytes | This contains the 12 byte GCM initialization vector |
+| Last 16 bytes | This contains the 16 byte GCM message authentication code |
+| Middle section | This contains the ciphertext, whose length is that of the token being encrypted |
 
 ## Security Behavior
 
 The module handles cookies according to [OWASP Cross Site Request Forgery Best Practices](https://cheatsheetseries.owasp.org/cheatsheets/Cross-Site_Request_Forgery_Prevention_Cheat_Sheet.html):
 
-#### OPTIONS Requests
+#### Options Requests
 
-The plugin does not perform any logic for pre-flight requests from the SPA and returns immediately.
+The plugin first handles pre-flight OPTIONS requests and writes CORS response headers:
+
+```text
+access-control-allow-origin: https://www.example.com
+access-control-allow-credentials: true
+access-control-allow-cors_allow_methods: OPTIONS,GET,HEAD,POST,PUT,PATCH,DELETE
+access-control-allow-cors_allow_headers: 
+access-control-max_age: 86400
+vary: origin
+```
 
 #### Web Origin Checks
 
-For other methods, the plugin first reads the `Origin HTTP Header`, sent by all modern browsers.\
+On the main request the plugin first reads the `Origin HTTP Header`, sent by all modern browsers.\
 If this does not contain a trusted value the request is immediately rejected with a 401 response.
 
 #### Cross Site Request Forgery Checks
