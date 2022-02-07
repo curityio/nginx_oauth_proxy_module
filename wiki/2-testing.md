@@ -2,7 +2,7 @@
 
 ## 1. Test Setup
 
-Add the path to `/usr/local/nginx/sbin` to the system PATH in the .zprofile file.\
+Add the path to `/usr/local/nginx/sbin` to the system PATH in your .zprofile file.\
 Then run the following Perl command to install support for NGINX testing:
 
 ```bash
@@ -20,12 +20,12 @@ make test
 ## 3. Understand the Nginx Test Framework
 
 See the [OpenResty Testing Documents](https://openresty.gitbooks.io/programming-openresty/content/testing/preparing-tests.html) to understand syntax.\
-Documentation is limited but the [Headers More Repo](https://github.com/openresty/headers-more-nginx-module/tree/master/t) has a good selection of tests to compare against.
 
 ## 4. Understand Test Behavior
 
 Each test spins up an instance of NGINX under the `t/servroot` folder which runs on the default test port of 1984.\
-Tests that are expected to succeed use proxy_pass to route to a target that runs after the module and simply returns:
+Tests that are expected to succeed use proxy_pass to route to a target that runs after the module and simply returns.\
+This example returns the decrypted access token as a target API response header, to support assertions.
 
 ```nginx
 location /t {
@@ -73,7 +73,7 @@ If you get cryptic permission errors or locked files, delete the `t/servroot` fo
 
 ## 6. Run NGINX Plus Certification Tests
 
-Before final release, our build system produces a dynamic module for multiple NGINX+ platforms, as described in [3-deployment.md]. To certify that a build is compatible with NGINX+, each shared library needs to be tested with NGINX's certification test suite, then released to GitHub. For some background, refer to the [NGINX Plus Certified Modules Program documentation](https://www.nginx.com/partners/certified-module-program-documentation/#tech-doc-instructions-building). As described there:
+Before final release, our build system produces a dynamic module for multiple NGINX+ platforms, as described in [deployment](3-deployment.md). To certify that a build is compatible with NGINX+, each shared library needs to be tested with NGINX's certification test suite, then released to GitHub. For some background, refer to the [NGINX Plus Certified Modules Program documentation](https://www.nginx.com/partners/certified-module-program-documentation/#tech-doc-instructions-building). As described there:
 
 - [NGINX+ must be installed](https://docs.nginx.com/nginx/admin-guide/installing-nginx/installing-nginx-plus/) on each platform in the build.sh script.
 - The dynamic modules must be deployed to each supported platform. 

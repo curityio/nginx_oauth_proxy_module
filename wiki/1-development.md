@@ -13,7 +13,7 @@ When developing we recommend a more specialist tool such as CLion 2020.2 or newe
 ## 2. OpenSSL Setup
 
 On Docker images we build the code as a dynamic module using libssl-dev.\
-This does not work on macOS and I have found building OpenSSL from source to work best.\
+This does not work on macOS so instead build OpenSSL from source.\
 Development IDEs can then find OpenSSL headers in the correct system locations: 
 
 ```bash
@@ -38,7 +38,7 @@ Then run the base configure script as follows, to download NGINX source and use 
 CONFIG_OPTS='--with-http_ssl_module --with-openssl=../openssl-OpenSSL_1_1_1m' ./configure
 ```
 
-Select these options to enable Perl tests to run and to enable debugging of the C code in an IDE such as CLion:
+Select these options to enable Perl tests to run and to enable debugging of the C code in CLion:
 
 ```text
 DYNAMIC_MODULE=n
@@ -52,8 +52,6 @@ Whenever the code in the module changes, run the make command to rebuild NGINX:
 ```bash
 make
 ```
-
-Custom options can be set in the IDE if needed, though those for this project need to be finalized.
 
 ## 5. Make Install
 
@@ -85,7 +83,7 @@ This nginx.conf file is configured to disable the daemon, so that logs are easil
 
 ## 7. Debug Code
 
-To perform printf debugging you can add `ngx_log_error` statements to the C code and then look at NGINX output.
+To perform printf debugging you can add `ngx_log_error` statements to the C code and then look at NGINX output.\
 Once nginx is running, select  `Run / Attach to Process`, and choose the `nginx worker process`.\
 Then set breakpoints, after which you can step through code to check variable state carefully:
 
@@ -97,19 +95,16 @@ You can run curl requests against the nginx system in the same manner as the SPA
 
 ```bash
 AT_COOKIE='AcYBf995tTBVsLtQLvOuLUZXHm2c-XqP8t7SKmhBiQtzy5CAw4h_RF6rXyg6kHrvhb8x4WaLQC6h3mw6a3O3Q9A'
-curl -i -X GET http://localhost:8080/api \
+curl -X GET http://localhost:8080/api \
 -H "origin: https://www.example.com" \
 -H "cookie: example-at=$AT_COOKIE"
 ```
 
-The target API then echoes back headers of interest, to show the received access token:
+The access token received by the target API is then echoed back to the caller.\
+The `curl -i` option can be used to view CORS headers that are returned to single page apps:
 
-```text
-Content-Type: application/json
-Content-Length: 42
-access-control-allow-origin: https://www.example.com
-access-control-allow-credentials: true
-authorization: Bearer 42665300-efe8-419d-be52-07b53e208f46
-
-{"message": "API was called successfully"}
+```json
+{
+    "message": "API was called successfully with Bearer 42665300-efe8-419d-be52-07b53e208f46"
+}
 ```
