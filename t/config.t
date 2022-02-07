@@ -30,25 +30,58 @@ GET /t
 
 --- error_code: 200
 
-=== TEST CONFIG_2: NGINX quits when no cookie prefix is configured
-##################################################################
-# The plugin validates required parameters for each path
-##################################################################
+=== TEST CONFIG_2: A deployment with empty configuration is correctly detected and logged
+####################################################################################
+# Verify that null configuration is handled in a controlled manner and fails to load
+####################################################################################
 
 --- config
 location /t {
     oauth_proxy on;
+}
+
+--- must_die
+
+--- request
+GET /t
+
+--- error_code: 500
+
+--- error_log
+The cookie_name_prefix configuration directive was not provided
+
+--- response_body_like chomp
+{"code":"server_error", "message":"Problem encountered processing the request"}
+
+=== TEST CONFIG_3: NGINX quits when no encryption key is configured for a location
+##################################################################
+# The plugin correctly validates required parameters for each path
+##################################################################
+
+--- config
+location /first {
+    oauth_proxy on;
+    oauth_proxy_cookie_name_prefix "example";
     oauth_proxy_encryption_key "4e4636356d65563e4c73233847503e3b21436e6f7629724950526f4b5e2e4e50";
+    oauth_proxy_trusted_web_origin "https://www.example.com";
+    oauth_proxy_cors_enabled on;
+}
+location /second {
+    oauth_proxy on;
+    oauth_proxy_cookie_name_prefix "example";
     oauth_proxy_trusted_web_origin "https://www.example.com";
     oauth_proxy_cors_enabled on;
 }
 
 --- must_die
 
---- error_log
-The cookie_name_prefix configuration directive was not provided
+--- request
+GET /t
 
-=== TEST CONFIG_3: NGINX quits when the cookie prefix configured is abnormally long
+--- error_log
+The encryption_key configuration directive was not provided
+
+=== TEST CONFIG_4: NGINX quits when the cookie prefix configured is abnormally long
 ####################################################################################################
 # A 64 character limit is used for the prefix to allow stack allocation based on a known buffer size
 ####################################################################################################
@@ -66,24 +99,6 @@ location /t {
 
 --- error_log
 The cookie_name_prefix configuration directive has a maximum length of 64 characters
-
-=== TEST CONFIG_4: NGINX quits when no encryption key is configured
-###################################################################
-# The plugin validates required parameters for each path
-###################################################################
-
---- config
-location /t {
-    oauth_proxy on;
-    oauth_proxy_cookie_name_prefix "example";
-    oauth_proxy_trusted_web_origin "https://www.example.com";
-    oauth_proxy_cors_enabled on;
-}
-
---- must_die
-
---- error_log
-The encryption_key configuration directive was not provided
 
 === TEST CONFIG_5: NGINX quits when an invalid length 256 bit encryption key is configured
 ################################################################
@@ -224,12 +239,14 @@ location /api1 {
     oauth_proxy_cookie_name_prefix "example";
     oauth_proxy_encryption_key "4e4636356d65563e4c73233847503e3b21436e6f7629724950526f4b5e2e4e50";
     oauth_proxy_trusted_web_origin "https://www.domain1.com";
+    oauth_proxy_cors_enabled on;
     return 200;
 }
 location /api2 {
     oauth_proxy on;
     oauth_proxy_encryption_key "4e4636356d65563e4c73233847503e3b21436e6f7629724950526f4b5e2e4e50";
     oauth_proxy_trusted_web_origin "https://www.domain2.com";
+    oauth_proxy_cors_enabled on;
     return 200;
 }
 
@@ -249,6 +266,7 @@ location /root {
     oauth_proxy_cookie_name_prefix "example";
     oauth_proxy_encryption_key "4e4636356d65563e4c73233847503e3b21436e6f7629724950526f4b5e2e4e50";
     oauth_proxy_trusted_web_origin "https://www.example.com";
+    oauth_proxy_cors_enabled on;
 
     location /root/api {
         proxy_pass http://localhost:1984/target;

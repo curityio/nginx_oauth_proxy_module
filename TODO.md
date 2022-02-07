@@ -1,24 +1,25 @@
 TASKS
 -----
-1. Get tests passing, then update GET, CORS and CONFIG tests in line with LUA
+1. Separate C resources and wiki, to consolidate docs
 
-2. Separate C resources and wiki, to consolidate docs
-
-3. Remove headers rather than passing them through.\
-   In C this is tricky, and we should not remove non Curity cookies:\
+2. Remove headers rather than passing them through, then add GET tests 9 and 10
    https://www.ruby-forum.com/t/removing-a-request-header-in-an-access-phase-handler/245742
 
-4. Do CORS updates based on incoming request headers and change the vary header
-
-5. Run valgrind with built + deployed images
+3. Run valgrind with built + deployed images
    Run tests concurrently
+
+4. Fix build error
+
+5. Do CORS updates based on incoming request headers and change the vary header
+   Do this for LUA and also for C
+   Update READMEs
    Merge code
+
+6. SPA refinements
 
 CODE
 ----
-1. Review all memory access and code simplification
-
-
+1. Final review of all memory access code and aim for simplifications
 
 COMPILER
 --------
