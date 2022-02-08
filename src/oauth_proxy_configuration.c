@@ -33,24 +33,13 @@ static ngx_int_t apply_configuration_defaults(ngx_conf_t *main_config, oauth_pro
 {
     const char *default_methods = "OPTIONS,HEAD,GET,POST,PUT,PATCH,DELETE";
     ngx_int_t default_max_age = 86400;
-    u_char *buffer = NULL;
-    size_t len = 0;
 
     if (config->cors_enabled)
     {
-        if (config->cors_allow_methods.data == NULL)
+        if (config->cors_allow_methods.len == 0)
         {
-            len = ngx_strlen(default_methods);
-            buffer = ngx_pcalloc(main_config->pool, len + 1);
-            if (buffer == NULL)
-            {
-                ngx_conf_log_error(NGX_LOG_WARN, main_config, 0, "Unable to allocate memory for cors_allow_methods");
-                return NGX_ERROR;
-            }
-            
-            buffer[len] = 0;
-            config->cors_allow_methods.data = buffer;
-            config->cors_allow_methods.len = len;
+            config->cors_allow_methods.data = (u_char *)default_methods;
+            config->cors_allow_methods.len = ngx_strlen(default_methods);
         }
 
         if (config->cors_max_age == -1)

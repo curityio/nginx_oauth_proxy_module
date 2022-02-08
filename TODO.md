@@ -1,7 +1,15 @@
 TASKS
 -----
-1. C module updates based on incoming request headers and change the vary header
-   Ensure that tests pass
+1. Test all OPTIONS permutations
+   Try again via tests
+
+2. Fix memory issue if possible:
+memcheck GC: 1000 nodes, 994 survivors (99.4%)
+--7-- memcheck GC: 1414 new table size (stepup)
+--7-- memcheck GC: 1414 nodes, 1414 survivors (100.0%)
+--7-- memcheck GC: 1999 new table size (stepup)
+--7-- memcheck GC: 1999 nodes, 1999 survivors (100.0%)
+--7-- memcheck GC: 2827 new table size (stepup)
 
 FINALIZATION
 ------------

@@ -360,12 +360,12 @@ static ngx_int_t add_cors_response_headers(ngx_http_request_t *request, oauth_pr
                 // If no headers are set explicitly then return any headers the browser requests at runtime
                 // This is an easy to manage option where the gateway doesn't need continual reconfiguration when a custom header is used
                 allow_headers = &config->cors_allow_headers;
-                if (allow_headers == NULL)
+                if (allow_headers->len == 0)
                 {
                     allow_headers = oauth_proxy_utils_get_header_in(request, (u_char *)literal_request_headers, ngx_strlen(literal_request_headers));
                 }
 
-                if (allow_headers != NULL && allow_headers->len > 0)
+                if (allow_headers != NULL)
                 {
                     if (oauth_proxy_utils_add_header_out(request,  "access-control-allow-headers", allow_headers) != NGX_OK)
                     {
@@ -386,9 +386,9 @@ static ngx_int_t add_cors_response_headers(ngx_http_request_t *request, oauth_pr
                 ngx_str_set(&vary_str, "origin,access-control-request-headers");
             }
 
-            if (config->cors_expose_headers.data != NULL)
+            if (config->cors_expose_headers.len > 0)
             {
-                if (oauth_proxy_utils_add_header_out(request,  "access-control-expose_headers", &(config->cors_expose_headers)) != NGX_OK)
+                if (oauth_proxy_utils_add_header_out(request,  "access-control-expose_headers", &config->cors_expose_headers) != NGX_OK)
                 {
                     ngx_log_error(NGX_LOG_WARN, request->connection->log, 0, "OAuth proxy failed to add CORS expose_headers response header");
                     return NGX_HTTP_INTERNAL_SERVER_ERROR;

@@ -184,9 +184,9 @@ static char *merge_location_configuration(ngx_conf_t *main_config, void *parent,
     ngx_conf_merge_ptr_value(child_config->trusted_web_origins,    parent_config->trusted_web_origins,    NULL);
     ngx_conf_merge_off_value(child_config->cors_enabled,           parent_config->cors_enabled,           0);
     ngx_conf_merge_off_value(child_config->allow_tokens,           parent_config->allow_tokens,           0);
-    ngx_conf_merge_str_value(child_config->cors_allow_methods,     parent_config->cors_allow_methods,     NULL);
-    ngx_conf_merge_str_value(child_config->cors_allow_headers,     parent_config->cors_allow_headers,     NULL);
-    ngx_conf_merge_str_value(child_config->cors_expose_headers,    parent_config->cors_expose_headers,    NULL);
+    ngx_conf_merge_str_value(child_config->cors_allow_methods,     parent_config->cors_allow_methods,     "");
+    ngx_conf_merge_str_value(child_config->cors_allow_headers,     parent_config->cors_allow_headers,     "");
+    ngx_conf_merge_str_value(child_config->cors_expose_headers,    parent_config->cors_expose_headers,    "");
     ngx_conf_merge_off_value(child_config->cors_max_age,           parent_config->cors_max_age,           -1);
     
     if (oauth_proxy_configuration_initialize_location(main_config, child_config) != NGX_OK)

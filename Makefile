@@ -20,7 +20,7 @@ clean:
 	rm -rf .build.info nginx-$(NGINX_VERSION) nginx-$(NGINX_VERSION).tar.gz* t/servroot
 
 test: all
-	PATH=$(NGINX_SRC_DIR)/objs:$$PATH prove -v -f t/decryption.t
+	PATH=$(NGINX_SRC_DIR)/objs:$$PATH prove -v -f t/*.t
 
 .build.info $(NGINX_SRC_DIR)/Makefile:
 	$(error You need to run the configure script in the root of this directory before building the source)
