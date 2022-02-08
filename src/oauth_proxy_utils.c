@@ -6,7 +6,6 @@
 #include "oauth_proxy.h"
 
 /* Forward declarations */
-static ngx_int_t oauth_proxy_utils_stringarray_to_headerstring(ngx_http_request_t *request, ngx_str_t *output, ngx_array_t *input);
 static ngx_int_t oauth_proxy_utils_integer_to_headerstring(ngx_http_request_t *request, ngx_str_t *output, ngx_int_t input);
 
 /*
@@ -152,21 +151,6 @@ ngx_int_t oauth_proxy_utils_add_header_out(ngx_http_request_t *request, const ch
 }
 
 /*
- * Deal with conversions and then add an outgoing header for a string array
- */
-ngx_int_t oauth_proxy_utils_add_stringarray_header_out(ngx_http_request_t *request, const char *name, ngx_array_t *values)
-{
-    ngx_str_t buffer;
-    
-    if (oauth_proxy_utils_stringarray_to_headerstring(request, &buffer, values) != NGX_OK)
-    {
-        return NGX_ERROR;
-    }
-    
-    return oauth_proxy_utils_add_header_out(request, name, &buffer);
-}
-
-/*
  * Deal with conversions and then add an outgoing header for an integer
  */
 ngx_int_t oauth_proxy_utils_add_integer_header_out(ngx_http_request_t *request, const char *name, ngx_int_t value)
@@ -182,48 +166,7 @@ ngx_int_t oauth_proxy_utils_add_integer_header_out(ngx_http_request_t *request, 
 }
 
 /*
- * Concatenate array elements to a comma separated buffer with a null terminator, then return a ngx_str_t pointing to heap memory
- */
-static ngx_int_t oauth_proxy_utils_stringarray_to_headerstring(ngx_http_request_t *request, ngx_str_t *output, ngx_array_t *input)
-{
-    u_char *buffer = NULL;
-    size_t buffer_size = 0;
-    ngx_str_t *items = NULL;
-    ngx_str_t item;
-    size_t offset = 0;
-    size_t i = 0;
-
-    items = input->elts;
-    for (i = 0; i < input->nelts; i++)
-    {
-        item = items[i];
-        buffer_size += item.len + 1;
-    }
-
-    buffer = ngx_pcalloc(request->pool, buffer_size);
-    if (buffer == NULL)
-    {
-        ngx_log_error(NGX_LOG_WARN, request->connection->log, 0, "OAuth proxy failed to allocate stringarray to string memory");
-        return NGX_ERROR;
-    }
-
-    for (i = 0; i < input->nelts; i++)
-    {
-        item = items[i];
-        ngx_memcpy(buffer + offset, item.data, item.len);
-        offset += item.len;
-        buffer[offset] = ',';
-        offset += 1;
-    }
-    buffer[offset - 1] = 0;
-
-    output->data = buffer;
-    output->len = buffer_size;
-    return NGX_OK;
-}
-
-/*
- * Convert an integer to a string and point the output to heap memory
+ * Write a header string that points to permanent heap memory
  */
 static ngx_int_t oauth_proxy_utils_integer_to_headerstring(ngx_http_request_t *request, ngx_str_t *output, ngx_int_t input)
 {

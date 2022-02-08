@@ -79,7 +79,7 @@ static ngx_command_t oauth_proxy_module_directives[] =
     {
         ngx_string("oauth_proxy_cors_allow_methods"),
         NGX_HTTP_LOC_CONF | NGX_CONF_TAKE1,
-        ngx_conf_set_str_array_slot,
+        ngx_conf_set_str_slot,
         NGX_HTTP_LOC_CONF_OFFSET,
         offsetof(oauth_proxy_configuration_t, cors_allow_methods),
         NULL
@@ -87,7 +87,7 @@ static ngx_command_t oauth_proxy_module_directives[] =
     {
         ngx_string("oauth_proxy_cors_allow_headers"),
         NGX_HTTP_LOC_CONF | NGX_CONF_TAKE1,
-        ngx_conf_set_str_array_slot,
+        ngx_conf_set_str_slot,
         NGX_HTTP_LOC_CONF_OFFSET,
         offsetof(oauth_proxy_configuration_t, cors_allow_headers),
         NULL
@@ -95,7 +95,7 @@ static ngx_command_t oauth_proxy_module_directives[] =
     {
         ngx_string("oauth_proxy_cors_expose_headers"),
         NGX_HTTP_LOC_CONF | NGX_CONF_TAKE1,
-        ngx_conf_set_str_array_slot,
+        ngx_conf_set_str_slot,
         NGX_HTTP_LOC_CONF_OFFSET,
         offsetof(oauth_proxy_configuration_t, cors_expose_headers),
         NULL
@@ -167,9 +167,6 @@ static void *create_location_configuration(ngx_conf_t *main_config)
     location_config->trusted_web_origins   = NGX_CONF_UNSET_PTR;
     location_config->cors_enabled          = NGX_CONF_UNSET_UINT;
     location_config->allow_tokens          = NGX_CONF_UNSET_UINT;
-    location_config->cors_allow_methods    = NGX_CONF_UNSET_PTR;
-    location_config->cors_allow_headers    = NGX_CONF_UNSET_PTR;
-    location_config->cors_expose_headers   = NGX_CONF_UNSET_PTR;
     location_config->cors_max_age          = NGX_CONF_UNSET_UINT;
     return location_config;
 }
@@ -187,10 +184,10 @@ static char *merge_location_configuration(ngx_conf_t *main_config, void *parent,
     ngx_conf_merge_ptr_value(child_config->trusted_web_origins,    parent_config->trusted_web_origins,    NULL);
     ngx_conf_merge_off_value(child_config->cors_enabled,           parent_config->cors_enabled,           0);
     ngx_conf_merge_off_value(child_config->allow_tokens,           parent_config->allow_tokens,           0);
-    ngx_conf_merge_ptr_value(child_config->cors_allow_methods,     parent_config->cors_allow_methods,     NULL);
-    ngx_conf_merge_ptr_value(child_config->cors_allow_headers,     parent_config->cors_allow_headers,     NULL);
-    ngx_conf_merge_ptr_value(child_config->cors_expose_headers,    parent_config->cors_expose_headers,    NULL);
-    ngx_conf_merge_off_value(child_config->cors_max_age,           parent_config->cors_max_age,           0);
+    ngx_conf_merge_str_value(child_config->cors_allow_methods,     parent_config->cors_allow_methods,     NULL);
+    ngx_conf_merge_str_value(child_config->cors_allow_headers,     parent_config->cors_allow_headers,     NULL);
+    ngx_conf_merge_str_value(child_config->cors_expose_headers,    parent_config->cors_expose_headers,    NULL);
+    ngx_conf_merge_off_value(child_config->cors_max_age,           parent_config->cors_max_age,           -1);
     
     if (oauth_proxy_configuration_initialize_location(main_config, child_config) != NGX_OK)
     {

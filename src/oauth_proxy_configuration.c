@@ -27,54 +27,39 @@ ngx_int_t oauth_proxy_configuration_initialize_location(ngx_conf_t *main_config,
 }
 
 /*
- * Set default options that are not provided in then nginx.conf file
+ * Set default options that are not provided in the nginx.conf file
  */
 static ngx_int_t apply_configuration_defaults(ngx_conf_t *main_config, oauth_proxy_configuration_t *config)
 {
-    u_char csrf_header_name[128];
-    ngx_int_t ret_code = NGX_OK;
+    const char *default_methods = "OPTIONS,HEAD,GET,POST,PUT,PATCH,DELETE";
+    ngx_int_t default_max_age = 86400;
+    u_char *buffer = NULL;
+    size_t len = 0;
 
     if (config->cors_enabled)
     {
-        if (config->cors_allow_methods == NULL)
+        if (config->cors_allow_methods.data == NULL)
         {
-            ret_code = oauth_proxy_utils_create_nginx_string_array(main_config, &config->cors_allow_methods, 7,
-                                                "OPTIONS", "GET", "HEAD", "POST", "PUT", "PATCH", "DELETE");
-            if (ret_code != NGX_OK)
+            len = ngx_strlen(default_methods);
+            buffer = ngx_pcalloc(main_config->pool, len + 1);
+            if (buffer == NULL)
             {
                 ngx_conf_log_error(NGX_LOG_WARN, main_config, 0, "Unable to allocate memory for cors_allow_methods");
-                return ret_code;
+                return NGX_ERROR;
             }
+            
+            buffer[len] = 0;
+            config->cors_allow_methods.data = buffer;
+            config->cors_allow_methods.len = len;
         }
 
-        if (config->cors_allow_headers == NULL)
+        if (config->cors_max_age == -1)
         {
-            oauth_proxy_utils_get_csrf_header_name(csrf_header_name, config);
-            ret_code = oauth_proxy_utils_create_nginx_string_array(main_config, &config->cors_allow_headers, 1, csrf_header_name);
-            if (ret_code != NGX_OK)
-            {
-                ngx_conf_log_error(NGX_LOG_WARN, main_config, 0, "Unable to allocate memory for cors_allow_headers");
-                return ret_code;
-            }
-        }
-
-        if (config->cors_expose_headers == NULL)
-        {
-            ret_code = oauth_proxy_utils_create_nginx_string_array(main_config, &config->cors_expose_headers, 0);
-            if (ret_code != NGX_OK)
-            {
-                ngx_conf_log_error(NGX_LOG_WARN, main_config, 0, "Unable to allocate memory for cors_expose_headers");
-                return ret_code;
-            }
-        }
-
-        if (config->cors_max_age <= 0)
-        {
-            config->cors_max_age = 86400;
+            config->cors_max_age = default_max_age;
         }
     }
 
-    return ret_code;
+    return NGX_OK;
 }
 
 /*
@@ -82,12 +67,7 @@ static ngx_int_t apply_configuration_defaults(ngx_conf_t *main_config, oauth_pro
  */
 static ngx_int_t validate_configuration(ngx_conf_t *main_config, const oauth_proxy_configuration_t *module_location_config)
 {
-    ngx_str_t *trusted_web_origins = NULL;
-    ngx_str_t trusted_web_origin;
-    const char *literal_http   = "http://";
-    const char *literal_https  = "https://";
     size_t max_cookie_name_size = 64;
-    ngx_uint_t i = 0;
 
     if (module_location_config != NULL && module_location_config->enabled)
     {
@@ -119,24 +99,6 @@ static ngx_int_t validate_configuration(ngx_conf_t *main_config, const oauth_pro
         {
             ngx_conf_log_error(NGX_LOG_WARN, main_config, 0, "The trusted_web_origin configuration directive was not provided for any web origins");
             return NGX_ERROR;
-        }
-
-        trusted_web_origins = module_location_config->trusted_web_origins->elts;
-        for (i = 0; i < module_location_config->trusted_web_origins->nelts; i++)
-        {
-            trusted_web_origin = trusted_web_origins[i];
-            if (trusted_web_origin.len < 7)
-            {
-                ngx_conf_log_error(NGX_LOG_WARN, main_config, 0, "An invalid trusted_web_origin configuration directive was provided", &trusted_web_origin);
-                return NGX_ERROR;
-            }
-            
-            if (ngx_strncasecmp(trusted_web_origin.data, (u_char*)literal_http,  ngx_strlen(literal_http))  != 0 &&
-                ngx_strncasecmp(trusted_web_origin.data, (u_char*)literal_https, ngx_strlen(literal_https)) != 0)
-            {
-                ngx_conf_log_error(NGX_LOG_WARN, main_config, 0, "An invalid trusted_web_origin configuration directive was provided: %V", &trusted_web_origin);
-                return NGX_ERROR;
-            }
         }
     }
 

@@ -74,7 +74,8 @@ Multiple origins could be used in special cases where cookies are shared across 
 When enabled, the OAuth proxy returns CORS response headers on behalf of the API.\
 When an origin header is received that is in the trusted_web_origins whitelist, response headers are written.\
 The [access-control-allow-origin](https://developer.mozilla.org/en-US/docs/Web/HTTP/Headers/Access-Control-Allow-Origin) header is returned, so that the SPA can call the API.\
-The [access-control-allow-credentials](https://developer.mozilla.org/en-US/docs/Web/HTTP/Headers/Access-Control-Allow-Credentials) header is returned, so that the SPA can send secured cookies to the API.
+The [access-control-allow-credentials](https://developer.mozilla.org/en-US/docs/Web/HTTP/Headers/Access-Control-Allow-Credentials) header is returned, so that the SPA can send secured cookies to the API.\
+Default values are provided for other CORS headers that the SPA needs, which can be overridden by optional directives.
 
 ## Optional Configuration Directives
 
@@ -91,27 +92,27 @@ This can be useful when web and mobile clients share the same API routes.
 
 #### oauth_proxy_cors_allow_methods
 
-> **Syntax**: **`oauth_proxy_cors_allow_methods`** `string[]`
+> **Syntax**: **`oauth_proxy_cors_allow_methods`** `string`
 >
-> **Default**: *['OPTIONS', 'GET', 'HEAD', 'POST', 'PUT', 'PATCH', 'DELETE']*
+> **Default**: *['OPTIONS,GET,HEAD,POST,PUT,PATCH,DELETE']*
 >
 > **Context**: `location`
 
 When CORS is enabled, these values are returned in the [access-control-allow-methods](https://developer.mozilla.org/en-US/docs/Web/HTTP/Headers/Access-Control-Allow-Methods) response header.\
-The SPA is then allowed to call a particular API endpoint with those HTTP methods (eg GET, POST).\
 A '*' wildcard value should not be configured here, since it will not work with credentialed requests.
 
 #### oauth_proxy_cors_allow_headers
 
-> **Syntax**: **`oauth_proxy_cors_allow_headers`** `string[]`
+> **Syntax**: **`oauth_proxy_cors_allow_headers`** `string`
 >
-> **Default**: *['x-example-csrf']*
+> **Default**: *['']*
 >
 > **Context**: `location`
 
-When CORS is enabled, the plugin returns these values in the [access-contol-allow-headers](https://developer.mozilla.org/en-US/docs/Web/HTTP/Headers/Access-Control-Allow-Headers) response header.\
-Include here any additional [non-safelisted request headers](https://developer.mozilla.org/en-US/docs/Glossary/CORS-safelisted_request_header) that the SPA needs to send in API requests.\
-To implement data changing requests, include the CSRF request header name, eg `x-example-csrf`.\
+When CORS is enabled, the plugin returns these values in the [access-control-allow-headers](https://developer.mozilla.org/en-US/docs/Web/HTTP/Headers/Access-Control-Allow-Headers) response header.\
+If no values are configured then at runtime any headers the SPA sends are allowed.\
+This is managed by returning the contents of the [access-control-request-headers](https://developer.mozilla.org/en-US/docs/Web/HTTP/Headers/Access-Control-Request-Headers) field.\
+If setting values explicitly, ensure that the token handler CSRF request header is included, eg `x-example-csrf`.\
 A '*' wildcard value should not be configured here, since it will not work with credentialed requests.
 
 #### oauth_proxy_cors_expose_headers
@@ -123,7 +124,6 @@ A '*' wildcard value should not be configured here, since it will not work with 
 > **Context**: `location`
 
 When CORS is enabled, the plugin returns these values in the [access-contol-expose-headers](https://developer.mozilla.org/en-US/docs/Web/HTTP/Headers/Access-Control-Expose-Headers) response header.\
-Include here any additional [non-safelisted response headers](https://developer.mozilla.org/en-US/docs/Glossary/CORS-safelisted_response_header) that the SPA needs to read from API responses.\
 A '*' wildcard value should not be configured here, since it will not work with credentialed requests.
 
 #### oauth_proxy_cors_max_age
@@ -135,7 +135,7 @@ A '*' wildcard value should not be configured here, since it will not work with 
 > **Context**: `location`
 
 When CORS is enabled, the plugin returns this value in the [access-contol-max-age](https://developer.mozilla.org/en-US/docs/Web/HTTP/Headers/Access-Control-Max-Age) response header.\
-When a value is configured, this prevents excessive pre-flight OPTIONS requests to improve efficiency.
+When a value is configured, this prevents excessive pre-flight OPTIONS requests, to improve efficiency.
 
 ## Example Configurations
 
@@ -160,7 +160,6 @@ location /products {
     oauth_proxy_encryption_key "4e4636356d65563e4c73233847503e3b21436e6f7629724950526f4b5e2e4e50";
     oauth_proxy_trusted_web_origin "https://www.example.com";
     oauth_proxy_cors_enabled on;
-    oauth_proxy_allow_tokens on;
 
     proxy_pass "https://productsapi.example.com";
 }
@@ -178,7 +177,6 @@ location /api {
     oauth_proxy_encryption_key "4e4636356d65563e4c73233847503e3b21436e6f7629724950526f4b5e2e4e50";
     oauth_proxy_trusted_web_origin "https://www.example.com";
     oauth_proxy_cors_enabled on;
-    oauth_proxy_allow_tokens on;
     
     location /api/products {
         proxy_pass "https://productsapi.example.com";

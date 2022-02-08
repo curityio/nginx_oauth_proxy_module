@@ -137,26 +137,7 @@ location /t {
 --- error_log
 The trusted_web_origin configuration directive was not provided for any web origins
 
-=== TEST CONFIG_7: NGINX fails to start when an invalid trusted web origin is configured
-###########################################################
-# SPA URLs use HTTPS, or can use HTTP in development setups
-###########################################################
-
---- config
-location /t {
-    oauth_proxy on;
-    oauth_proxy_cookie_name_prefix "example";
-    oauth_proxy_encryption_key "4e4636356d65563e4c73233847503e3b21436e6f7629724950526f4b5e2e4e50";
-    oauth_proxy_trusted_web_origin "htt://www.example.com";
-    oauth_proxy_cors_enabled on;
-}
-
---- must_die
-
---- error_log
-An invalid trusted_web_origin configuration directive was provided: htt://www.example.com
-
-=== TEST CONFIG_8: NGINX starts correctly with a valid configuration
+=== TEST CONFIG_7: NGINX starts correctly with a valid configuration
 #########################################################################################
 # Verifies the most standard happy case, to ensure that the SPA can get data from the API
 #########################################################################################
@@ -179,7 +160,7 @@ GET /t
 
 --- error_code: 200
 
-=== TEST CONFIG_9: NGINX starts correctly with a valid configuration and multiple web origins
+=== TEST CONFIG_8: NGINX starts correctly with a valid configuration and multiple web origins
 ###################################################################################
 # For cases where a single API potentially serves multiple SPAs that share a cookie
 ###################################################################################
@@ -200,7 +181,7 @@ GET /t
 
 --- error_code: 200
 
-=== TEST CONFIG_10: NGINX starts correctly with two valid root paths
+=== TEST CONFIG_9: NGINX starts correctly with two valid root paths
 ###############################################################################
 # For cases where multiple routes serve multiple SPAs in the same reverse proxy
 ###############################################################################
@@ -228,7 +209,7 @@ GET /api2
 
 --- error_code: 200
 
-=== TEST CONFIG_11: NGINX quits when one of two configurations is invalid
+=== TEST CONFIG_10: NGINX quits when one of two configurations is invalid
 ###############################################################
 # Verifies that multiple configurations are correctly validated
 ###############################################################
@@ -255,7 +236,7 @@ location /api2 {
 --- error_log
 The cookie_name_prefix configuration directive was not provided
 
-=== TEST CONFIG_12: NGINX starts correctly with inherited settings for a child path
+=== TEST CONFIG_11: NGINX starts correctly with inherited settings for a child path
 #########################################################################
 # Verifies that the plugin runs for child paths when enabled for a parent
 #########################################################################
