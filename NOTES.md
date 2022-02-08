@@ -25,6 +25,8 @@ FINALIZATION
 3. NGINX+ certification testing to do, maybe via a trial version.\
    See if I can test each .so file I have built in Docker Compose.
 
+4. Use the module in an SPA branch
+
 NOTES
 -----
 1. Removing cookie headers is complicated and feels inadvisable, so I have omitted this in the C module:

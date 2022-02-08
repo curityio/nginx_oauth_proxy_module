@@ -22,9 +22,9 @@
 #include "oauth_proxy.h"
 
 /* Forward declarations of implementation functions */
+static ngx_str_t *get_header(ngx_http_request_t *request, const char *name);
 static ngx_int_t verify_web_origin(const oauth_proxy_configuration_t *config, const ngx_str_t *web_origin);
 static ngx_int_t apply_csrf_checks(ngx_http_request_t *request, const oauth_proxy_configuration_t *config, const ngx_str_t *web_origin);
-static ngx_str_t *get_origin_header(ngx_http_request_t *request);
 static ngx_int_t add_authorization_header(ngx_http_request_t *request, const ngx_str_t* token_value);
 static ngx_int_t write_options_response(ngx_http_request_t *request, oauth_proxy_configuration_t *module_location_config);
 static ngx_int_t write_error_response(ngx_http_request_t *request, ngx_int_t status, oauth_proxy_configuration_t *config);
@@ -36,6 +36,7 @@ static ngx_int_t add_cors_response_headers(ngx_http_request_t *request, oauth_pr
 ngx_int_t oauth_proxy_handler_main(ngx_http_request_t *request)
 {
     oauth_proxy_configuration_t *module_location_config = NULL;
+    ngx_str_t *authorization_header = NULL;
     ngx_str_t *web_origin = NULL;
     ngx_str_t at_cookie_encrypted_hex;
     ngx_str_t access_token;
@@ -48,26 +49,30 @@ ngx_int_t oauth_proxy_handler_main(ngx_http_request_t *request)
         return NGX_DECLINED;
     }
 
-    /* Return configured CORS response headers to pre-flight requests from the SPA */
     if (request->method == NGX_HTTP_OPTIONS)
     {
         if (module_location_config->cors_enabled)
         {
-            /* Avoid needing to handling OPTIONS requests in the API */
+            /* When CORS is enabled, avoid needing to handling pre-flight OPTIONS requests in the API */
             return write_options_response(request, module_location_config);
         }
 
+        /* If CORS is disabled, return immediately and the request will be routed to the target API */
         return NGX_OK;
     }
 
     /* Pass the request through if it has an Authorization header, eg from a mobile client that uses the same route as an SPA */
-    if (module_location_config->allow_tokens && request->headers_in.authorization && request->headers_in.authorization->value.len > 0)
+    if (module_location_config->allow_tokens)
     {
-        return NGX_OK;
+        authorization_header = get_header(request, "authorization");
+        if (authorization_header != NULL)
+        {
+            return NGX_OK;
+        }
     }
 
     /* Verify the web origin, which is sent by all modern browsers */
-    web_origin = get_origin_header(request);
+    web_origin = get_header(request, "origin");
     if (web_origin == NULL)
     {
         ret_code = NGX_HTTP_UNAUTHORIZED;
@@ -105,7 +110,7 @@ ngx_int_t oauth_proxy_handler_main(ngx_http_request_t *request)
         return write_error_response(request, ret_code, module_location_config);
     }
 
-    /* Try to decrypt the access token cookie to get the access token */
+    /* Try to decrypt the cookie to get the access token */
     ret_code = oauth_proxy_decryption_decrypt_cookie(request, &access_token, &at_cookie_encrypted_hex, &module_location_config->encryption_key);
     if (ret_code != NGX_OK)
     {
@@ -119,7 +124,7 @@ ngx_int_t oauth_proxy_handler_main(ngx_http_request_t *request)
         return write_error_response(request, ret_code, module_location_config);
     }
     
-    /* Finally update CORS headers, which must be done for the API request in addition to the pre-flight request */
+    /* Finally update CORS headers, which must be done for both the pre-flight request and also the main API request */
     if (module_location_config->cors_enabled)
     {
         add_cors_response_headers(request, module_location_config, 0);
@@ -129,13 +134,11 @@ ngx_int_t oauth_proxy_handler_main(ngx_http_request_t *request)
 }
 
 /*
- * Get the origin header used for CORS related logic
+ * Return the authorization header if it exists
  */
-static ngx_str_t *get_origin_header(ngx_http_request_t *request)
+static ngx_str_t *get_header(ngx_http_request_t *request, const char *name)
 {
-    char *literal_origin = "origin";
-
-    return oauth_proxy_utils_get_header_in(request, (u_char *)literal_origin, ngx_strlen(literal_origin));
+    return oauth_proxy_utils_get_header_in(request, (u_char *)name, ngx_strlen(name));
 }
 
 /*
@@ -286,6 +289,7 @@ static ngx_int_t write_error_response(ngx_http_request_t *request, ngx_int_t sta
                 ngx_str_set(&message, "Access denied due to missing or invalid credentials");
             }
 
+            /* The string length calculation replaces the two '%V' markers with their actual values */
             errorFormat = "{\"code\":\"%V\", \"message\":\"%V\"}";
             errorLen = ngx_strlen(errorFormat) + code.len + message.len - 4;
             ngx_snprintf(jsonErrorData, sizeof(jsonErrorData) - 1, errorFormat, &code, &message);
@@ -295,6 +299,7 @@ static ngx_int_t write_error_response(ngx_http_request_t *request, ngx_int_t sta
             request->headers_out.content_length_n = errorLen;
             ngx_http_send_header(request);
 
+            /* http://nginx.org/en/docs/dev/development_guide.html#http_response_body */
             ngx_str_set(&request->headers_out.content_type, "application/json");
             body->pos = jsonErrorData;
             body->last = jsonErrorData + errorLen;
@@ -324,9 +329,10 @@ static ngx_int_t add_cors_response_headers(ngx_http_request_t *request, oauth_pr
     ngx_str_t vary_str;
     const char *literal_request_headers = "access-control-request-headers";
 
-    web_origin = get_origin_header(request);
+    web_origin = get_header(request, "origin");
     if (web_origin != NULL && verify_web_origin(config, web_origin) == NGX_OK)
     {
+        /* These are always needed in order for the SPA to be able to read error responses from the module */
         if (config->cors_enabled || is_error != 0)
         {
             if (oauth_proxy_utils_add_header_out(request,  "access-control-allow-origin", web_origin) != NGX_OK)
@@ -345,6 +351,7 @@ static ngx_int_t add_cors_response_headers(ngx_http_request_t *request, oauth_pr
 
         if (config->cors_enabled)
         {
+            /* Write headers only needed in responses to pre-flight requests */
             ngx_str_set(&vary_str, "origin");
             if (request->method == NGX_HTTP_OPTIONS)
             {
@@ -357,8 +364,8 @@ static ngx_int_t add_cors_response_headers(ngx_http_request_t *request, oauth_pr
                     }
                 }
 
-                // If no headers are set explicitly then return any headers the browser requests at runtime
-                // This is an easy to manage option where the gateway doesn't need continual reconfiguration when a custom header is used
+                /* If no headers are set explicitly then return any headers the browser requests at runtime
+                   This ensures that the API gateway does not need reconfiguration whenever a new header is sent */
                 allow_headers = &config->cors_allow_headers;
                 if (allow_headers->len == 0)
                 {
@@ -386,6 +393,7 @@ static ngx_int_t add_cors_response_headers(ngx_http_request_t *request, oauth_pr
                 ngx_str_set(&vary_str, "origin,access-control-request-headers");
             }
 
+            /* These headers are needed in both pre-flight requests and the main request */
             if (config->cors_expose_headers.len > 0)
             {
                 if (oauth_proxy_utils_add_header_out(request,  "access-control-expose-headers", &config->cors_expose_headers) != NGX_OK)

@@ -9,65 +9,19 @@
 static ngx_int_t oauth_proxy_utils_integer_to_headerstring(ngx_http_request_t *request, ngx_str_t *output, ngx_int_t input);
 
 /*
- * Do the plumbing to populate an array type from the pool
- */
-ngx_int_t oauth_proxy_utils_create_nginx_string_array(ngx_conf_t *main_config, ngx_array_t **data, size_t num_values, ...)
-{
-    va_list args;
-    ngx_str_t *array_item = NULL;
-    u_char *value = NULL;
-    u_char *buffer = NULL;
-    size_t len = 0;
-    size_t i = 0;
-
-    *data = ngx_array_create(main_config->pool, num_values, sizeof(ngx_str_t));
-    if (*data == NULL)
-    {
-        return NGX_ERROR;
-    }
-
-    va_start(args, num_values);
-    for (i = 0; i < num_values; i++)
-    {
-        array_item = ngx_array_push(*data);
-        if (array_item == NULL)
-        {
-            return NGX_ERROR;
-        }
-        
-        value = va_arg(args, u_char *);
-        len = ngx_strlen(value);
-        buffer = ngx_pcalloc(main_config->pool, len + 1);
-        if (buffer == NULL)
-        {
-            return NGX_ERROR;
-        }
-        
-        memcpy(buffer, value, len);
-        buffer[len] = 0;
-
-        array_item->data = buffer;
-        array_item->len = len;
-    }
-    va_end(args);
-
-    return NGX_OK;
-}
-
-/*
  * Get the CSRF header name into the supplied buffer
  */
 void oauth_proxy_utils_get_csrf_header_name(u_char *csrf_header_name, const oauth_proxy_configuration_t *config)
 {
     const char *literal_prefix = "x-";
     const char *literal_suffix = "-csrf";
-    size_t prefix_length = 2;
-    size_t suffix_length = 5;
+    size_t prefix_length = ngx_strlen(literal_prefix);
+    size_t suffix_length = ngx_strlen(literal_suffix);
 
     ngx_memcpy(csrf_header_name, literal_prefix, prefix_length);
     ngx_memcpy(csrf_header_name + prefix_length, config->cookie_name_prefix.data, config->cookie_name_prefix.len);
     ngx_memcpy(csrf_header_name + prefix_length + config->cookie_name_prefix.len, literal_suffix, suffix_length);
-    csrf_header_name[2 + config->cookie_name_prefix.len + suffix_length] = 0;
+    csrf_header_name[prefix_length + config->cookie_name_prefix.len + suffix_length] = 0;
 }
 
 /*
@@ -166,7 +120,7 @@ ngx_int_t oauth_proxy_utils_add_integer_header_out(ngx_http_request_t *request, 
 }
 
 /*
- * Write a header string that points to permanent heap memory
+ * Set a header string, which must point to permanent heap memory
  */
 static ngx_int_t oauth_proxy_utils_integer_to_headerstring(ngx_http_request_t *request, ngx_str_t *output, ngx_int_t input)
 {
@@ -182,7 +136,7 @@ static ngx_int_t oauth_proxy_utils_integer_to_headerstring(ngx_http_request_t *r
         return NGX_ERROR;
     }
 
-    result = ngx_snprintf(buffer, buffer_size - 1, "%d", (int)input);
+    result = ngx_snprintf(buffer, buffer_size - 1, "%d", input);
     size = result - buffer;
     buffer[size] = 0;
 
