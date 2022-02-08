@@ -94,7 +94,7 @@ This can be useful when web and mobile clients share the same API routes.
 
 > **Syntax**: **`oauth_proxy_cors_allow_methods`** `string`
 >
-> **Default**: *['OPTIONS,GET,HEAD,POST,PUT,PATCH,DELETE']*
+> **Default**: *'OPTIONS,GET,HEAD,POST,PUT,PATCH,DELETE'*
 >
 > **Context**: `location`
 
@@ -105,7 +105,7 @@ A '*' wildcard value should not be configured here, since it will not work with 
 
 > **Syntax**: **`oauth_proxy_cors_allow_headers`** `string`
 >
-> **Default**: *['']*
+> **Default**: *''*
 >
 > **Context**: `location`
 
@@ -117,9 +117,9 @@ A '*' wildcard value should not be configured here, since it will not work with 
 
 #### oauth_proxy_cors_expose_headers
 
-> **Syntax**: **`oauth_proxy_cors_expose_headers`** `string[]`
+> **Syntax**: **`oauth_proxy_cors_expose_headers`** `string`
 >
-> **Default**: *[]*
+> **Default**: *''*
 >
 > **Context**: `location`
 

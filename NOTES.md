@@ -1,37 +1,32 @@
-TASKS
------
-1. Final review of all memory access code and aim for simplifications
-   Valgrind results indicate some GC that needs to be better understood
-   Read up more on ngx_pcalloc etc and compare to main branch
-
-memcheck GC: 1000 nodes, 994 survivors (99.4%)
---7-- memcheck GC: 1414 new table size (stepup)
---7-- memcheck GC: 1414 nodes, 1414 survivors (100.0%)
---7-- memcheck GC: 1999 new table size (stepup)
---7-- memcheck GC: 1999 nodes, 1999 survivors (100.0%)
---7-- memcheck GC: 2827 new table size (stepup)
-
 FINALIZATION
 ------------
-1. Strictest compiler optimizations and warnings in configure.\
-   Include -std=c99, O8 or O6, and strictest warnings, then make it fail.\
-   They do not seem to stick due to use of automake by NGINX.\
+1. Strictest compiler optimizations and warnings in configure.
+   Include -std=c99, O8 or O6, and strictest warnings, then make it fail.
+   They do not seem to stick due to use of automake by NGINX.
    At least document the results.
 
-2. Statically link with openssl.\
-   Current sizes of .so files are 109-137KB - check after static linking.\
+2. Statically link with openssl.
+   Current sizes of .so files are 109-137KB - check after static linking.
    If not possible then at least explain why.
 
-3. NGINX+ certification testing to do, maybe via a trial version.\
-   See if I can test each .so file I have built in Docker Compose.
+3. Test the module with the real example SPA on a branch, once other reviews are passed.
 
-4. Use the module in an SPA branch
+4. NGINX+ certification testing to do, maybe via a trial version.
+   I would like to get the certificates and be able to follow the below guide.
+   See if I can test each .so file I have built in Docker Compose.
+   https://docs.nginx.com/nginx/admin-guide/installing-nginx/installing-nginx-plus/
+
+5. CentOS 8 reached 'end of life' at end of 2021 so I have commented it out from the Dockerfile for now.
+   The recommendation seems to be to update to CentOS stream:
+   https://blog.centos.org/2022/01/centos-community-newsletter-january-2022/
+   https://techglimpse.com/failed-metadata-repo-appstream-centos-8/
+   https://www.linuxcapable.com/how-to-install-latest-nginx-mainline-on-centos-8-stream/
 
 NOTES
 -----
-1. Removing cookie headers is complicated and feels inadvisable, so I have omitted this in the C module:
-   https://www.ruby-forum.com/t/removing-a-request-header-in-an-access-phase-handler/245742
+1. I used some Apache code for base64url decoding and included it in the NOTICES file.
+   There is a similar notice in this Apple repo that also uses the Apache utils:
+   https://opensource.apple.com/source/apr/apr-39/apr-util/apr-util
 
-2. CentOS 8 is no longer supported so I have commented it out from builds for now.
-   Return to this as part of NGINX certification testing:
-   https://techglimpse.com/failed-metadata-repo-appstream-centos-8/
+2. Removing cookie headers is complicated and feels inadvisable, so I have omitted this in the C module:
+   https://www.ruby-forum.com/t/removing-a-request-header-in-an-access-phase-handler/245742
