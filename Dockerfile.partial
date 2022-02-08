@@ -22,6 +22,7 @@ FROM alpine
 ARG NGINX_VERSION
 ENV NGINX_VERSION=$NGINX_VERSION
 COPY --from=alpine-builder /tmp/nginx-$NGINX_VERSION/objs/ngx_curity_http_oauth_proxy_module.so /build/alpine.ngx_curity_http_oauth_proxy_module_$NGINX_VERSION.so
+COPY --from=alpine-builder /tmp/nginx-$NGINX_VERSION/objs/Makefile                              /build/Makefile
 
 ENTRYPOINT ["sleep"]
 CMD ["300"]

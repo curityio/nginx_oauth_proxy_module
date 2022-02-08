@@ -67,21 +67,19 @@ Multiple origins could be used in special cases where cookies are shared across 
 
 > **Syntax**: **`oauth_proxy_cors_enabled`** `boolean`
 >
-> **Default**: *on*
->
 > **Context**: `location`
 
 When enabled, the OAuth proxy returns CORS response headers on behalf of the API.\
 When an origin header is received that is in the trusted_web_origins whitelist, response headers are written.\
 The [access-control-allow-origin](https://developer.mozilla.org/en-US/docs/Web/HTTP/Headers/Access-Control-Allow-Origin) header is returned, so that the SPA can call the API.\
 The [access-control-allow-credentials](https://developer.mozilla.org/en-US/docs/Web/HTTP/Headers/Access-Control-Allow-Credentials) header is returned, so that the SPA can send secured cookies to the API.\
-Default values are provided for other CORS headers that the SPA needs, which can be overridden by optional directives.
+Default values are provided for other CORS headers that the SPA needs.
 
 ## Optional Configuration Directives
 
 #### oauth_proxy_allow_tokens
 
-> **Syntax**: **`oauth_proxy_allow_tokens`** `boolean`
+> **Syntax**: **`oauth_proxy_allow_tokens`** `on` | `off`
 >
 > **Default**: *off*
 >

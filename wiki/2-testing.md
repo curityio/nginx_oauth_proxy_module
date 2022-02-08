@@ -1,4 +1,4 @@
-# OAuth Proxy Module - Unit Tests
+# OAuth Proxy Module - Testing
 
 ## 1. Test Setup
 
