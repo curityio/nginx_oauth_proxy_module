@@ -8,7 +8,7 @@ Run the following script to build the NGINX as a dynamic module for multiple fla
 ./build.sh
 ```
 
-A shared libray with a `.so` extension is produced for each Linux distro, in the local `./build` folder:
+A shared libray with a `.so` extension is produced for each Linux distro, in your local `./build` folder:
 
 ```text
 alpine.ngx_curity_http_oauth_proxy_module_1.21.3.so
@@ -19,7 +19,8 @@ ubuntu.20.04.ngx_curity_http_oauth_proxy_module_1.21.3.so
 ## 2. Troubleshoot Build Failures
 
 A multi-stage Docker build is used, to output built .so files to an `nginx-module-builder` image.\
-To troubleshoot failures, remote to the latest Docker image in `docker image list`:
+To troubleshoot failures, remote to the latest Docker image in `docker image list`.\
+Build commands can then be run manually if required, to understand the failure cause:
 
 ```bash
 docker run -it a77962ad4c52
@@ -39,7 +40,7 @@ The open source alpine NGINX is then run via valgrind, to detect any potential m
 ./resources/docker/deploy.sh
 ```
 
-Then run the following script in another terminal window.\
+Then run the following script in one or more terminal windows.\
 This will run a number of HTTP requests and then output valgrind results:
 
 ```bash

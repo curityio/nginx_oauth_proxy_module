@@ -22,7 +22,7 @@ A typical flow for an SPA calling an API would work like this:
 - The incoming HTTP Authorization Header is then updated with the JWT access token
 - The API must then verify the JWT in a zero trust manner, on every request
 
-## Configuration Directives
+## Required Configuration Directives
 
 All of the directives are required for locations where the module is enabled.\
 NGINX will fail to load if the configuration for any locations fail validation:
@@ -31,72 +31,113 @@ NGINX will fail to load if the configuration for any locations fail validation:
 
 > **Syntax**: **`oauth_proxy`** `on` | `off`
 >
-> **Default**: *`off`*
->
 > **Context**: `location`
 
 The module is disabled by default but can be enabled for paths you choose.
 
-#### oauth_proxy_allow_tokens
+#### oauth_proxy_cookie_name_prefix
 
-> **Syntax**: **`oauth_proxy_allow_tokens`** `on` | `off`
+> **Syntax**: **`oauth_proxy_cookie_name_prefix`** `string`
 >
-> **Default**: *`off`*                                                                
+> **Context**: `location`
+
+The prefix used in the SPA's cookie name, typically representing a company or product name.\
+The value supplied must not be empty, and `example` would lead to full cookie names such as `example-at`.
+
+#### oauth_proxy_encryption_key
+
+> **Syntax**: **`oauth_proxy_encryption_key`** `string`
 >
-> **Context**: `location`                                                   
+> **Context**: `location`
 
-When set to `on`, requests that already have an authorization header can bypass cookie validation.\
-This enables the same API routes to be shared between SPAs and mobile clients.\
-If set to `off` then all locations for which the module is configured must contain secure cookies.
-
-#### oauth_proxy_cookie_prefix
-
-> **Syntax**: **`oauth_proxy_cookie_prefix`** _`string`_
->
-> **Default**: *``*                                                                
->
-> **Context**: `location`                                                   
-
-A cookie prefix name must be provided, such as a company and / or product name.\
-The value of `example` used in this README can be replaced with your own custom value.\
-The maximum allowed length of the prefix is 64 characters.
-
-#### oauth_proxy_hex_encryption_key
-
-> **Syntax**: **`oauth_proxy_hex_encryption_key`** _`string`_
->
-> **Default**: *``*                                                                
->
-> **Context**: `location`                                                   
-
-This must be exactly 64 hexadecimal characters, representing the 32 bytes of the encryption key.
-This provides an encryption key that is compliant with the AES256-GCM standard.\
-A random encryption key in the correct format can be generated via the following command:
-
-```bash
-openssl rand 32 | xxd -p -c 64
-```
+This must be a 32 byte encryption key expressed as 64 hex characters.\
+It is used to decrypt AES256 encrypted secure cookies.\
+The key is initially generated with a tool such as `openssl`, as explained in Curity tutorials.
 
 #### oauth_proxy_trusted_web_origins
 
-> **Syntax**: **`oauth_proxy_trusted_web_origins`** _`string`_
+> **Syntax**: **`oauth_proxy_trusted_web_origins`** `string[]`
 >
-> **Default**: *``*                                                                
+> **Context**: `location`
+
+A whitelist of at least one web origin from which the plugin will accept requests.\
+Multiple origins could be used in special cases where cookies are shared across subdomains.
+
+#### oauth_proxy_cors_enabled
+
+> **Syntax**: **`oauth_proxy_cors_enabled`** `boolean`
 >
-> **Context**: `location`                                                   
+> **Default**: *on*
+>
+> **Context**: `location`
 
-An array of at least one trusted web origins where SPA clients will run in the browser.\
-Multiple subdomains can be configured, though a single value is the most common use case:
+When enabled, the OAuth proxy returns CORS response headers on behalf of the API.\
+When an origin header is received that is in the trusted_web_origins whitelist, response headers are written.\
+The [access-control-allow-origin](https://developer.mozilla.org/en-US/docs/Web/HTTP/Headers/Access-Control-Allow-Origin) header is returned, so that the SPA can call the API.\
+The [access-control-allow-credentials](https://developer.mozilla.org/en-US/docs/Web/HTTP/Headers/Access-Control-Allow-Credentials) header is returned, so that the SPA can send secured cookies to the API.\
+Default values are provided for other CORS headers that the SPA needs, which can be overridden by optional directives.
 
-```nginx
-location / {
-   ...
-   oauth_proxy_trusted_web_origins "https://webapp1.example.com";
-   oauth_proxy_trusted_web_origins "https://webapp2.example.com";
-}
-```
+## Optional Configuration Directives
 
-## Sample Configurations
+#### oauth_proxy_allow_tokens
+
+> **Syntax**: **`oauth_proxy_allow_tokens`** `boolean`
+>
+> **Default**: *off*
+>
+> **Context**: `location`
+
+If set to true, then requests that already have a bearer token are passed straight through to APIs.\
+This can be useful when web and mobile clients share the same API routes.
+
+#### oauth_proxy_cors_allow_methods
+
+> **Syntax**: **`oauth_proxy_cors_allow_methods`** `string`
+>
+> **Default**: *'OPTIONS,GET,HEAD,POST,PUT,PATCH,DELETE'*
+>
+> **Context**: `location`
+
+When CORS is enabled, these values are returned in the [access-control-allow-methods](https://developer.mozilla.org/en-US/docs/Web/HTTP/Headers/Access-Control-Allow-Methods) response header.\
+A '*' wildcard value should not be configured here, since it will not work with credentialed requests.
+
+#### oauth_proxy_cors_allow_headers
+
+> **Syntax**: **`oauth_proxy_cors_allow_headers`** `string`
+>
+> **Default**: *''*
+>
+> **Context**: `location`
+
+When CORS is enabled, the plugin returns these values in the [access-control-allow-headers](https://developer.mozilla.org/en-US/docs/Web/HTTP/Headers/Access-Control-Allow-Headers) response header.\
+If no values are configured then at runtime any headers the SPA sends are allowed.\
+This is managed by returning the contents of the [access-control-request-headers](https://developer.mozilla.org/en-US/docs/Web/HTTP/Headers/Access-Control-Request-Headers) field.\
+If setting values explicitly, ensure that the token handler CSRF request header is included, eg `x-example-csrf`.\
+A '*' wildcard value should not be configured here, since it will not work with credentialed requests.
+
+#### oauth_proxy_cors_expose_headers
+
+> **Syntax**: **`oauth_proxy_cors_expose_headers`** `string`
+>
+> **Default**: *''*
+>
+> **Context**: `location`
+
+When CORS is enabled, the plugin returns these values in the [access-contol-expose-headers](https://developer.mozilla.org/en-US/docs/Web/HTTP/Headers/Access-Control-Expose-Headers) response header.\
+A '*' wildcard value should not be configured here, since it will not work with credentialed requests.
+
+#### oauth_proxy_cors_max_age
+
+> **Syntax**: **`oauth_proxy_cors_max_age`** `number`
+>
+> **Default**: *86400*
+>
+> **Context**: `location`
+
+When CORS is enabled, the plugin returns this value in the [access-contol-max-age](https://developer.mozilla.org/en-US/docs/Web/HTTP/Headers/Access-Control-Max-Age) response header.\
+When a value is configured, this prevents excessive pre-flight OPTIONS requests, to improve efficiency.
+
+## Example Configurations
 
 #### Loading the Module
 
@@ -115,10 +156,10 @@ The following location decrypts cookies, then forwards an access token to the do
 location /products {
 
     oauth_proxy on;
-    oauth_proxy_allow_tokens on;
-    oauth_proxy_cookie_prefix "example";
-    oauth_proxy_hex_encryption_key "4e4636356d65563e4c73233847503e3b21436e6f7629724950526f4b5e2e4e50";
+    oauth_proxy_cookie_name_prefix "example";
+    oauth_proxy_encryption_key "4e4636356d65563e4c73233847503e3b21436e6f7629724950526f4b5e2e4e50";
     oauth_proxy_trusted_web_origin "https://www.example.com";
+    oauth_proxy_cors_enabled on;
 
     proxy_pass "https://productsapi.example.com";
 }
@@ -132,10 +173,10 @@ Parent and child locations can be used, in which case children inherit the paren
 location /api {
 
     oauth_proxy on;
-    oauth_proxy_allow_tokens on;
-    oauth_proxy_cookie_prefix "example";
-    oauth_proxy_hex_encryption_key "4e4636356d65563e4c73233847503e3b21436e6f7629724950526f4b5e2e4e50";
+    oauth_proxy_cookie_name_prefix "example";
+    oauth_proxy_encryption_key "4e4636356d65563e4c73233847503e3b21436e6f7629724950526f4b5e2e4e50";
     oauth_proxy_trusted_web_origin "https://www.example.com";
+    oauth_proxy_cors_enabled on;
     
     location /api/products {
         proxy_pass "https://productsapi.example.com";
@@ -153,28 +194,38 @@ The plugin expects to receive up to two cookies, which use a custom prefix with 
 
 | Example Cookie Name | Fixed Suffix | Contains |
 | ------------------- | ------------ | -------- |
-| example-at | -at | An encrypted cookie containing either an opaque or JWT access token |
+| example-at | -at | An encrypted cookie containing an opaque or JWT access token |
 | example-csrf | -csrf | A CSRF cookie verified during data changing requests |
 
 Cookies are encrypted using AES256-GCM, with a hex encoding, in this format:
 
 | Cookie Section | Contains |
 | -------------- | -------- |
-| First 24 hex digits | This contains the 12 byte GCM initialization vector |
-| Last 32 hex digits | This contains the 16 byte GCM message authentication code |
-| Middle hex digits | This contains the ciphertext, whose length is that of the token being encrypted |
+| First byte | This contains a version number, currently always 1 |
+| Next 12 bytes | This contains the 12 byte GCM initialization vector |
+| Last 16 bytes | This contains the 16 byte GCM message authentication code |
+| Middle section | This contains the ciphertext, whose length is that of the token being encrypted |
 
 ## Security Behavior
 
 The module handles cookies according to [OWASP Cross Site Request Forgery Best Practices](https://cheatsheetseries.owasp.org/cheatsheets/Cross-Site_Request_Forgery_Prevention_Cheat_Sheet.html):
 
-#### OPTIONS Requests
+#### Options Requests
 
-The plugin does not perform any logic for pre-flight requests from the SPA and returns immediately.
+The plugin first handles pre-flight OPTIONS requests and writes CORS response headers:
+
+```text
+access-control-allow-origin: https://www.example.com
+access-control-allow-credentials: true
+access-control-allow-cors_allow_methods: OPTIONS,GET,HEAD,POST,PUT,PATCH,DELETE
+access-control-allow-cors_allow_headers: x-example-csrf
+access-control-max-age: 86400
+vary: origin,access-control-request-headers
+```
 
 #### Web Origin Checks
 
-For other methods, the plugin first reads the `Origin HTTP Header`, sent by all modern browsers.\
+On the main request the plugin first reads the `Origin HTTP Header`, sent by all modern browsers.\
 If this does not contain a trusted value the request is immediately rejected with a 401 response.
 
 #### Cross Site Request Forgery Checks
@@ -211,20 +262,11 @@ AES256-GCM uses authenticated encryption, so invalid cookies are rejected with a
 
 #### Error Responses
 
-The common failure scenarios are summarized below:
-
-| Failure Type | Description | Error Status |
-| ------------ | ----------- | ------------ |
-| Invalid Request | Incorrect or malicious details were sent by the client | 401 |
-| Incorrect Configuration | Invalid configuration leading to input being rejected | 401 |
-| Encryption Key Renewal | Expected reconfiguration leading to input being rejected | 401 |
-| Server Error | A technical problem occurs in the module logic | 500 |
-
-For OAuth Proxy errors, the response contains a JSON body and CORS headers so that the SPA can read the details:
+Error responses contain a JSON body and CORS headers so that the SPA can read the details:
 
 ```text
 {
-    "code": "unauthorized_request", 
+    "code": "unauthorized", 
     "message": "Access denied due to missing or invalid credentials"
 }
 
@@ -232,11 +274,8 @@ access-control-allow-origin: https://www.example.com
 access-control-allow-credentials: true
 ```
 
-#### SPA Error Handling
-
-A 401 error response should be handled by the SPA as an access token expiry event.\
-The SPA should try a token refresh, and ask the user to re-authenticate if this fails.\
-This ensures that the SPA copes resiliently with both expiry and encryption key renewal.
+The code in the [Example SPA](https://github.com/curityio/web-oauth-via-bff) shows how to handle error responses.\
+The HTTP status code is usually sufficient, and the error code can inform the SPA of specific causes.
 
 ## Compatibility
 
@@ -264,15 +303,15 @@ Download the .so file for your platform and deploy it to the `/usr/lib/nginx/mod
 | Ubuntu 18.04 LTS (Bionic Beaver)  | [⇓](https://github.com/curityio/nginx_phantom_token_module/releases/download/1.2.0/ubuntu.18.04.ngx_curity_http_oauth_proxy_module_1.19.5.so)   | [⇓](https://github.com/curityio/nginx_phantom_token_module/releases/download/1.2.0/ubuntu.18.04.ngx_curity_http_oauth_proxy_module_1.19.10.so)   | [⇓](https://github.com/curityio/nginx_phantom_token_module/releases/download/1.2.0/ubuntu.18.04.ngx_curity_http_oauth_proxy_module_1.21.3.so) |
 | Ubuntu 20.04 LTS (Focal Fossa)    | [⇓](https://github.com/curityio/nginx_phantom_token_module/releases/download/1.2.0/ubuntu.20.04.ngx_curity_http_oauth_proxy_module_1.19.5.so)   | [⇓](https://github.com/curityio/nginx_phantom_token_module/releases/download/1.2.0/ubuntu.20.04.ngx_curity_http_oauth_proxy_module_1.19.10.so)   | [⇓](https://github.com/curityio/nginx_phantom_token_module/releases/download/1.2.0/ubuntu.20.04.ngx_curity_http_oauth_proxy_module_1.21.3.so) |
 
-## Implementation Details
+## Development and Testing Details
 
 If you wish to customize this module by building from source, see the following resources:
 
 | Guide | Description |
 | ----- | ----------- |
-| [Development](resources/1-development.md) | How to build and work with the module on a development computer |
-| [Testing](resources/2-testing.md) | How to run NGINX tests to verify the module's success and failure behavior |
-| [Deployment](resources/3-deployment.md) | How to build and deploy the module to a Docker container |
+| [Development](wiki/1-development.md) | How to build and work with the module on a development computer |
+| [Testing](wiki/2-testing.md) | How to run NGINX tests to verify the module's success and failure behavior |
+| [Deployment](wiki/3-deployment.md) | How to build and deploy the module to a Docker container |
 
 ## Status
 

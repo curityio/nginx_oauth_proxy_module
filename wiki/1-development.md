@@ -13,7 +13,7 @@ When developing we recommend a more specialist tool such as CLion 2020.2 or newe
 ## 2. OpenSSL Setup
 
 On Docker images we build the code as a dynamic module using libssl-dev.\
-This does not work on macOS and I have found building OpenSSL from source to work best.\
+This does not work on macOS so instead build OpenSSL from source.\
 Development IDEs can then find OpenSSL headers in the correct system locations: 
 
 ```bash
@@ -38,7 +38,7 @@ Then run the base configure script as follows, to download NGINX source and use 
 CONFIG_OPTS='--with-http_ssl_module --with-openssl=../openssl-OpenSSL_1_1_1m' ./configure
 ```
 
-Select these options to enable Perl tests to run and to enable debugging of the C code in an IDE such as CLion:
+Select these options to enable Perl tests to run and to enable debugging of the C code in CLion:
 
 ```text
 DYNAMIC_MODULE=n
@@ -52,8 +52,6 @@ Whenever the code in the module changes, run the make command to rebuild NGINX:
 ```bash
 make
 ```
-
-Custom options can be set in the IDE if needed, though those for this project need to be finalized.
 
 ## 5. Make Install
 
@@ -85,13 +83,13 @@ This nginx.conf file is configured to disable the daemon, so that logs are easil
 
 ## 7. Debug Code
 
-To perform printf debugging you can add `ngx_log_error` statements to the C code and then look at NGINX output.
+To perform printf debugging you can add `ngx_log_error` statements to the C code and then look at NGINX output.\
 Once nginx is running, select  `Run / Attach to Process`, and choose the `nginx worker process`.\
 Then set breakpoints, after which you can step through code to check variable state carefully:
 
 ![Debugger](debugging.png)
 
-## 7. Act as an SPA Client
+## 8. Act as an SPA Client
 
 You can run curl requests against the nginx system in the same manner as the SPA:
 
@@ -102,16 +100,11 @@ curl -X GET http://localhost:8080/api \
 -H "cookie: example-at=$AT_COOKIE"
 ```
 
-The development target API is an internet mockbin API that echoes headers and shows the forwarded access token:
+The access token received by the target API is then echoed back to the caller.\
+The `curl -i` option can be used to view CORS headers that are returned to single page apps:
 
 ```json
 {
-  "method": "GET"
-  "headers": {
-    "host": "mockbin.org",
-    "origin": "https://www.example.com",
-    "cookie": "example-at=093d3fb879767f6ec2b1e7e359040fe6ba875734ee043c5cc484d3da8963a351e9aba1c5e273f3d1ea2914f83836fa434474d1720b3040f5f7237f34536b7389",
-    "authorization": "Bearer 42665300-efe8-419d-be52-07b53e208f46",
-  }
+    "message": "API was called successfully with Bearer 42665300-efe8-419d-be52-07b53e208f46"
 }
 ```

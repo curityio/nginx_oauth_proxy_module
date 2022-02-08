@@ -19,7 +19,7 @@ done
 #
 # Run a series of HTTP requests and then view valgrind logs to see if there are memory leaks
 #
-for ITEM in {1..10}
+for ITEM in {1..100}
 do
   #
   # Make a GET request to the API via the OAuth proxy module

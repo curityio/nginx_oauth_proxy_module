@@ -8,7 +8,7 @@ RUN apk add --no-cache --virtual .build-deps \
 COPY configure /tmp
 COPY config /tmp
 COPY Makefile /tmp
-COPY src/*.c /tmp/src/
+COPY src/* /tmp/src/
 ARG NGINX_VERSION
 ENV NGINX_VERSION=$NGINX_VERSION
 ADD nginx-$NGINX_VERSION.tar.gz /tmp/
