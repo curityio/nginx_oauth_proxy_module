@@ -376,7 +376,7 @@ static ngx_int_t add_cors_response_headers(ngx_http_request_t *request, oauth_pr
 
                 if (config->cors_max_age > 0)
                 {
-                    if (oauth_proxy_utils_add_integer_header_out(request,  "access-control-max_age", config->cors_max_age) != NGX_OK)
+                    if (oauth_proxy_utils_add_integer_header_out(request,  "access-control-max-age", config->cors_max_age) != NGX_OK)
                     {
                         ngx_log_error(NGX_LOG_WARN, request->connection->log, 0, "OAuth proxy failed to add CORS max_age header");
                         return NGX_HTTP_INTERNAL_SERVER_ERROR;
@@ -388,7 +388,7 @@ static ngx_int_t add_cors_response_headers(ngx_http_request_t *request, oauth_pr
 
             if (config->cors_expose_headers.len > 0)
             {
-                if (oauth_proxy_utils_add_header_out(request,  "access-control-expose_headers", &config->cors_expose_headers) != NGX_OK)
+                if (oauth_proxy_utils_add_header_out(request,  "access-control-expose-headers", &config->cors_expose_headers) != NGX_OK)
                 {
                     ngx_log_error(NGX_LOG_WARN, request->connection->log, 0, "OAuth proxy failed to add CORS expose_headers response header");
                     return NGX_HTTP_INTERNAL_SERVER_ERROR;

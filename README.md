@@ -219,7 +219,7 @@ access-control-allow-origin: https://www.example.com
 access-control-allow-credentials: true
 access-control-allow-cors_allow_methods: OPTIONS,GET,HEAD,POST,PUT,PATCH,DELETE
 access-control-allow-cors_allow_headers: x-example-csrf
-access-control-max_age: 86400
+access-control-max-age: 86400
 vary: origin,access-control-request-headers
 ```
 
