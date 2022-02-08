@@ -46,3 +46,11 @@ This will run a number of HTTP requests and then output valgrind results:
 ```bash
 ./resources/docker/test.sh
 ```
+
+## 4. 
+
+ldd ngx_curity_http_oauth_proxy_module.so 
+	
+```text
+/lib/ld-musl-x86_64.so.1 (0x7fca986e2000) libc.musl-x86_64.so.1 => /lib/ld-musl-x86_64.so.1 (0x7fca986e2000)
+```
