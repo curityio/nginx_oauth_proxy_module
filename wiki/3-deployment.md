@@ -36,19 +36,18 @@ RUN CONFIG_OPTS="--with-openssl=../openssl-OpenSSL_1_1_1m" ./configure && make
 
 ## 4. Deploy and Test
 
-Run the following scripts to deploy NGINX with the dynamic module.\
+Run a command of the following form  to deploy NGINX with the dynamic module.\
 The open source alpine NGINX is then run via valgrind, to detect any potential memory leaks:
 
 ```bash
-./resources/docker/build.sh
-./resources/docker/deploy.sh
+./resources/deployment/deploy.sh ubuntu18
 ```
 
 Then run the following script in one or more terminal windows.\
 This will run a number of HTTP requests and then output valgrind results:
 
 ```bash
-./resources/docker/test.sh
+./resources/deployment/test.sh
 ```
 
 ## 4. 

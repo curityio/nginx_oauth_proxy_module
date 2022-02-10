@@ -9,8 +9,7 @@ OPENSSL_VERSION_TAG='OpenSSL_1_1_1m'
 BUILD_INFO_FILE="$SRC_DIR/.build.info"
 test -f "$BUILD_INFO_FILE" && . "$BUILD_INFO_FILE"
 
-#declare -a CONFIG_OPTS=($CONFIG_OPTS --with-compat --with-cc-opt="-Wformat -Werror=format-security")
-declare -a CONFIG_OPTS=($CONFIG_OPTS --with-compat --with-cc-opt="-std=c99 -Wall -Wextra")
+declare -a CONFIG_OPTS=($CONFIG_OPTS --with-compat --with-cc-opt="-Wall -Wextra")
 
 if [[ -z "$NGINX_SRC_DIR" ]]; then
   read -t 60 -e -p "Path to NGINX (leave blank to download version $NGINX_VERSION): " NGINX_SRC_DIR || :
