@@ -1,81 +1,313 @@
 #!/bin/bash
 
-###############################################################################
-# Run some commands against the deployed system and then check for memory leaks
-###############################################################################
+####################################################################################
+#Run some integration tests against the deployed NGINX system with the custom module
+####################################################################################
 
+API_URL='http://localhost:8081/api'
+WEB_ORIGIN='https://www.example.com'
+ACCESS_TOKEN='42665300-efe8-419d-be52-07b53e208f46'
+CSRF_TOKEN='njowdfew098723rhjl'
+RESPONSE_FILE=response.txt
+
+#
+# Ensure that we are in the folder containing this script
+#
 cd "$(dirname "${BASH_SOURCE[0]}")"
-PORT_NUMBER=8081
-cd ../..
+ENCRYPT_UTIL=$(pwd)/encrypt.js
 
 #
-# Ensure that the NGINX instance is up
+# Get encrypted values for testing
 #
-echo "Waiting for NGINX on port $PORT_NUMBER ..."
-while [ "$(curl -s -o /dev/null -w ''%{http_code}'' http://localhost:$PORT_NUMBER)" != "200" ]; do
-  sleep 2
-done
+ENCRYPTED_ACCESS_TOKEN=$(node $ENCRYPT_UTIL "$ACCESS_TOKEN")
+ENCRYPTED_CSRF_TOKEN=$(node $ENCRYPT_UTIL "$CSRF_TOKEN")
 
 #
-# Run a series of HTTP requests and then view valgrind logs to see if there are memory leaks
+# Get a header value from the HTTP response file
 #
-for ITEM in {1..100}
-do
-  #
-  # Make a GET request to the API via the OAuth proxy module
-  #
-  echo "Testing valid GET request $ITEM ..."
-  ENCRYPTED_ACCESS_TOKEN='093d3fb879767f6ec2b1e7e359040fe6ba875734ee043c5cc484d3da8963a351e9aba1c5e273f3d1ea2914f83836fa434474d1720b3040f5f7237f34536b7389'
-  HTTP_STATUS=$(curl -s -X GET "http://localhost:$PORT_NUMBER/api" \
-  -H "origin: https://www.example.com" \
-  -H "cookie: example-at=$ENCRYPTED_ACCESS_TOKEN" \
-  -o /dev/null -w '%{http_code}')
-  if [ "$HTTP_STATUS" != '200' ]; then
-    echo "*** Problem encountered calling the API with a secure cookie and a GET request: $HTTP_STATUS"
-  else
-    echo "*** GET succeeded ..."
-  fi
-
-  #
-  # Make a POST request to the API via the OAuth proxy module
-  #
-  echo "Testing valid POST request $ITEM ..."
-  CSRF_HEADER='pQguFsD6hFjnyYjaeC5KyijcWS6AvkJHiUmY7dLUsuTKsLAITLiJHVqsCdQpaGYO'
-  ENCRYPTED_CSRF_TOKEN='f61b300a79018b4b94f480086d63395148084af1f20c3e474623e60f34a181656b3a54725c1b4ddaeec9171f0398bde8c6c1e0e12d90bdb13397bf24678cd17a230a3df8e1771f9992e3bf2d6567ad920e1c25dc5e3e015679b5e673'
-  HTTP_STATUS=$(curl -s -X POST "http://localhost:$PORT_NUMBER/api" \
-  -H "origin: https://www.example.com" \
-  -H "cookie: example-at=$ENCRYPTED_ACCESS_TOKEN; example-csrf=$ENCRYPTED_CSRF_TOKEN" \
-  -H "x-example-csrf: $CSRF_HEADER" \
-  -o /dev/null -w '%{http_code}')
-  if [ "$HTTP_STATUS" != '200' ]; then
-    echo "*** Problem encountered calling the API with a secure cookie and a POST request: $HTTP_STATUS"
-  else
-    echo "*** POST succeeded ..."
-  fi
-
-  #
-  # Make an invalid POST request, where one byte of the encrypted payload is tampered with, to test error paths
-  #
-  echo "Testing invalid POST request $ITEM ..."
-  CSRF_HEADER='pQguFsD6hFjnyYjaeC5KyijcWS6AvkJHiUmY7dLUsuTKsLAITLiJHVqsCdQpaGYO'
-  ENCRYPTED_CSRF_TOKEN='f61b300a79018b4b94f480086d63395148084af1f20c3e474623e60f34a181656b3a54725c1b4ddaeec9171f0397bde8c6c1e0e12d90bdb13397bf24678cd17a230a3df8e1771f9992e3bf2d6567ad920e1c25dc5e3e015679b5e673'
-  HTTP_STATUS=$(curl -s -X POST "http://localhost:$PORT_NUMBER/api" \
-  -H "origin: https://www.example.com" \
-  -H "cookie: example-at=$ENCRYPTED_ACCESS_TOKEN; example-csrf=$ENCRYPTED_CSRF_TOKEN" \
-  -H "x-example-csrf: $CSRF_HEADER" \
-  -o /dev/null -w '%{http_code}')
-  if [ "$HTTP_STATUS" != '401' ]; then
-    echo "*** POST did not receive a 401 response as expected ..."
-  else
-    echo "*** POST failed as expected ..."
-  fi
-done
+function getHeaderValue(){
+  local _HEADER_NAME=$1
+  local _HEADER_VALUE=$(cat $RESPONSE_FILE | grep -i "^$_HEADER_NAME" | sed -r "s/^$_HEADER_NAME: (.*)$/\1/i")
+  local _HEADER_VALUE=${_HEADER_VALUE%$'\r'}
+  echo $_HEADER_VALUE
+}
 
 #
-# Inspect valgrind results once finished
+# Verify that browser pre-flight OPTIONS requests from a malicious site are denied CORS access
 #
-echo 'Retrieving valgrind memory results ...'
-DOCKER_CONTAINER_ID=$(docker container ls | grep nginx_valgrind | awk '{print $1}')
-echo $DOCKER_CONTAINER_ID
-docker cp "$DOCKER_CONTAINER_ID:/valgrind-results.txt" .
-cat valgrind-results.txt
+echo '1. Testing OPTIONS request for an untrusted web origin ...'
+HTTP_STATUS=$(curl -i -s -X OPTIONS "$API_URL" \
+-H "origin: https://malicious-site.com" \
+-o $RESPONSE_FILE -w '%{http_code}')
+if [ "$HTTP_STATUS" != '204' ]; then
+  echo "*** OPTIONS request failed, status: $HTTP_STATUS"
+  exit
+fi
+
+ORIGIN=$(getHeaderValue 'access-control-allow-origin')
+if [ "$ORIGIN" != '' ]; then
+  echo '*** The CORS access-control-allow-origin response header was granted incorrectly'
+  exit
+fi
+
+CREDENTIALS=$(getHeaderValue 'access-control-allow-credentials')
+if [ "$CREDENTIALS" != '' ]; then
+  echo '*** The CORS access-control-allow-credentials response header was granted incorrectly'
+  exit
+fi
+echo '1. OPTIONS request successfully denied access to an untrusted web origin'
+
+#
+# Verify that browser pre-flight requests from a valid origin succeed and return the correct headers
+#
+echo '2. Testing OPTIONS request for a valid web origin ...'
+HTTP_STATUS=$(curl -i -s -X OPTIONS "$API_URL" \
+-H "origin: $WEB_ORIGIN" \
+-H "access-control-request-headers: x-example-csrf" \
+-o $RESPONSE_FILE -w '%{http_code}')
+if [ "$HTTP_STATUS" != '204' ]; then
+  echo "*** OPTIONS request failed, status: $HTTP_STATUS"
+  exit
+fi
+
+ORIGIN=$(getHeaderValue 'access-control-allow-origin')
+if [ "$ORIGIN" != "$WEB_ORIGIN" ]; then
+  echo '*** The CORS access-control-allow-origin response header was not set correctly'
+  exit
+fi
+
+CREDENTIALS=$(getHeaderValue 'access-control-allow-credentials')
+if [ "$CREDENTIALS" != 'true' ]; then
+  echo '*** The CORS access-control-allow-credentials response header was not set correctly'
+  exit
+fi
+
+VARY=$(getHeaderValue 'vary')
+if [ "$VARY" != 'origin,access-control-request-headers' ]; then
+  echo '*** The CORS vary response header was not set correctly'
+  exit
+fi
+
+METHODS=$(getHeaderValue 'access-control-allow-methods')
+if [ "$METHODS" != 'OPTIONS,HEAD,GET,POST,PUT,PATCH,DELETE' ]; then
+  echo '*** The CORS access-control-allow-methods response header was not set correctly'
+  exit
+fi
+
+HEADERS=$(getHeaderValue 'access-control-allow-headers')
+if [ "$HEADERS" != 'x-example-csrf' ]; then
+  echo '*** The CORS access-control-allow-headers response header was not set correctly'
+  exit
+fi
+
+MAXAGE=$(getHeaderValue 'access-control-max-age')
+if [ "$MAXAGE" != '86400' ]; then
+  echo '*** The CORS access-control-max-age response header was not set correctly'
+  exit
+fi
+echo '2. OPTIONS request returned all correct CORS headers for a valid web origin'
+
+#
+# Verify that the main browser request from a malicious site is denied CORS access
+#
+echo '3. Testing GET request for an untrusted web origin ...'
+HTTP_STATUS=$(curl -i -s -X GET "$API_URL" \
+-H "origin: https://malicious-site.com" \
+-H "cookie: example-at=$ENCRYPTED_ACCESS_TOKEN" \
+ -o $RESPONSE_FILE -w '%{http_code}')
+if [ "$HTTP_STATUS" != '401' ]; then
+  echo "*** GET request failed, status: $HTTP_STATUS"
+  exit
+fi
+ORIGIN=$(getHeaderValue 'access-control-allow-origin')
+if [ "$ORIGIN" != '' ]; then
+  echo '*** The CORS access-control-allow-origin response header was granted incorrectly'
+  exit
+fi
+
+CREDENTIALS=$(getHeaderValue 'access-control-allow-credentials')
+if [ "$CREDENTIALS" != '' ]; then
+  echo '*** The CORS access-control-allow-credentials response header was granted incorrectly'
+  exit
+fi
+echo '3. GET request successfully denied access to an untrusted web origin'
+
+#
+# Verify that the main browser request from a valid origin succeeds and returns the correct headers
+#
+echo '4. Testing GET request for a valid web origin ...'
+HTTP_STATUS=$(curl -i -s -X GET "$API_URL" \
+-H "origin: $WEB_ORIGIN" \
+-H "cookie: example-at=$ENCRYPTED_ACCESS_TOKEN" \
+-o $RESPONSE_FILE -w '%{http_code}')
+if [ "$HTTP_STATUS" != '200' ]; then
+  echo "*** GET request failed, status: $HTTP_STATUS"
+  exit
+fi
+
+ORIGIN=$(getHeaderValue 'access-control-allow-origin')
+if [ "$ORIGIN" != "$WEB_ORIGIN" ]; then
+  echo '*** The CORS access-control-allow-origin response header was not set correctly'
+  exit
+fi
+
+CREDENTIALS=$(getHeaderValue 'access-control-allow-credentials')
+if [ "$CREDENTIALS" != 'true' ]; then
+  echo '*** The CORS access-control-allow-credentials response header was not set correctly'
+  exit
+fi
+
+VARY=$(getHeaderValue 'vary')
+if [ "$VARY" != 'origin' ]; then
+  echo '*** The CORS vary response header was not set correctly'
+  exit
+fi
+echo '4. GET request returned all correct CORS headers for a valid web origin'
+
+#
+# Verify that SPA clients can read error responses from the plugin, by sending no credential but the correct origin
+#
+echo '5. Testing CORS headers for error responses to the SPA ...'
+HTTP_STATUS=$(curl -i -s -X POST "$API_URL" \
+-H "origin: $WEB_ORIGIN" \
+-o $RESPONSE_FILE -w '%{http_code}')
+if [ "$HTTP_STATUS" != '401' ]; then
+  echo '*** Request with no credential did not result in the expected error'
+  exit
+fi
+ORIGIN=$(getHeaderValue 'Access-Control-Allow-Origin')
+if [ "$ORIGIN" != "$WEB_ORIGIN" ]; then
+  echo '*** CORS headers do not allow the SPA to read the error response'
+  exit
+fi
+echo '5. CORS error responses returned to the SPA have the correct CORS headers'
+
+#
+# Verify that access is denied for GET requests without a token or cookie
+#
+echo '6. Testing POST with no credential ...'
+HTTP_STATUS=$(curl -i -s -X POST "$API_URL" \
+-o $RESPONSE_FILE -w '%{http_code}')
+if [ "$HTTP_STATUS" != '401' ]; then
+  echo '*** POST with no credential did not result in the expected error'
+  exit
+fi
+echo '6. POST with no credential failed with the expected error'
+JSON=$(tail -n 1 $RESPONSE_FILE)
+echo $JSON | jq
+
+#
+# Verify that an access token sent from a mobile client is passed through to the API
+#
+echo '7. Testing POST from mobile client with an access token ...'
+HTTP_STATUS=$(curl -i -s -X POST "$API_URL" \
+-H "Authorization: Bearer $ACCESS_TOKEN" \
+-o $RESPONSE_FILE -w '%{http_code}')
+if [ "$HTTP_STATUS" != '200' ]; then
+  echo "*** POST from mobile client failed, status: $HTTP_STATUS"
+  exit
+fi
+echo '7. POST from mobile client was successfully routed to the API'
+JSON=$(tail -n 1 $RESPONSE_FILE)
+echo $JSON | jq
+
+#
+# Verify that a cookie sent on a GET request is correctly decrypted
+#
+echo '8. Testing GET with a valid encrypted cookie ...'
+HTTP_STATUS=$(curl -i -s -X GET "$API_URL" \
+-H "origin: $WEB_ORIGIN" \
+-H "cookie: example-at=$ENCRYPTED_ACCESS_TOKEN" \
+-o $RESPONSE_FILE -w '%{http_code}')
+if [ "$HTTP_STATUS" != '200' ]; then
+  echo "*** GET with a valid encrypted cookie failed, status: $HTTP_STATUS"
+  exit
+fi
+echo '8. GET with a valid encrypted cookie was successfully routed to the API'
+JSON=$(tail -n 1 $RESPONSE_FILE)
+echo $JSON | jq
+
+#
+# Verify that data changing commands require a CSRF cookie
+#
+echo '9. Testing POST with missing CSRF cookie ...'
+HTTP_STATUS=$(curl -i -s -X POST "$API_URL" \
+-H "origin: $WEB_ORIGIN" \
+-H "cookie: example-at=$ENCRYPTED_ACCESS_TOKEN" \
+-o $RESPONSE_FILE -w '%{http_code}')
+if [ "$HTTP_STATUS" != '401' ]; then
+  echo '*** POST with a missing CSRF cookie did not result in the expected error'
+  exit
+fi
+echo '9. POST with a missing CSRF cookie was successfully rejected'
+JSON=$(tail -n 1 $RESPONSE_FILE)
+echo $JSON | jq
+
+#
+# Verify that data changing commands require a CSRF header
+#
+echo '10. Testing POST with missing CSRF header ...'
+HTTP_STATUS=$(curl -i -s -X POST "$API_URL" \
+-H "origin: $WEB_ORIGIN" \
+-H "cookie: example-at=$ENCRYPTED_ACCESS_TOKEN" \
+-H "cookie: example-csrf=$ENCRYPTED_CSRF_TOKEN" \
+-o $RESPONSE_FILE -w '%{http_code}')
+if [ "$HTTP_STATUS" != '401' ]; then
+  echo '*** POST with a missing CSRF header did not result in the expected error'
+  exit
+fi
+echo '10. POST with a missing CSRF header was successfully rejected'
+JSON=$(tail -n 1 $RESPONSE_FILE)
+echo $JSON | jq
+
+#
+# Verify that double submit cookie checks work if the cookie and value do not match
+#
+echo '11. Testing POST with incorrect CSRF header ...'
+HTTP_STATUS=$(curl -i -s -X POST "$API_URL" \
+-H "origin: $WEB_ORIGIN" \
+-H "cookie: example-at=$ENCRYPTED_ACCESS_TOKEN" \
+-H "cookie: example-csrf=$ENCRYPTED_CSRF_TOKEN" \
+-H "x-example-csrf: x$CSRF_TOKEN" \
+-o $RESPONSE_FILE -w '%{http_code}')
+if [ "$HTTP_STATUS" != '401' ]; then
+  echo '*** POST with an incorrect CSRF header did not result in the expected error'
+  exit
+fi
+echo '11. POST with an incorrect CSRF header was successfully rejected'
+JSON=$(tail -n 1 $RESPONSE_FILE)
+echo $JSON | jq
+
+#
+# Verify that double submit cookie checks succeed with the correct data
+#
+echo '12. Testing POST with correct CSRF cookie and header ...'
+HTTP_STATUS=$(curl -i -s -X POST "$API_URL" \
+-H "origin: $WEB_ORIGIN" \
+-H "cookie: example-at=$ENCRYPTED_ACCESS_TOKEN" \
+-H "cookie: example-csrf=$ENCRYPTED_CSRF_TOKEN" \
+-H "x-example-csrf: $CSRF_TOKEN" \
+-o $RESPONSE_FILE -w '%{http_code}')
+if [ "$HTTP_STATUS" != '200' ]; then
+  echo '*** POST with correct CSRF cookie and header did not succeed'
+  exit
+fi
+echo '12. POST with correct CSRF cookie and header was successfully routed to the API'
+JSON=$(tail -n 1 $RESPONSE_FILE)
+echo $JSON | jq
+
+#
+# Verify that malformed cookies are correctly rejected
+#
+echo '13. Testing GET with malformed access token cookie ...'
+HTTP_STATUS=$(curl -i -s -X GET "$API_URL" \
+-H "origin: $WEB_ORIGIN" \
+-H "cookie: example-at=" \
+-o $RESPONSE_FILE -w '%{http_code}')
+if [ "$HTTP_STATUS" != '401' ]; then
+  echo '*** GET with malformed access token cookie did not result in the expected error'
+  exit
+fi
+echo '13. GET with malformed access token cookie was successfully rejected'
+JSON=$(tail -n 1 $RESPONSE_FILE)
+echo $JSON | jq

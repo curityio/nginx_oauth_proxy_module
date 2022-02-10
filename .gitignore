@@ -67,3 +67,5 @@ t/servroot
 .build.info
 build
 valgrind*
+response.txt
+encryption.key
