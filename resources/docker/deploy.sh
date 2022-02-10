@@ -32,13 +32,10 @@ if [ $? -ne 0 ]; then
   exit 1
 fi
 
-#
-# Supply the 32 byte encryption key for AES256 as an environment variable
-#
+# Supply a runtime 32 byte AES256 cookie encryption key
 export ENCRYPTION_KEY=$(openssl rand 32 | xxd -p -c 64)
 echo -n $ENCRYPTION_KEY > encryption.key
 envsubst < nginx.conf.template > nginx.conf
-exit
 
 # Deploy the Docker container for the distro
 echo 'Deploying the NGINX and valgrind Docker image ...'

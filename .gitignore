@@ -69,3 +69,4 @@ build
 valgrind*
 response.txt
 encryption.key
+/resources/docker/nginx.conf
