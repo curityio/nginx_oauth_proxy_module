@@ -30,11 +30,12 @@ http {
             # First run the plugin
             oauth_proxy on;
             oauth_proxy_cookie_name_prefix "example";
-            oauth_proxy_encryption_key "$ENCRYPTION_KEY";
+            oauth_proxy_encryption_key "ENCRYPTION_KEY";
             oauth_proxy_trusted_web_origin "https://www.example.com";
             oauth_proxy_cors_enabled on;
+            oauth_proxy_allow_tokens on;
 
-           # Then forward to the below API
+            # Then forward to the below API
             proxy_pass "http://localhost:8081/api-internal";
         }
 

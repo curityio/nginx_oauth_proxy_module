@@ -6,6 +6,9 @@
 
 cd "$(dirname "${BASH_SOURCE[0]}")"
 
+export ENCRYPTION_KEY=$(openssl rand 32 | xxd -p -c 64)
+echo -n $ENCRYPTION_KEY > encryption.key
+
 # Validate input for the distro
 DISTRO=$1
 case $DISTRO in
@@ -35,7 +38,11 @@ fi
 # Supply a runtime 32 byte AES256 cookie encryption key
 export ENCRYPTION_KEY=$(openssl rand 32 | xxd -p -c 64)
 echo -n $ENCRYPTION_KEY > encryption.key
-envsubst < nginx.conf.template > nginx.conf
+
+# Update the runtime configuration file
+NGINX_CONF_DATA=$(cat ./nginx.conf.template)
+NGINX_CONF_DATA=$(sed "s/ENCRYPTION_KEY/$ENCRYPTION_KEY/g" <<< "$NGINX_CONF_DATA")
+echo "$NGINX_CONF_DATA" > ./nginx.conf
 
 # Deploy the Docker container for the distro
 echo 'Deploying the NGINX and valgrind Docker image ...'

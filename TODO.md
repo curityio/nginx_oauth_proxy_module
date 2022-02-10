@@ -1,6 +1,6 @@
 FINALIZATION
 ------------
-1. Test the module with the real example SPA on a branch, once other reviews are passed.
+1. Test the module with the real example SPA on an SPA deployments branch
 
 2. NGINX+ deployment to verify for different flavors of Linux.\
    I would like to get the certificates and be able to follow the below guide.\
