@@ -66,4 +66,7 @@ openssl-*
 t/servroot
 .build.info
 build
+response.txt
+encryption.key
+/resources/docker/nginx.conf
 valgrind*

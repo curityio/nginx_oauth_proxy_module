@@ -16,7 +16,11 @@ debian.buster.ngx_curity_http_oauth_proxy_module_1.21.3.so
 ubuntu.20.04.ngx_curity_http_oauth_proxy_module_1.21.3.so
 ```
 
-## 2. Troubleshoot Build Failures
+## 2. Release Build Settings
+
+TODO: Document static linking better than I have currently
+
+## 3. Troubleshoot Build Failures
 
 A multi-stage Docker build is used, to output built .so files to an `nginx-module-builder` image.\
 To troubleshoot failures, remote to the latest Docker image in `docker image list`.\
@@ -30,7 +34,7 @@ tar xzvf OpenSSL_1_1_1m.tar.gz
 RUN CONFIG_OPTS="--with-openssl=../openssl-OpenSSL_1_1_1m" ./configure && make
 ```
 
-## 3. Verify no Memory Leaks
+## 4. Deploy and Test
 
 Run the following scripts to deploy NGINX with the dynamic module.\
 The open source alpine NGINX is then run via valgrind, to detect any potential memory leaks:
