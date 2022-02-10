@@ -1,6 +1,6 @@
 # OAuth Proxy NGINX Module
 
-[![Quality](https://img.shields.io/badge/quality-production-green)](https://curity.io/resources/code-examples/status/)
+[![Quality](https://img.shields.io/badge/quality-test-yellow)](https://curity.io/resources/code-examples/status/)
 [![Availability](https://img.shields.io/badge/availability-binary-blue)](https://curity.io/resources/code-examples/status/)
 
 An NGINX module that decrypts secure cookies in API calls from Single Page Applications.\

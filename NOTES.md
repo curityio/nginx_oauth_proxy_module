@@ -2,12 +2,26 @@ FINALIZATION
 ------------
 1. Test the module with the real example SPA on an SPA deployments branch
 
-2. NGINX+ deployment to verify for different flavors of Linux.\
-   I would like to get the certificates and be able to follow the below guide.\
-   Also run NGINX+ certification tests.
+2. Complete NGINX deployment for all distributions
+
+3. Do NGINX+ certification testing if possible.\
    https://docs.nginx.com/nginx/admin-guide/installing-nginx/installing-nginx-plus \
 
-3. Do a final build and upload a release to the GitHub repo.
+4. Document static v dynamic linking below, and sizes of the dynamic module in each case
+-rwxr-xr-x  1 gary.archer  staff   193K 10 Feb 14:25 alpine.ngx_curity_http_oauth_proxy_module_1.21.3.so*
+-rwxr-xr-x  1 gary.archer  staff   175K 10 Feb 14:21 amzn.ngx_curity_http_oauth_proxy_module_1.21.3.so*
+-rwxr-xr-x  1 gary.archer  staff   230K 10 Feb 14:23 amzn2.ngx_curity_http_oauth_proxy_module_1.21.3.so*
+-rwxr-xr-x  1 gary.archer  staff   174K 10 Feb 14:16 centos.7.ngx_curity_http_oauth_proxy_module_1.21.3.so*
+-rwxr-xr-x  1 gary.archer  staff   251K 10 Feb 14:20 debian.buster.ngx_curity_http_oauth_proxy_module_1.21.3.so*
+-rwxr-xr-x  1 gary.archer  staff   227K 10 Feb 14:18 debian.stretch.ngx_curity_http_oauth_proxy_module_1.21.3.so*
+-rwxr-xr-x  1 gary.archer  staff   234K 10 Feb 14:13 ubuntu.18.04.ngx_curity_http_oauth_proxy_module_1.21.3.so*
+-rwxr-xr-x  1 gary.archer  staff   253K 10 Feb 14:15 ubuntu.20.04.ngx_curity_http_oauth_proxy_module_1.21.3.so*
+
+5. Test builds and deployment on 1.19.10 and 1.19.5
+   Record valgrind results for all permutations
+
+6. Catch up with Travis to discuss proposed release.
+   Do a final build for all 3 NGINX versions and upload a release to the GitHub repo.
 
 ISSUES
 ------

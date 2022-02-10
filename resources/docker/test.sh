@@ -311,3 +311,12 @@ fi
 echo '13. GET with malformed access token cookie was successfully rejected'
 JSON=$(tail -n 1 $RESPONSE_FILE)
 echo $JSON | jq
+
+#
+# Output valgrind results once finished
+#
+echo 'Retrieving valgrind memory results ...'
+DOCKER_CONTAINER_ID=$(docker container ls | grep "nginx_${DISTRO}" | awk '{print $1}')
+echo $DOCKER_CONTAINER_ID
+docker cp "$DOCKER_CONTAINER_ID:/valgrind-results.txt" .
+cat valgrind-results.txt

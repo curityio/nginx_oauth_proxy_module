@@ -15,6 +15,7 @@ RUN echo "deb [signed-by=/usr/share/keyrings/nginx-archive-keyring.gpg] \
 http://nginx.org/packages/mainline/ubuntu `lsb_release -cs` nginx" \
 | tee /etc/apt/sources.list.d/nginx.list
 
+# 'apt list -a nginx' shows versions available
 RUN apt update
 RUN apt install -y nginx=1.21.3-1~bionic valgrind
 
