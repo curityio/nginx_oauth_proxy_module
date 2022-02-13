@@ -35,6 +35,16 @@ case $DISTRO in
     MODULE_FOLDER='/usr/lib/nginx/modules'
     ;;
 
+  'amazon')
+    MODULE_FILE='amzn.ngx_curity_http_oauth_proxy_module_1.21.3.so'
+    MODULE_FOLDER='/etc/nginx/modules'
+    ;;
+
+  'amazon2')
+    MODULE_FILE='amzn2.ngx_curity_http_oauth_proxy_module_1.21.3.so'
+    MODULE_FOLDER='/etc/nginx/modules'
+    ;;
+
   'debian10')
     MODULE_FILE='debian.buster.ngx_curity_http_oauth_proxy_module_1.21.3.so'
     MODULE_FOLDER='/usr/lib/nginx/modules'
