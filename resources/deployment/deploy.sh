@@ -15,17 +15,26 @@ echo -n $ENCRYPTION_KEY > encryption.key
 DISTRO=$1
 case $DISTRO in
 
-  'alpine')
-    MODULE_PREFIX='alpine'
-    ;;
-
   'ubuntu18')
     MODULE_PREFIX='ubuntu.18.04'
+    MODULE_FOLDER='/usr/lib/nginx/modules'
     ;;
   
   'ubuntu20')
     MODULE_PREFIX='ubuntu.20.04'
+    MODULE_FOLDER='/usr/lib/nginx/modules'
     ;;
+
+  'centos7')
+    MODULE_PREFIX='centos.7'
+    MODULE_FOLDER='/etc/nginx/modules'
+    ;;
+
+  'alpine')
+    MODULE_PREFIX='alpine'
+    MODULE_FOLDER='/usr/lib/nginx/modules'
+    ;;
+  
 esac
 
 if [ "$MODULE_PREFIX" == '' ]; then
@@ -46,7 +55,7 @@ fi
 #
 # Supply a runtime 32 byte AES256 cookie encryption key
 #
-export ENCRYPTION_KEY=$(openssl rand 32 | xxd -p -c 64)
+ENCRYPTION_KEY=$(openssl rand 32 | xxd -p -c 64)
 echo -n $ENCRYPTION_KEY > encryption.key
 
 #
@@ -62,5 +71,6 @@ echo "$NGINX_CONF_DATA" > ./nginx.conf
 echo 'Deploying the NGINX and valgrind Docker image ...'
 export DISTRO
 export MODULE_PREFIX
+export MODULE_FOLDER
 export ENCRYPTION_KEY
 docker-compose up --force-recreate --remove-orphans
