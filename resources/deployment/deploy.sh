@@ -16,28 +16,38 @@ DISTRO=$1
 case $DISTRO in
 
   'ubuntu18')
-    MODULE_PREFIX='ubuntu.18.04'
+    MODULE_FILE='ubuntu.18.04.ngx_curity_http_oauth_proxy_module_1.21.3.so'
     MODULE_FOLDER='/usr/lib/nginx/modules'
     ;;
   
   'ubuntu20')
-    MODULE_PREFIX='ubuntu.20.04'
+    MODULE_FILE='ubuntu.20.04.ngx_curity_http_oauth_proxy_module_1.21.3.so'
     MODULE_FOLDER='/usr/lib/nginx/modules'
     ;;
 
   'centos7')
-    MODULE_PREFIX='centos.7'
+    MODULE_FILE='centos.7.ngx_curity_http_oauth_proxy_module_1.21.3.so'
     MODULE_FOLDER='/etc/nginx/modules'
     ;;
 
+  'debian9')
+    MODULE_FILE='debian.stretch.ngx_curity_http_oauth_proxy_module_1.19.5.so'
+    MODULE_FOLDER='/usr/lib/nginx/modules'
+    ;;
+
+  'debian10')
+    MODULE_FILE='debian.buster.ngx_curity_http_oauth_proxy_module_1.21.3.so'
+    MODULE_FOLDER='/usr/lib/nginx/modules'
+    ;;
+
   'alpine')
-    MODULE_PREFIX='alpine'
+    MODULE_FILE='alpine.ngx_curity_http_oauth_proxy_module_1.21.3.so'
     MODULE_FOLDER='/usr/lib/nginx/modules'
     ;;
   
 esac
 
-if [ "$MODULE_PREFIX" == '' ]; then
+if [ "$MODULE_FILE" == '' ]; then
   echo 'Please enter a supported Linux distribution as a command line argument'
   exit
 fi
@@ -70,7 +80,6 @@ echo "$NGINX_CONF_DATA" > ./nginx.conf
 #
 echo 'Deploying the NGINX and valgrind Docker image ...'
 export DISTRO
-export MODULE_PREFIX
+export MODULE_FILE
 export MODULE_FOLDER
-export ENCRYPTION_KEY
 docker-compose up --force-recreate --remove-orphans
