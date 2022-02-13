@@ -308,8 +308,9 @@ If you wish to customize this module by building from source, see the following 
 | Guide | Description |
 | ----- | ----------- |
 | [Development](wiki/1-development.md) | How to build and work with the module on a development computer |
-| [Testing](wiki/2-testing.md) | How to run NGINX tests to verify the module's success and failure behavior |
-| [Deployment](wiki/3-deployment.md) | How to build and deploy the module to a Docker container |
+| [Integration Tests](wiki/2-integration-tests.md) | How to run NGINX tests to verify the module's success and failure behavior |
+| [Builds](wiki/3-builds.md) | How to build the module for various flavors of Linux |
+| [Deployment](wiki/4-deployment.md) | How to deploy the module to a Docker container and run HTTP tests |
 
 ## Status
 
