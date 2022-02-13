@@ -2,8 +2,7 @@
 
 ## 1. Test Setup
 
-Add the path to `/usr/local/nginx/sbin` to the system PATH in your .zprofile file.\
-Then run the following Perl command to install support for NGINX testing:
+Run the following command to install the NGINX Perl based testing framework:
 
 ```bash
 cpan Test::Nginx
@@ -19,7 +18,7 @@ make test
 
 ## 3. Understand the Nginx Test Framework
 
-See the [OpenResty Testing Documents](https://openresty.gitbooks.io/programming-openresty/content/testing/preparing-tests.html) to understand syntax.\
+See the [OpenResty Testing Documents](https://openresty.gitbooks.io/programming-openresty/content/testing/preparing-tests.html) to understand syntax.
 
 ## 4. Understand Test Behavior
 

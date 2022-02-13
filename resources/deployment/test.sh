@@ -165,7 +165,7 @@ fi
 echo '4. GET request returned all correct CORS headers for a valid web origin'
 
 #
-# Verify that SPA clients can read error responses from the plugin, by sending no credential but the correct origin
+# Verify that SPA clients can read error responses from the module, by sending no credential but the correct origin
 #
 echo '5. Testing CORS headers for error responses to the SPA ...'
 HTTP_STATUS=$(curl -i -s -X POST "$API_URL" \

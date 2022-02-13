@@ -55,11 +55,14 @@ if [[ -z "$DYNAMIC_MODULE" ]]; then
 fi
 
 if [[ "$DYNAMIC_MODULE" =~ ^([yY][eE][sS]|[yY])+$ ]] || [[ -z "$DYNAMIC_MODULE" ]]; then
-  CONFIG_OPTS+=(--add-dynamic-module=$SRC_DIR --with-http_ssl_module)
+  CONFIG_OPTS+=(--add-dynamic-module=$SRC_DIR)
   DYNAMIC_MODULE=Y
 else
   CONFIG_OPTS+=(--add-module=$SRC_DIR)
 fi
+
+# For static linking with OpenSSL during builds
+CONFIG_OPTS+=( --with-http_ssl_module)
 
 BUILD_INFO=("NGINX_SRC_DIR=$NGINX_SRC_DIR" "NGINX_VERSION=$NGINX_VERSION" "NGINX_DEBUG=$NGINX_DEBUG" "DYNAMIC_MODULE=$DYNAMIC_MODULE")
 printf '%s\n' "${BUILD_INFO[@]}" >$BUILD_INFO_FILE

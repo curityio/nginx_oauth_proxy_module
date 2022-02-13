@@ -117,7 +117,7 @@ $data;
 --- error_log
 Invalid data length after decoding from base64
 
-=== TEST HTTP_GET_5: GET returns correct CORS response headers with plugin errors
+=== TEST HTTP_GET_5: GET returns correct CORS response headers with module errors
 #################################################################################
 # Verify that when a 401 is received the SPA can read details due to CORS headers
 #################################################################################

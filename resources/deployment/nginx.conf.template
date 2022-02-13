@@ -27,7 +27,7 @@ http {
  
         location /api {
             
-            # First run the plugin
+            # First run the module
             oauth_proxy on;
             oauth_proxy_cookie_name_prefix "example";
             oauth_proxy_encryption_key "ENCRYPTION_KEY";
