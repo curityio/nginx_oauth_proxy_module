@@ -68,5 +68,5 @@ t/servroot
 build
 response.txt
 encryption.key
-/resources/docker/nginx.conf
+/resources/deployment/nginx.conf
 valgrind*

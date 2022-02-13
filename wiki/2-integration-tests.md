@@ -1,4 +1,4 @@
-# OAuth Proxy Module - Testing
+# OAuth Proxy Module - Integration Tests
 
 ## 1. Test Setup
 
@@ -70,20 +70,3 @@ GET /t
 View the `t/servroot/conf/nginx.conf` file to see the deployed configuration for a test.\
 If required, add `ngx_log_error` statements to C code, then look at test logs at `t/servroot/logs/error.log`.\
 If you get cryptic permission errors or locked files, delete the `t/servroot` folder.
-
-## 6. Run NGINX Plus Certification Tests
-
-Before final release, our build system produces a dynamic module for multiple NGINX+ platforms, as described in [deployment](3-deployment.md). To certify that a build is compatible with NGINX+, each shared library needs to be tested with NGINX's certification test suite, then released to GitHub. For some background, refer to the [NGINX Plus Certified Modules Program documentation](https://www.nginx.com/partners/certified-module-program-documentation/#tech-doc-instructions-building). As described there:
-
-- [NGINX+ must be installed](https://docs.nginx.com/nginx/admin-guide/installing-nginx/installing-nginx-plus/) on each platform in the build.sh script.
-- The dynamic modules must be deployed to each supported platform. 
-- The [certification test suite](https://www.nginx.com/partners/certified-module-program-documentation/#tech-doc-instructions-self-cert) and [its dependencies](https://www.nginx.com/partners/certified-module-program-documentation/#appendix) must be installed.
-- With the NGINX+ service stopped, run the test suite, like this for example:
-
-```sh
-sudo -u nginx \
-    TEST_NGINX_BINARY=/usr/sbin/nginx \
-    TEST_NGINX_GLOBALS="load_module /tmp/modules/ngx_curity_http_oauth_proxy_module.so;" \
-    TEST_NGINX_GLOBALS_HTTP="phantom_token off;" \
-    prove -v . > ../nginx-plus-module-prove-test-verbose 2>&1
-```
