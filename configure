@@ -55,7 +55,7 @@ if [[ -z "$DYNAMIC_MODULE" ]]; then
 fi
 
 if [[ "$DYNAMIC_MODULE" =~ ^([yY][eE][sS]|[yY])+$ ]] || [[ -z "$DYNAMIC_MODULE" ]]; then
-  CONFIG_OPTS+=(--add-dynamic-module=$SRC_DIR)
+  CONFIG_OPTS+=(--add-dynamic-module=$SRC_DIR --with-http_ssl_module)
   DYNAMIC_MODULE=Y
 else
   CONFIG_OPTS+=(--add-module=$SRC_DIR)

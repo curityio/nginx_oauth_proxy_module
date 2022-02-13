@@ -35,7 +35,7 @@ Standard system locations will then be updated:
 Then run the base configure script as follows, to download NGINX source and use these options on macOS:
 
 ```bash
-CONFIG_OPTS='--with-http_ssl_module --with-openssl=../openssl-OpenSSL_1_1_1m' ./configure
+CONFIG_OPTS='--with-openssl=../openssl-OpenSSL_1_1_1m' ./configure
 ```
 
 Select these options to enable Perl tests to run and to enable debugging of the C code in CLion:
@@ -53,27 +53,7 @@ Whenever the code in the module changes, run this command to rebuild NGINX:
 make
 ```
 
-## 5. Compiler and Linker Settings
-
-The above  `./configure` script calls the main NGINX configure script and provides build options.\
-This can include custom parameters from [this nginx page](http://nginx.org/en/docs/configure.html) including these:
-
-| Option | Description |
-| ------ | ----------- |
-| --with-cc-opt | Settings to add to the CFLAGS variable used by the linker |
-| --with-ld-opt | Settings to add to LDFLAGS variable used by the linker |
-
-Within the NGINX project, `./auto/make` is then called, to create the main `./objs/Makefile`.\
-When `--with-http_ssl_module` is used, the makefile indicates static linking:
-
-```text
--lpcre ../openssl-OpenSSL_1_1_1m/.openssl/lib/libssl.a ../openssl-OpenSSL_1_1_1m/.openssl/lib/libcrypto.a -lz
-```
-
-However, lower level [CFLAGS settings](https://wiki.gentoo.org/wiki/CFLAGS#-O) are dictated by the nginx system.\
-Settings such as `-std=c99` or `-O2` do not seem to be honored.
-
-## 6. Make Install
+## 5. Make Install
 
 Pre-creating the nginx folder for development is recommended.\
 This enables nginx to be run as your own user account, which works better later when debugging:
@@ -90,7 +70,7 @@ It deploys an entire NGINX system under the `/usr/local/nginx` folder:
 make install
 ```
 
-## 7. Run NGINX Locally
+## 6. Run NGINX Locally
 
 Deploy the development configuration in the `nginx.conf` file and start NGINX locally:
 
@@ -101,7 +81,7 @@ cp ./resources/localhost/nginx.conf /usr/local/nginx/conf/nginx.conf
 
 This nginx.conf file is configured to disable the daemon, so that logs are easily viewable.
 
-## 8. Debug Code
+## 7. Debug Code
 
 To perform printf debugging you can add `ngx_log_error` statements to the C code and then look at NGINX output.\
 Once nginx is running, select  `Run / Attach to Process`, and choose the `nginx worker process`.\
@@ -109,7 +89,7 @@ Then set breakpoints, after which you can step through code to check variable st
 
 ![Debugger](debugging.png)
 
-## 9. Act as an SPA Client
+## 8. Act as an SPA Client
 
 You can run curl requests against the nginx system in the same manner as the SPA:
 
