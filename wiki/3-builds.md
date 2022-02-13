@@ -58,7 +58,7 @@ make
 
 ## 5. Troubleshoot Library Dependencies
 
-In the event of a `library hell` issue we could remote to a running container.\
+In the event of a `library hell` issue we can later remote to a deployed container.\
 Then use the `ldd` tool to list dynamic dependencies:
 
 ```bash

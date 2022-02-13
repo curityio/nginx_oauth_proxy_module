@@ -52,13 +52,3 @@ Healthy output should indicate no memory leaks for the deployed system.
 --8-- REDIR: 0x611de40 (libc.so.6:strncmp) redirected to 0x4a2c6e0 (_vgnU_ifunc_wrapper)
 --8-- REDIR: 0x611d940 (libc.so.6:strcmp) redirected to 0x4a2c6e0 (_vgnU_ifunc_wrapper)
 ```
-
-## 4. Verify Library Dependencies
-
-
-
-ldd ngx_curity_http_oauth_proxy_module.so 
-	
-```text
-/lib/ld-musl-x86_64.so.1 (0x7fca986e2000) libc.musl-x86_64.so.1 => /lib/ld-musl-x86_64.so.1 (0x7fca986e2000)
-```
