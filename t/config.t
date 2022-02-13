@@ -13,7 +13,7 @@ __DATA__
 
 === TEST CONFIG_1: NGINX starts OK when the module is deactivated
 ################################################################################
-# Routing to the target does not require config settings or run the plugin logic
+# Routing to the target does not require config settings or run the module logic
 ################################################################################
 
 --- config
@@ -55,7 +55,7 @@ The cookie_name_prefix configuration directive was not provided
 
 === TEST CONFIG_3: NGINX quits when no encryption key is configured for a location
 ##################################################################
-# The plugin correctly validates required parameters for each path
+# The module correctly validates required parameters for each path
 ##################################################################
 
 --- config
@@ -121,7 +121,7 @@ The encryption_key configuration directive must contain 64 hex characters
 
 === TEST CONFIG_6: NGINX quits when no trusted web origins are configured
 ################################################################################
-# The plugin is only used for SPAs so it makes sense to always have at least one
+# The module is only used for SPAs so it makes sense to always have at least one
 ################################################################################
 
 --- config
@@ -238,7 +238,7 @@ The cookie_name_prefix configuration directive was not provided
 
 === TEST CONFIG_11: NGINX starts correctly with inherited settings for a child path
 #########################################################################
-# Verifies that the plugin runs for child paths when enabled for a parent
+# Verifies that the module runs for child paths when enabled for a parent
 #########################################################################
 
 --- config

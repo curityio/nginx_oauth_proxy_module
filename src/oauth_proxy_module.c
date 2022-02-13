@@ -153,7 +153,7 @@ oauth_proxy_configuration_t* oauth_proxy_module_get_location_configuration(ngx_h
 }
 
 /*
- * Called when NGINX starts up and finds a location that uses the plugin
+ * Called when NGINX starts up and finds a location that uses the plumodulegin
  */
 static void *create_location_configuration(ngx_conf_t *main_config)
 {
@@ -172,7 +172,7 @@ static void *create_location_configuration(ngx_conf_t *main_config)
 }
 
 /*
- * Called when NGINX starts up and finds a parent location that uses the plugin
+ * Called when NGINX starts up and finds a parent location that uses the module
  */
 static char *merge_location_configuration(ngx_conf_t *main_config, void *parent, void *child)
 {

@@ -63,8 +63,8 @@ sudo mkdir /usr/local/nginx
 sudo chown yourusername /usr/local/nginx
 ```
 
-Whenever you want to update the local system after building code, this is run.\
-It deploys an entire NGINX system under the `/usr/local/nginx` folder:
+Whenever you want to update the local system after building code, do a `make install`.\
+This deploys an entire NGINX system under the `/usr/local/nginx` folder:
 
 ```bash
 make install
@@ -72,7 +72,7 @@ make install
 
 ## 6. Run NGINX Locally
 
-Deploy the development configuration in the `nginx.conf` file and start NGINX locally:
+Finally deploy the  `nginx.conf` development configuration and start NGINX locally:
 
 ```bash
 cp ./resources/localhost/nginx.conf /usr/local/nginx/conf/nginx.conf
@@ -95,15 +95,18 @@ You can run curl requests against the nginx system in the same manner as the SPA
 
 ```bash
 AT_COOKIE='AcYBf995tTBVsLtQLvOuLUZXHm2c-XqP8t7SKmhBiQtzy5CAw4h_RF6rXyg6kHrvhb8x4WaLQC6h3mw6a3O3Q9A'
-curl -X GET http://localhost:8080/api \
+curl -i -X GET http://localhost:8080/api \
 -H "origin: https://www.example.com" \
 -H "cookie: example-at=$AT_COOKIE"
 ```
 
 The access token received by the target API is then echoed back to the caller.\
-The `curl -i` option can be used to view CORS headers that are returned to single page apps:
+The response also includes CORS headers returned by the module:
 
-```json
+```text
+access-control-allow-origin: https://www.example.com
+access-control-allow-credentials: true
+
 {
     "message": "API was called successfully with Bearer 42665300-efe8-419d-be52-07b53e208f46"
 }

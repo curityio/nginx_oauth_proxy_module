@@ -60,7 +60,7 @@ The key is initially generated with a tool such as `openssl`, as explained in Cu
 >
 > **Context**: `location`
 
-A whitelist of at least one web origin from which the plugin will accept requests.\
+A whitelist of at least one web origin from which the module will accept requests.\
 Multiple origins could be used in special cases where cookies are shared across subdomains.
 
 #### oauth_proxy_cors_enabled
@@ -107,7 +107,7 @@ A '*' wildcard value should not be configured here, since it will not work with 
 >
 > **Context**: `location`
 
-When CORS is enabled, the plugin returns these values in the [access-control-allow-headers](https://developer.mozilla.org/en-US/docs/Web/HTTP/Headers/Access-Control-Allow-Headers) response header.\
+When CORS is enabled, the module returns these values in the [access-control-allow-headers](https://developer.mozilla.org/en-US/docs/Web/HTTP/Headers/Access-Control-Allow-Headers) response header.\
 If no values are configured then at runtime any headers the SPA sends are allowed.\
 This is managed by returning the contents of the [access-control-request-headers](https://developer.mozilla.org/en-US/docs/Web/HTTP/Headers/Access-Control-Request-Headers) field.\
 If setting values explicitly, ensure that the token handler CSRF request header is included, eg `x-example-csrf`.\
@@ -121,7 +121,7 @@ A '*' wildcard value should not be configured here, since it will not work with 
 >
 > **Context**: `location`
 
-When CORS is enabled, the plugin returns these values in the [access-contol-expose-headers](https://developer.mozilla.org/en-US/docs/Web/HTTP/Headers/Access-Control-Expose-Headers) response header.\
+When CORS is enabled, the module returns these values in the [access-contol-expose-headers](https://developer.mozilla.org/en-US/docs/Web/HTTP/Headers/Access-Control-Expose-Headers) response header.\
 A '*' wildcard value should not be configured here, since it will not work with credentialed requests.
 
 #### oauth_proxy_cors_max_age
@@ -132,7 +132,7 @@ A '*' wildcard value should not be configured here, since it will not work with 
 >
 > **Context**: `location`
 
-When CORS is enabled, the plugin returns this value in the [access-contol-max-age](https://developer.mozilla.org/en-US/docs/Web/HTTP/Headers/Access-Control-Max-Age) response header.\
+When CORS is enabled, the module returns this value in the [access-contol-max-age](https://developer.mozilla.org/en-US/docs/Web/HTTP/Headers/Access-Control-Max-Age) response header.\
 When a value is configured, this prevents excessive pre-flight OPTIONS requests, to improve efficiency.
 
 ## Example Configurations
@@ -188,7 +188,7 @@ location /api {
 
 ## Cookie Details
 
-The plugin expects to receive up to two cookies, which use a custom prefix with fixed suffixes:
+The module expects to receive up to two cookies, which use a custom prefix with fixed suffixes:
 
 | Example Cookie Name | Fixed Suffix | Contains |
 | ------------------- | ------------ | -------- |
@@ -210,7 +210,7 @@ The module handles cookies according to [OWASP Cross Site Request Forgery Best P
 
 #### Options Requests
 
-The plugin first handles pre-flight OPTIONS requests and writes CORS response headers:
+The module first handles pre-flight OPTIONS requests and writes CORS response headers:
 
 ```text
 access-control-allow-origin: https://www.example.com
@@ -223,7 +223,7 @@ vary: origin,access-control-request-headers
 
 #### Web Origin Checks
 
-On the main request the plugin first reads the `Origin HTTP Header`, sent by all modern browsers.\
+On the main request the module first reads the `Origin HTTP Header`, sent by all modern browsers.\
 If this does not contain a trusted value the request is immediately rejected with a 401 response.
 
 #### Cross Site Request Forgery Checks

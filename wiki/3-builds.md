@@ -27,26 +27,24 @@ This can accept custom parameters from [this nginx page](http://nginx.org/en/doc
 | --with-ld-opt | Settings to add to LDFLAGS variable used by the linker |
 
 The NGINX configure script uses `automake` to produce the build file at `./nginx-1.21.3/objs/Makefile`.\
-Lower level [CFLAGS settings](https://wiki.gentoo.org/wiki/CFLAGS#-O) seem to be dictated by the nginx system.
-
-Settings such as `-std=c99` or `-O2` do not seem to be honored.\
+Lower level [CFLAGS settings](https://wiki.gentoo.org/wiki/CFLAGS#-O) such as `-std=c99` or `-O2` are dictated by the nginx system.\
 We therefore use NGINX recommended build defaults to build the NGINX module.
 
 ## 3. OpenSSL Dependency
 
 The Linux build finds OpenSSL headers by installing `libssl-dev` for the Linux platform.\
 We also statically link with OpenSSL to ensure no unexpected runtime issues.\
-The NGINX makefile statically links when the `--with-http_ssl_module` flag is set:
+In order for the NGINX autoconf to statically link, we must supply the `--with-http_ssl_module` flag:
 
 ```text
 -lpcre ../openssl-OpenSSL_1_1_1m/.openssl/lib/libssl.a ../openssl-OpenSSL_1_1_1m/.openssl/lib/libcrypto.a -lz
 ```
 
-This is only a build time requirement, and the actual NGINX system works without  `--with-http_ssl_module`.
+This is only needed at build time, and the actual NGINX system works with or without the HTTP SSL module.
 
 ## 4. Troubleshoot Linux Build Failures
 
-A multi-stage Docker build is used, to output built .so files to an `nginx-module-builder` image.\
+A multi-stage Docker build is used, to output built `.so` files to an `nginx-module-builder` image.\
 To troubleshoot failures, remote to the most recent Docker image in `docker image list`.\
 Build commands can then be run manually if required, to understand the failure cause:
 
