@@ -52,22 +52,28 @@ WORKDIR /tmp
 RUN ./configure && make
 
 ######
-#FROM centos:8 as centos8-builder
-#
-#RUN yum install -y \
-#     gcc pcre-devel zlib-devel make openssl-devel
-#
-#COPY configure /tmp
-#COPY config /tmp
-#COPY Makefile /tmp
-#COPY src/* /tmp/src/
-#ARG NGINX_VERSION
-#ENV NGINX_VERSION=$NGINX_VERSION
-#ADD nginx-$NGINX_VERSION.tar.gz /tmp/
-#
-#WORKDIR /tmp
-#RUN ./configure && make
-#
+FROM centos:8 as centos8-builder
+
+# https://techglimpse.com/failed-metadata-repo-appstream-centos-8
+WORKDIR /etc/yum.repos.d
+RUN sed -i 's/mirrorlist/#mirrorlist/g' /etc/yum.repos.d/CentOS-*
+RUN sed -i 's|#baseurl=http://mirror.centos.org|baseurl=http://vault.centos.org|g' /etc/yum.repos.d/CentOS-*
+RUN yum update -y
+
+RUN yum install -y \
+     gcc pcre-devel zlib-devel make openssl-devel
+
+COPY configure /tmp
+COPY config /tmp
+COPY Makefile /tmp
+COPY src/* /tmp/src/
+ARG NGINX_VERSION
+ENV NGINX_VERSION=$NGINX_VERSION
+ADD nginx-$NGINX_VERSION.tar.gz /tmp/
+
+WORKDIR /tmp
+RUN ./configure && make
+
 ######
 FROM debian:stretch as debian9-builder
 
@@ -166,7 +172,7 @@ ENV NGINX_VERSION=$NGINX_VERSION
 COPY --from=ubuntu18-builder /tmp/nginx-$NGINX_VERSION/objs/ngx_curity_http_oauth_proxy_module.so /build/ubuntu.18.04.ngx_curity_http_oauth_proxy_module_$NGINX_VERSION.so
 COPY --from=ubuntu20-builder /tmp/nginx-$NGINX_VERSION/objs/ngx_curity_http_oauth_proxy_module.so /build/ubuntu.20.04.ngx_curity_http_oauth_proxy_module_$NGINX_VERSION.so
 COPY --from=centos7-builder /tmp/nginx-$NGINX_VERSION/objs/ngx_curity_http_oauth_proxy_module.so /build/centos.7.ngx_curity_http_oauth_proxy_module_$NGINX_VERSION.so
-#COPY --from=centos8-builder /tmp/nginx-$NGINX_VERSION/objs/ngx_curity_http_oauth_proxy_module.so /build/centos.8.ngx_curity_http_oauth_proxy_module_$NGINX_VERSION.so
+COPY --from=centos8-builder /tmp/nginx-$NGINX_VERSION/objs/ngx_curity_http_oauth_proxy_module.so /build/centos.8.ngx_curity_http_oauth_proxy_module_$NGINX_VERSION.so
 COPY --from=debian9-builder /tmp/nginx-$NGINX_VERSION/objs/ngx_curity_http_oauth_proxy_module.so /build/debian.stretch.ngx_curity_http_oauth_proxy_module_$NGINX_VERSION.so
 COPY --from=debian10-builder /tmp/nginx-$NGINX_VERSION/objs/ngx_curity_http_oauth_proxy_module.so /build/debian.buster.ngx_curity_http_oauth_proxy_module_$NGINX_VERSION.so
 COPY --from=amzn-builder /tmp/nginx-$NGINX_VERSION/objs/ngx_curity_http_oauth_proxy_module.so /build/amzn.ngx_curity_http_oauth_proxy_module_$NGINX_VERSION.so
