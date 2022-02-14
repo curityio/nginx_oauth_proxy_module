@@ -11,12 +11,7 @@
 
 FROM amazonlinux:1
 
-# I would like to exclude openssl libraries but doing so results in an 'undefined symbol: EVP_DecryptFinal_ex' error:
 RUN yum install -y gcc pcre-devel zlib-devel make wget valgrind
-
-# TODO: delete
-# openssl-devel
-# openssl makes the libssl.so and libcrypto.so libs available at /usr/lib64
 
 WORKDIR /tmp/nginx
 RUN wget http://nginx.org/download/nginx-1.21.3.tar.gz && tar xzvf nginx-1.21.3.tar.gz
