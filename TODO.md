@@ -28,14 +28,3 @@ NOTES
    https://blog.centos.org/2022/01/centos-community-newsletter-january-2022/
    https://techglimpse.com/failed-metadata-repo-appstream-centos-8/
    https://www.linuxcapable.com/how-to-install-latest-nginx-mainline-on-centos-8-stream/
-
-5. On Amazon Linux 1 with nginx open source I get a module load problem after building from source.\
-   - module "/usr/local/nginx/modules/ngx_curity_http_oauth_proxy_module.so" is not binary compatible
-   - in /usr/local/nginx/conf/nginx.conf
-
-   Removing the `--with-compat` flag fixes the problem:\
-   https://www.nginx.com/blog/compiling-dynamic-modules-nginx-plus/
-
-   But docs says this setting should be used, so tghe assumption is this will be OK for NGINX Plus.\
-   When not set, dynamic modules must be built with the full compile time options that were used for the nginx binary.\
-   https://serverfault.com/questions/988250/nginx-module-not-binary-compatible-after-compilation-on-centos-7

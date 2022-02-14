@@ -16,7 +16,11 @@ RUN yum install -y gcc pcre-devel zlib-devel make wget valgrind
 WORKDIR /tmp/nginx
 RUN wget http://nginx.org/download/nginx-1.21.3.tar.gz && tar xzvf nginx-1.21.3.tar.gz
 WORKDIR /tmp/nginx/nginx-1.21.3
-RUN ./configure && make && make install
+
+# If customers ever build nginx from source they must use the --with-compat flag.
+# When not set, dynamic modules must be built with the full compile time options that were used for the nginx binary.
+# This results in a 'module is not binary compatible' error.
+RUN ./configure --with-compat && make && make install
 
 WORKDIR /
 RUN rm -rf /tmp/nginx
