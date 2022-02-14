@@ -71,7 +71,8 @@ Then use the `ldd` tool to list dynamic dependencies:
 ldd /usr/lib/nginx/modules/ngx_curity_http_oauth_proxy_module.so 
 ```
 
-This should show only system libraries, with no dependencies on customer versions of OpenSSL:
+This should show only system libraries, with no dependencies on customer versions of OpenSSL.\
+The Linux deployment verifies that there are no library issues for any distro.
 
 ```text
 linux-vdso.so.1 (0x00007ffddb5af000)

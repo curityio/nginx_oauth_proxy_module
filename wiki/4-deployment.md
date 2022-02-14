@@ -9,6 +9,9 @@ The following deployment script is used, which uses a custom Dockerfile to build
 ./resources/deployment/deploy.sh ubuntu18
 ```
 
+A series of custom Dockerfiles are used, in the [Deployment Resources](https://github.com/curityio/nginx_oauth_proxy_module/tree/main/resources/deployment).\
+These follow the instructions from [NGINX Linux Packages](http://nginx.org/en/linux_packages.html) document.
+
 ## 2. HTTP Tests
 
 Next we can run the following script to run some HTTP requests to call the module:
