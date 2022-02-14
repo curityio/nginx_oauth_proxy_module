@@ -18,41 +18,57 @@ case $DISTRO in
   'ubuntu18')
     MODULE_FILE='ubuntu.18.04.ngx_curity_http_oauth_proxy_module_1.21.3.so'
     MODULE_FOLDER='/usr/lib/nginx/modules'
+    NGINX_PATH='/usr/sbin/nginx'
+    CONF_PATH='/etc/nginx/nginx.conf'
     ;;
   
   'ubuntu20')
     MODULE_FILE='ubuntu.20.04.ngx_curity_http_oauth_proxy_module_1.21.3.so'
     MODULE_FOLDER='/usr/lib/nginx/modules'
+    NGINX_PATH='/usr/sbin/nginx'
+    CONF_PATH='/etc/nginx/nginx.conf'
     ;;
 
   'centos7')
     MODULE_FILE='centos.7.ngx_curity_http_oauth_proxy_module_1.21.3.so'
     MODULE_FOLDER='/etc/nginx/modules'
+    NGINX_PATH='/usr/sbin/nginx'
+    CONF_PATH='/etc/nginx/nginx.conf'
     ;;
 
   'debian9')
     MODULE_FILE='debian.stretch.ngx_curity_http_oauth_proxy_module_1.19.5.so'
     MODULE_FOLDER='/usr/lib/nginx/modules'
+    NGINX_PATH='/usr/sbin/nginx'
+    CONF_PATH='/etc/nginx/nginx.conf'
     ;;
 
   'amazon')
     MODULE_FILE='amzn.ngx_curity_http_oauth_proxy_module_1.21.3.so'
-    MODULE_FOLDER='/etc/nginx/modules'
+    MODULE_FOLDER='/usr/local/nginx/modules'
+    NGINX_PATH='/usr/local/nginx/sbin/nginx'
+    CONF_PATH='/usr/local/nginx/conf/nginx.conf'
     ;;
 
   'amazon2')
     MODULE_FILE='amzn2.ngx_curity_http_oauth_proxy_module_1.21.3.so'
     MODULE_FOLDER='/etc/nginx/modules'
+    NGINX_PATH='/usr/sbin/nginx'
+    CONF_PATH='/etc/nginx/nginx.conf'
     ;;
 
   'debian10')
     MODULE_FILE='debian.buster.ngx_curity_http_oauth_proxy_module_1.21.3.so'
     MODULE_FOLDER='/usr/lib/nginx/modules'
+    NGINX_PATH='/usr/sbin/nginx'
+    CONF_PATH='/etc/nginx/nginx.conf'
     ;;
 
   'alpine')
     MODULE_FILE='alpine.ngx_curity_http_oauth_proxy_module_1.21.3.so'
     MODULE_FOLDER='/usr/lib/nginx/modules'
+    NGINX_PATH='/usr/sbin/nginx'
+    CONF_PATH='/etc/nginx/nginx.conf'
     ;;
   
 esac
@@ -92,4 +108,6 @@ echo 'Deploying the NGINX and valgrind Docker image ...'
 export DISTRO
 export MODULE_FILE
 export MODULE_FOLDER
+export NGINX_PATH
+export CONF_PATH
 docker-compose up --force-recreate --remove-orphans
