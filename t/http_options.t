@@ -204,7 +204,7 @@ access-control-allow-methods: OPTIONS,HEAD,GET,POST,PUT,PATCH,DELETE
 access-control-allow-headers: x-example-csrf,other
 access-control-expose-headers:
 access-control-max-age: 86400
-vary: origin,access-control-request-headers
+vary: origin
 
 === TEST HTTP_OPTIONS_7: OPTIONS with custom expose headers returns expected headers
 ######################################################################

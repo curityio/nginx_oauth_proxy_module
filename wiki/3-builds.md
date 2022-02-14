@@ -2,13 +2,15 @@
 
 ## 1. Linux Builds
 
-Run the following script to build the OAuth Proxy as a dynamic module for multiple flavors of Linux:
+Run these commands to build the OAuth Proxy as a dynamic module for multiple flavors of Linux:
 
 ```bash
-./build.sh
+NGINX_VERSION=1.21.3  ./build.sh
+NGINX_VERSION=1.19.10 ./build.sh
+NGINX_VERSION=1.19.5  ./build.sh
 ```
 
-A shared library with a `.so` extension is produced for each Linux distro, in your local `./build` folder:
+Shared libraries with a `.so` extension are produced for each Linux distro, in your local `./build` folder:
 
 ```text
 alpine.ngx_curity_http_oauth_proxy_module_1.21.3.so
@@ -27,20 +29,26 @@ This can accept custom parameters from [this nginx page](http://nginx.org/en/doc
 | --with-ld-opt | Settings to add to LDFLAGS variable used by the linker |
 
 The NGINX configure script uses `automake` to produce the build file at `./nginx-1.21.3/objs/Makefile`.\
-Lower level [CFLAGS settings](https://wiki.gentoo.org/wiki/CFLAGS#-O) such as `-std=c99` or `-O2` are dictated by the nginx system.\
-We therefore use NGINX recommended build defaults to build the NGINX module.
+Lower level [CFLAGS settings](https://wiki.gentoo.org/wiki/CFLAGS#-O) such as `-std=c99` or `-O2` are dictated by the nginx system.
 
-## 3. OpenSSL Dependency
+## 3. OpenSSL Static Linking
 
-The Linux build finds OpenSSL headers by installing `libssl-dev` for the Linux platform.\
-We also statically link with OpenSSL to ensure no unexpected runtime issues.\
-In order for the NGINX autoconf to statically link, we must supply the `--with-http_ssl_module` flag:
+The Linux build finds OpenSSL headers by installing `libssl-dev`, then statically links to OpenSSL libraries.\
+Static linking is done by specifying the `-lssl -lcrypto` options in the `./configure` script.\
+On Linux the linked libraries are `libssl.so`, `libcrypto.so`, and on macOS they have a `.a` extension instead.
 
 ```text
--lpcre ../openssl-OpenSSL_1_1_1m/.openssl/lib/libssl.a ../openssl-OpenSSL_1_1_1m/.openssl/lib/libcrypto.a -lz
+$(LINK) -o objs/ngx_curity_http_oauth_proxy_module.so \
+	objs/addon/src/oauth_proxy_module.o \
+	objs/addon/src/oauth_proxy_configuration.o \
+	objs/addon/src/oauth_proxy_handler.o \
+	objs/addon/src/oauth_proxy_decryption.o \
+	objs/addon/src/oauth_proxy_encoding.o \
+	objs/addon/src/oauth_proxy_utils.o \
+	objs/ngx_curity_http_oauth_proxy_module_modules.o \
+	-lssl -lcrypto \
+	-shared
 ```
-
-This is only needed at build time, and the actual NGINX system works with or without the HTTP SSL module.
 
 ## 4. Troubleshoot Linux Build Failures
 

@@ -15,20 +15,65 @@ echo -n $ENCRYPTION_KEY > encryption.key
 DISTRO=$1
 case $DISTRO in
 
-  'alpine')
-    MODULE_PREFIX='alpine'
-    ;;
-
   'ubuntu18')
-    MODULE_PREFIX='ubuntu.18.04'
+    MODULE_FILE='ubuntu.18.04.ngx_curity_http_oauth_proxy_module_1.21.3.so'
+    MODULE_FOLDER='/usr/lib/nginx/modules'
+    NGINX_PATH='/usr/sbin/nginx'
+    CONF_PATH='/etc/nginx/nginx.conf'
     ;;
   
   'ubuntu20')
-    MODULE_PREFIX='ubuntu.20.04'
+    MODULE_FILE='ubuntu.20.04.ngx_curity_http_oauth_proxy_module_1.21.3.so'
+    MODULE_FOLDER='/usr/lib/nginx/modules'
+    NGINX_PATH='/usr/sbin/nginx'
+    CONF_PATH='/etc/nginx/nginx.conf'
     ;;
+
+  'centos7')
+    MODULE_FILE='centos.7.ngx_curity_http_oauth_proxy_module_1.21.3.so'
+    MODULE_FOLDER='/etc/nginx/modules'
+    NGINX_PATH='/usr/sbin/nginx'
+    CONF_PATH='/etc/nginx/nginx.conf'
+    ;;
+
+  'debian9')
+    MODULE_FILE='debian.stretch.ngx_curity_http_oauth_proxy_module_1.19.5.so'
+    MODULE_FOLDER='/usr/lib/nginx/modules'
+    NGINX_PATH='/usr/sbin/nginx'
+    CONF_PATH='/etc/nginx/nginx.conf'
+    ;;
+
+  'amazon')
+    MODULE_FILE='amzn.ngx_curity_http_oauth_proxy_module_1.21.3.so'
+    MODULE_FOLDER='/usr/local/nginx/modules'
+    NGINX_PATH='/usr/local/nginx/sbin/nginx'
+    CONF_PATH='/usr/local/nginx/conf/nginx.conf'
+    ;;
+
+  'amazon2')
+    MODULE_FILE='amzn2.ngx_curity_http_oauth_proxy_module_1.21.3.so'
+    MODULE_FOLDER='/etc/nginx/modules'
+    NGINX_PATH='/usr/sbin/nginx'
+    CONF_PATH='/etc/nginx/nginx.conf'
+    ;;
+
+  'debian10')
+    MODULE_FILE='debian.buster.ngx_curity_http_oauth_proxy_module_1.21.3.so'
+    MODULE_FOLDER='/usr/lib/nginx/modules'
+    NGINX_PATH='/usr/sbin/nginx'
+    CONF_PATH='/etc/nginx/nginx.conf'
+    ;;
+
+  'alpine')
+    MODULE_FILE='alpine.ngx_curity_http_oauth_proxy_module_1.21.3.so'
+    MODULE_FOLDER='/usr/lib/nginx/modules'
+    NGINX_PATH='/usr/sbin/nginx'
+    CONF_PATH='/etc/nginx/nginx.conf'
+    ;;
+  
 esac
 
-if [ "$MODULE_PREFIX" == '' ]; then
+if [ "$MODULE_FILE" == '' ]; then
   echo 'Please enter a supported Linux distribution as a command line argument'
   exit
 fi
@@ -46,7 +91,7 @@ fi
 #
 # Supply a runtime 32 byte AES256 cookie encryption key
 #
-export ENCRYPTION_KEY=$(openssl rand 32 | xxd -p -c 64)
+ENCRYPTION_KEY=$(openssl rand 32 | xxd -p -c 64)
 echo -n $ENCRYPTION_KEY > encryption.key
 
 #
@@ -61,6 +106,8 @@ echo "$NGINX_CONF_DATA" > ./nginx.conf
 #
 echo 'Deploying the NGINX and valgrind Docker image ...'
 export DISTRO
-export MODULE_PREFIX
-export ENCRYPTION_KEY
+export MODULE_FILE
+export MODULE_FOLDER
+export NGINX_PATH
+export CONF_PATH
 docker-compose up --force-recreate --remove-orphans

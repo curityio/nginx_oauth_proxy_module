@@ -370,6 +370,7 @@ static ngx_int_t add_cors_response_headers(ngx_http_request_t *request, oauth_pr
                 if (allow_headers->len == 0)
                 {
                     allow_headers = oauth_proxy_utils_get_header_in(request, (u_char *)literal_request_headers, ngx_strlen(literal_request_headers));
+                    ngx_str_set(&vary_str, "origin,access-control-request-headers");
                 }
 
                 if (allow_headers != NULL)
@@ -389,8 +390,6 @@ static ngx_int_t add_cors_response_headers(ngx_http_request_t *request, oauth_pr
                         return NGX_HTTP_INTERNAL_SERVER_ERROR;
                     }
                 }
-
-                ngx_str_set(&vary_str, "origin,access-control-request-headers");
             }
 
             /* These headers are needed in both pre-flight requests and the main request */

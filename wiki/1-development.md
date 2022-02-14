@@ -13,7 +13,7 @@ When developing we recommend a more specialist tool such as CLion 2020.2 or newe
 ## 2. OpenSSL Setup
 
 On Docker images we build the code as a dynamic module using libssl-dev.\
-This does not work on macOS so instead build OpenSSL from source.\
+This package is not available for macOS so instead we build OpenSSL from source.\
 Development IDEs can then find OpenSSL headers in the correct system locations: 
 
 ```bash
