@@ -2,7 +2,7 @@
 # For Amazon Linux 1 the open source install is not supported:
 # http://nginx.org/en/linux_packages.html#Amazon-Linux
 #
-# I think Amazon 1 yum installs can only work on NGINX Plus, via this repo:
+# Amazon 1 yum installs require NGINX Plus, via this repo:
 # https://cs.nginx.com/static/files/nginx-plus-amazon.repo
 #
 # Therefore we build a default NGINX from source as in this post:
