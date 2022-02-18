@@ -188,7 +188,7 @@ location /api {
 
 ## Cookie Details
 
-The module expects to receives two cookies, which use a custom prefix with fixed suffixes.
+The module expects to receives two cookies, which use a custom prefix with fixed suffixes.\
 Cookies are encrypted using AES256-GCM, and received in a base64 URL encoded format.
 
 | Example Cookie Name | Fixed Suffix | Contains |
