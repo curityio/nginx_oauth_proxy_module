@@ -13,14 +13,16 @@ FROM amazonlinux:1
 
 RUN yum install -y gcc pcre-devel zlib-devel make wget valgrind
 
-WORKDIR /tmp/nginx
-RUN wget http://nginx.org/download/nginx-1.21.3.tar.gz && tar xzvf nginx-1.21.3.tar.gz
-WORKDIR /tmp/nginx/nginx-1.21.3
+# To build NGINX from source and use OpenSSL, we also need to point it to OpenSSL source
+WORKDIR /tmp
+RUN wget https://github.com/openssl/openssl/archive/refs/tags/OpenSSL_1_1_1m.tar.gz && tar xzvf OpenSSL_1_1_1m.tar.gz
+RUN wget http://nginx.org/download/nginx-1.21.3.tar.gz                              && tar xzvf nginx-1.21.3.tar.gz
+WORKDIR /tmp/nginx-1.21.3
 
-# If customers ever build nginx from source they must use the --with-compat flag.
-# When not set, dynamic modules must be built with the full compile time options that were used for the nginx binary.
-# This results in a 'module is not binary compatible' error.
-RUN ./configure --with-compat && make && make install
+# with-compat ensures that the dynamic module does not need to use the same compile time options as NGINX.
+RUN ./configure --with-compat --with-http_ssl_module --with-openssl=../openssl-OpenSSL_1_1_1m && make && make install
 
 WORKDIR /
-RUN rm -rf /tmp/nginx
+RUN rm -rf /tmp/openssl*
+RUN rm -rf /tmp/OpenSSL*
+RUN rm -rf /tmp/nginx*

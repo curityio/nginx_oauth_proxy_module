@@ -50,6 +50,13 @@ case $DISTRO in
     CONF_PATH='/etc/nginx/nginx.conf'
     ;;
 
+  'debian10')
+    MODULE_FILE='debian.buster.ngx_curity_http_oauth_proxy_module_1.21.3.so'
+    MODULE_FOLDER='/usr/lib/nginx/modules'
+    NGINX_PATH='/usr/sbin/nginx'
+    CONF_PATH='/etc/nginx/nginx.conf'
+    ;;
+
   'amazon')
     MODULE_FILE='amzn.ngx_curity_http_oauth_proxy_module_1.21.3.so'
     MODULE_FOLDER='/usr/local/nginx/modules'
@@ -60,13 +67,6 @@ case $DISTRO in
   'amazon2')
     MODULE_FILE='amzn2.ngx_curity_http_oauth_proxy_module_1.21.3.so'
     MODULE_FOLDER='/etc/nginx/modules'
-    NGINX_PATH='/usr/sbin/nginx'
-    CONF_PATH='/etc/nginx/nginx.conf'
-    ;;
-
-  'debian10')
-    MODULE_FILE='debian.buster.ngx_curity_http_oauth_proxy_module_1.21.3.so'
-    MODULE_FOLDER='/usr/lib/nginx/modules'
     NGINX_PATH='/usr/sbin/nginx'
     CONF_PATH='/etc/nginx/nginx.conf'
     ;;

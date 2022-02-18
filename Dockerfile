@@ -52,13 +52,7 @@ WORKDIR /tmp
 RUN ./configure && make
 
 ######
-FROM centos:8 as centos8-builder
-
-# https://techglimpse.com/failed-metadata-repo-appstream-centos-8
-WORKDIR /etc/yum.repos.d
-RUN sed -i 's/mirrorlist/#mirrorlist/g' /etc/yum.repos.d/CentOS-*
-RUN sed -i 's|#baseurl=http://mirror.centos.org|baseurl=http://vault.centos.org|g' /etc/yum.repos.d/CentOS-*
-RUN yum update -y
+FROM quay.io/centos/centos:stream8 as centos8-builder
 
 RUN yum install -y \
      gcc pcre-devel zlib-devel make openssl-devel

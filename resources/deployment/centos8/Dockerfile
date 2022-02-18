@@ -1,15 +1,10 @@
 #
 # For CentOS we need to install some dependencies and then install nginx
+# CentOS 8 is end of life so we use the latest CentOS Stream instead
 # http://nginx.org/en/linux_packages.html#CentOS
 #
 
-FROM centos:8
-
-# https://techglimpse.com/failed-metadata-repo-appstream-centos-8
-WORKDIR /etc/yum.repos.d
-RUN sed -i 's/mirrorlist/#mirrorlist/g' /etc/yum.repos.d/CentOS-*
-RUN sed -i 's|#baseurl=http://mirror.centos.org|baseurl=http://vault.centos.org|g' /etc/yum.repos.d/CentOS-*
-RUN yum update -y
+FROM quay.io/centos/centos:stream8
 
 RUN yum install -y yum-utils
 COPY centos7/nginx.repo /etc/yum.repos.d/nginx.repo

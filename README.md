@@ -133,7 +133,7 @@ A '*' wildcard value should not be configured here, since it will not work with 
 > **Context**: `location`
 
 When CORS is enabled, the module returns this value in the [access-contol-max-age](https://developer.mozilla.org/en-US/docs/Web/HTTP/Headers/Access-Control-Max-Age) response header.\
-When a value is configured, this prevents excessive pre-flight OPTIONS requests, to improve efficiency.
+This option prevents excessive pre-flight OPTIONS requests, to improve the efficiency of API calls.
 
 ## Example Configurations
 
@@ -188,21 +188,13 @@ location /api {
 
 ## Cookie Details
 
-The module expects to receive up to two cookies, which use a custom prefix with fixed suffixes:
+The module expects to receives two cookies, which use a custom prefix with fixed suffixes.
+Cookies are encrypted using AES256-GCM, and received in a base64 URL encoded format.
 
 | Example Cookie Name | Fixed Suffix | Contains |
 | ------------------- | ------------ | -------- |
 | example-at | -at | An encrypted cookie containing an opaque or JWT access token |
 | example-csrf | -csrf | A CSRF cookie verified during data changing requests |
-
-Cookies are encrypted using AES256-GCM, with a hex encoding, in this format:
-
-| Cookie Section | Contains |
-| -------------- | -------- |
-| First byte | This contains a version number, currently always 1 |
-| Next 12 bytes | This contains the 12 byte GCM initialization vector |
-| Last 16 bytes | This contains the 16 byte GCM message authentication code |
-| Middle section | This contains the ciphertext, whose length is that of the token being encrypted |
 
 ## Security Behavior
 
@@ -277,12 +269,8 @@ The HTTP status code is usually sufficient, and the error code can inform the SP
 
 ## Compatibility
 
-This module has been tested with these NGINX versions:
-
-- NGINX 1.13.7 (NGINX Plus Release 14)
-- NGINX 1.13.10 (NGINX Plus Release 15)
-
-It is likely to work with newer versions of NGINX, but only the above have been verified.
+This module has been tested for the Linux NGINX distributions from the [Deployment Resources](/resources/deployment).\
+It requires the [NGINX HTTP SSL module](http://nginx.org/en/docs/http/ngx_http_ssl_module.html) to be enabled, so that OpenSSL libraries are available.
  
 ### Releases
 
@@ -291,15 +279,15 @@ Download the .so file for your platform and deploy it to the `/usr/lib/nginx/mod
 
 |                                   | NGINX 1.19.5 / NGINX Plus R23 | NGINX 1.19.10 / NGINX Plus R24    | NGINX 1.21.3 / NGINX Plus R25 |
 | ----------------------------------|:-----------------------------:|:---------------------------------:|:---------------------------------:|
-| Amazon Linux                      | [⇓](https://github.com/curityio/nginx_phantom_token_module/releases/download/0.1.0/amzn.ngx_curity_http_oauth_proxy_module_1.19.5.so)           | [⇓](https://github.com/curityio/nginx_phantom_token_module/releases/download/0.1.0/amzn.ngx_curity_http_oauth_proxy_module_1.19.10.so)           | [⇓](https://github.com/curityio/nginx_phantom_token_module/releases/download/0.1.0/amzn.ngx_curity_http_oauth_proxy_module_1.21.3.so) | 
-| Amazon Linux 2                    | [⇓](https://github.com/curityio/nginx_phantom_token_module/releases/download/0.1.0/amzn2.ngx_curity_http_oauth_proxy_module_1.19.5.so)          | [⇓](https://github.com/curityio/nginx_phantom_token_module/releases/download/0.1.0/amzn2.ngx_curity_http_oauth_proxy_module_1.19.10.so)          | [⇓](https://github.com/curityio/nginx_phantom_token_module/releases/download/0.1.0/amzn2.ngx_curity_http_oauth_proxy_module_1.21.3.so) |
-| CentOS 7.0+                       | [⇓](https://github.com/curityio/nginx_phantom_token_module/releases/download/0.1.0/centos.7.ngx_curity_http_oauth_proxy_module_1.19.5.so)       | [⇓](https://github.com/curityio/nginx_phantom_token_module/releases/download/0.1.0/centos.7.ngx_curity_http_oauth_proxy_module_1.19.10.so)       | [⇓](https://github.com/curityio/nginx_phantom_token_module/releases/download/0.1.0/centos.7.ngx_curity_http_oauth_proxy_module_1.21.3.so) |
-| CentOS 8.0+                       | [⇓](https://github.com/curityio/nginx_phantom_token_module/releases/download/0.1.0/centos.8.ngx_curity_http_oauth_proxy_module_1.19.5.so)       | [⇓](https://github.com/curityio/nginx_phantom_token_module/releases/download/0.1.0/centos.8.ngx_curity_http_oauth_proxy_module_1.19.10.so)       | [⇓](https://github.com/curityio/nginx_phantom_token_module/releases/download/0.1.0/centos.8.ngx_curity_http_oauth_proxy_module_1.21.3.so) |
-| Debian 9.0 (Stretch)              | [⇓](https://github.com/curityio/nginx_phantom_token_module/releases/download/0.1.0/debian.stretch.ngx_curity_http_oauth_proxy_module_1.19.5.so) | [⇓](https://github.com/curityio/nginx_phantom_token_module/releases/download/0.1.0/debian.stretch.ngx_curity_http_oauth_proxy_module_1.19.10.so) | [⇓](https://github.com/curityio/nginx_phantom_token_module/releases/download/0.1.0/debian.stretch.ngx_curity_http_oauth_proxy_module_1.21.3.so) |
-| Debian 10.0 (Buster)              | [⇓](https://github.com/curityio/nginx_phantom_token_module/releases/download/0.1.0/debian.buster.ngx_curity_http_oauth_proxy_module_1.19.5.so)  | [⇓](https://github.com/curityio/nginx_phantom_token_module/releases/download/0.1.0/debian.buster.ngx_curity_http_oauth_proxy_module_1.19.10.so)  | [⇓](https://github.com/curityio/nginx_phantom_token_module/releases/download/0.1.0/debian.buster.ngx_curity_http_oauth_proxy_module_1.21.3.so) |
-| Alpine                            | [⇓](https://github.com/curityio/nginx_phantom_token_module/releases/download/0.1.0/alpine.ngx_curity_http_oauth_proxy_module_1.19.5.so)         | [⇓](https://github.com/curityio/nginx_phantom_token_module/releases/download/0.1.0/alpine.ngx_curity_http_oauth_proxy_module_1.19.10.so)         | [⇓](https://github.com/curityio/nginx_phantom_token_module/releases/download/0.1.0/alpine.ngx_curity_http_oauth_proxy_module_1.21.3.so) |
-| Ubuntu 18.04 LTS (Bionic Beaver)  | [⇓](https://github.com/curityio/nginx_phantom_token_module/releases/download/0.1.0/ubuntu.18.04.ngx_curity_http_oauth_proxy_module_1.19.5.so)   | [⇓](https://github.com/curityio/nginx_phantom_token_module/releases/download/0.1.0/ubuntu.18.04.ngx_curity_http_oauth_proxy_module_1.19.10.so)   | [⇓](https://github.com/curityio/nginx_phantom_token_module/releases/download/0.1.0/ubuntu.18.04.ngx_curity_http_oauth_proxy_module_1.21.3.so) |
-| Ubuntu 20.04 LTS (Focal Fossa)    | [⇓](https://github.com/curityio/nginx_phantom_token_module/releases/download/0.1.0/ubuntu.20.04.ngx_curity_http_oauth_proxy_module_1.19.5.so)   | [⇓](https://github.com/curityio/nginx_phantom_token_module/releases/download/0.1.0/ubuntu.20.04.ngx_curity_http_oauth_proxy_module_1.19.10.so)   | [⇓](https://github.com/curityio/nginx_phantom_token_module/releases/download/0.1.0/ubuntu.20.04.ngx_curity_http_oauth_proxy_module_1.21.3.so) |
+| Amazon Linux                      | [⇓](https://github.com/curityio/nginx_phantom_token_module/releases/download/1.0.0/amzn.ngx_curity_http_oauth_proxy_module_1.19.5.so)           | [⇓](https://github.com/curityio/nginx_phantom_token_module/releases/download/1.0.0/amzn.ngx_curity_http_oauth_proxy_module_1.19.10.so)           | [⇓](https://github.com/curityio/nginx_phantom_token_module/releases/download/1.0.0/amzn.ngx_curity_http_oauth_proxy_module_1.21.3.so) | 
+| Amazon Linux 2                    | [⇓](https://github.com/curityio/nginx_phantom_token_module/releases/download/1.0.0/amzn2.ngx_curity_http_oauth_proxy_module_1.19.5.so)          | [⇓](https://github.com/curityio/nginx_phantom_token_module/releases/download/1.0.0/amzn2.ngx_curity_http_oauth_proxy_module_1.19.10.so)          | [⇓](https://github.com/curityio/nginx_phantom_token_module/releases/download/1.0.0/amzn2.ngx_curity_http_oauth_proxy_module_1.21.3.so) |
+| CentOS 7.0+                       | [⇓](https://github.com/curityio/nginx_phantom_token_module/releases/download/1.0.0/centos.7.ngx_curity_http_oauth_proxy_module_1.19.5.so)       | [⇓](https://github.com/curityio/nginx_phantom_token_module/releases/download/1.0.0/centos.7.ngx_curity_http_oauth_proxy_module_1.19.10.so)       | [⇓](https://github.com/curityio/nginx_phantom_token_module/releases/download/1.0.0/centos.7.ngx_curity_http_oauth_proxy_module_1.21.3.so) |
+| CentOS Stream 8.0+                | [⇓](https://github.com/curityio/nginx_phantom_token_module/releases/download/1.0.0/centos.8.ngx_curity_http_oauth_proxy_module_1.19.5.so)       | [⇓](https://github.com/curityio/nginx_phantom_token_module/releases/download/1.0.0/centos.8.ngx_curity_http_oauth_proxy_module_1.19.10.so)       | [⇓](https://github.com/curityio/nginx_phantom_token_module/releases/download/1.0.0/centos.8.ngx_curity_http_oauth_proxy_module_1.21.3.so) |
+| Debian 9.0 (Stretch)              | [⇓](https://github.com/curityio/nginx_phantom_token_module/releases/download/1.0.0/debian.stretch.ngx_curity_http_oauth_proxy_module_1.19.5.so) | [⇓](https://github.com/curityio/nginx_phantom_token_module/releases/download/1.0.0/debian.stretch.ngx_curity_http_oauth_proxy_module_1.19.10.so) | [⇓](https://github.com/curityio/nginx_phantom_token_module/releases/download/1.0.0/debian.stretch.ngx_curity_http_oauth_proxy_module_1.21.3.so) |
+| Debian 10.0 (Buster)              | [⇓](https://github.com/curityio/nginx_phantom_token_module/releases/download/1.0.0/debian.buster.ngx_curity_http_oauth_proxy_module_1.19.5.so)  | [⇓](https://github.com/curityio/nginx_phantom_token_module/releases/download/1.0.0/debian.buster.ngx_curity_http_oauth_proxy_module_1.19.10.so)  | [⇓](https://github.com/curityio/nginx_phantom_token_module/releases/download/1.0.0/debian.buster.ngx_curity_http_oauth_proxy_module_1.21.3.so) |
+| Alpine                            | [⇓](https://github.com/curityio/nginx_phantom_token_module/releases/download/1.0.0/alpine.ngx_curity_http_oauth_proxy_module_1.19.5.so)         | [⇓](https://github.com/curityio/nginx_phantom_token_module/releases/download/1.0.0/alpine.ngx_curity_http_oauth_proxy_module_1.19.10.so)         | [⇓](https://github.com/curityio/nginx_phantom_token_module/releases/download/1.0.0/alpine.ngx_curity_http_oauth_proxy_module_1.21.3.so) |
+| Ubuntu 18.04 LTS (Bionic Beaver)  | [⇓](https://github.com/curityio/nginx_phantom_token_module/releases/download/1.0.0/ubuntu.18.04.ngx_curity_http_oauth_proxy_module_1.19.5.so)   | [⇓](https://github.com/curityio/nginx_phantom_token_module/releases/download/1.0.0/ubuntu.18.04.ngx_curity_http_oauth_proxy_module_1.19.10.so)   | [⇓](https://github.com/curityio/nginx_phantom_token_module/releases/download/1.0.0/ubuntu.18.04.ngx_curity_http_oauth_proxy_module_1.21.3.so) |
+| Ubuntu 20.04 LTS (Focal Fossa)    | [⇓](https://github.com/curityio/nginx_phantom_token_module/releases/download/1.0.0/ubuntu.20.04.ngx_curity_http_oauth_proxy_module_1.19.5.so)   | [⇓](https://github.com/curityio/nginx_phantom_token_module/releases/download/1.0.0/ubuntu.20.04.ngx_curity_http_oauth_proxy_module_1.19.10.so)   | [⇓](https://github.com/curityio/nginx_phantom_token_module/releases/download/1.0.0/ubuntu.20.04.ngx_curity_http_oauth_proxy_module_1.21.3.so) |
 
 ## Development and Testing Details
 
@@ -311,10 +299,6 @@ If you wish to customize this module by building from source, see the following 
 | [Integration Tests](wiki/2-integration-tests.md) | How to run NGINX tests to verify the module's success and failure behavior |
 | [Builds](wiki/3-builds.md) | How to build the module for various flavors of Linux |
 | [Deployment](wiki/4-deployment.md) | How to deploy the module to a Docker container and run HTTP tests |
-
-## Status
-
-This module is fit for production usage.
 
 ## Licensing
 
