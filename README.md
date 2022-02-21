@@ -289,16 +289,9 @@ Download the .so file for your platform and deploy it to the `/usr/lib/nginx/mod
 | Ubuntu 18.04 LTS (Bionic Beaver)  | [⇓](https://github.com/curityio/nginx_oauth_proxy_module/releases/download/1.0.0/ubuntu.18.04.ngx_curity_http_oauth_proxy_module_1.19.5.so)   | [⇓](https://github.com/curityio/nginx_oauth_proxy_module/releases/download/1.0.0/ubuntu.18.04.ngx_curity_http_oauth_proxy_module_1.19.10.so)   | [⇓](https://github.com/curityio/nginx_oauth_proxy_module/releases/download/1.0.0/ubuntu.18.04.ngx_curity_http_oauth_proxy_module_1.21.3.so) |
 | Ubuntu 20.04 LTS (Focal Fossa)    | [⇓](https://github.com/curityio/nginx_oauth_proxy_module/releases/download/1.0.0/ubuntu.20.04.ngx_curity_http_oauth_proxy_module_1.19.5.so)   | [⇓](https://github.com/curityio/nginx_oauth_proxy_module/releases/download/1.0.0/ubuntu.20.04.ngx_curity_http_oauth_proxy_module_1.19.10.so)   | [⇓](https://github.com/curityio/nginx_oauth_proxy_module/releases/download/1.0.0/ubuntu.20.04.ngx_curity_http_oauth_proxy_module_1.21.3.so) |
 
-## Development and Testing Details
+## Development Setup
 
-If you wish to customize this module by building from source, see the following resources:
-
-| Guide | Description |
-| ----- | ----------- |
-| [Development](wiki/1-development.md) | How to build and work with the module on a development computer |
-| [Integration Tests](wiki/2-integration-tests.md) | How to run NGINX tests to verify the module's success and failure behavior |
-| [Builds](wiki/3-builds.md) | How to build the module for various flavors of Linux |
-| [Deployment](wiki/4-deployment.md) | How to deploy the module to a Docker container and run HTTP tests |
+If you wish to customize this module by building from source, see the [Development Wiki](https://github.com/curityio/nginx_oauth_proxy_module/wiki) for instructions.
 
 ## Licensing
 
