@@ -264,7 +264,7 @@ access-control-allow-origin: https://www.example.com
 access-control-allow-credentials: true
 ```
 
-The code in the [Example SPA](https://github.com/curityio/web-oauth-via-bff) shows how to handle error responses.\
+The code in the [Example SPA](https://github.com/curityio/spa-using-token-handler) shows how to handle error responses.\
 The HTTP status code is usually sufficient, and the error code can inform the SPA of specific causes.
 
 ## Compatibility
