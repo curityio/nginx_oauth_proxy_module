@@ -14,11 +14,11 @@
  *  limitations under the License.
  */
 
-#include <openssl/evp.h>
 #include <ngx_config.h>
 #include <ngx_core.h>
 #include <ngx_http.h>
 #include <ngx_string.h>
+#include <openssl/evp.h>
 #include "oauth_proxy.h"
 
 /* For encryption related constants to be used in array sizes, use #defines as valid C */
