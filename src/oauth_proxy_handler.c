@@ -255,6 +255,7 @@ static ngx_int_t write_options_response(ngx_http_request_t *request, oauth_proxy
 
 /*
  * Add the error response and write CORS headers so that Javascript can read it
+ * http://nginx.org/en/docs/dev/development_guide.html#http_response_body
  */
 static ngx_int_t write_error_response(ngx_http_request_t *request, ngx_int_t status, oauth_proxy_configuration_t *module_location_config)
 {
@@ -297,10 +298,11 @@ static ngx_int_t write_error_response(ngx_http_request_t *request, ngx_int_t sta
 
             request->headers_out.status = status;
             request->headers_out.content_length_n = errorLen;
-            ngx_http_send_header(request);
 
             /* http://nginx.org/en/docs/dev/development_guide.html#http_response_body */
             ngx_str_set(&request->headers_out.content_type, "application/json");
+            ngx_http_send_header(request);
+
             body->pos = jsonErrorData;
             body->last = jsonErrorData + errorLen;
             body->memory = 1;

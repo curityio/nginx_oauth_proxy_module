@@ -48,6 +48,9 @@ $data;
 --- error_log
 No CSRF cookie was found in the incoming request
 
+--- response_headers
+content-type: application/json
+
 === TEST HTTP_POST_2: POST with no CSRF request header returns 401
 ############################################################
 # A request header should be sent along with the CSRF cookie
@@ -75,6 +78,9 @@ $data;
 
 --- error_log
 A data changing request did not have a CSRF header
+
+--- response_headers
+content-type: application/json
 
 === TEST HTTP_POST_3: POST with mismatched CSRF request header and cookie returns 401
 ##################################################################
@@ -104,6 +110,9 @@ $data;
 
 --- error_log
 The CSRF request header did not match the value in the encrypted CSRF cookie
+
+--- response_headers
+content-type: application/json
 
 === TEST HTTP_POST_4: POST with 2 valid cookies and a CSRF token returns 200
 #############################################################
