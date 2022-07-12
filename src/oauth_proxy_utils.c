@@ -66,12 +66,18 @@ ngx_str_t *oauth_proxy_utils_get_header_in(ngx_http_request_t *request, u_char *
 
 /*
  * Get a cookie and deal with string manipulation
+ * Use this include technique from the below link to handle version specific differences
+ * https://github.com/openresty/headers-more-nginx-module/blob/master/src/ngx_http_headers_more_headers_in.c
  */
 ngx_int_t oauth_proxy_utils_get_cookie(ngx_http_request_t *request, ngx_str_t* cookie_value, const ngx_str_t* cookie_name_prefix, const u_char *cookie_suffix)
 {
     u_char cookie_name[128];
     size_t suffix_len = 0;
     ngx_str_t cookie_name_str;
+
+#if defined(nginx_version) && nginx_version >= 1023000
+    ngx_table_elt_t *cookie_headers = NULL;
+#endif
 
     suffix_len = ngx_strlen(cookie_suffix);
     ngx_memcpy(cookie_name, cookie_name_prefix->data, cookie_name_prefix->len);
@@ -80,7 +86,21 @@ ngx_int_t oauth_proxy_utils_get_cookie(ngx_http_request_t *request, ngx_str_t* c
 
     cookie_name_str.data = cookie_name;
     cookie_name_str.len = ngx_strlen(cookie_name);
+
+#if defined(nginx_version) && nginx_version >= 1023000
+
+    // The API to deal with multi header lines has changed starting in NGINX 1.23.0
+    cookie_headers = ngx_http_parse_multi_header_lines(request, request->headers_in.cookie, &cookie_name_str, cookie_value);
+    if (cookie_headers == NULL) {
+        return NGX_DECLINED;
+    }
+
+    return NGX_OK;
+#else
+
+    // Versions before 1.23.0 used this syntax and returned NGX_DECLINED if not found
     return ngx_http_parse_multi_header_lines(&request->headers_in.cookies, &cookie_name_str, cookie_value);
+#endif
 }
 
 /*
