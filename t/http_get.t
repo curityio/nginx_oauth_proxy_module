@@ -39,6 +39,9 @@ GET /t
 --- error_log
 The request did not have an origin header
 
+--- response_headers
+content-type: application/json
+
 === TEST HTTP_GET_2: GET with an untrusted origin header returns 401
 ###############################################################################################
 # Only trusted SPA clients should be able to get data from the browser due to CORS restrictions
@@ -64,6 +67,9 @@ origin: https://www.malicious-site.com
 --- error_log
 The request was from an untrusted web origin
 
+--- response_headers
+content-type: application/json
+
 === TEST HTTP_GET_3: GET without a cookie or token credential returns 401
 ##########################################################################################
 # Verify that a 401 is received when there is no message credential at all sent to the API
@@ -88,6 +94,9 @@ origin: https://www.example.com
 
 --- error_log
 No AT cookie was found in the incoming request
+
+--- response_headers
+content-type: application/json
 
 === TEST HTTP_GET_4: GET with an invalid cookie returns 401
 #####################################################################################
@@ -117,6 +126,9 @@ $data;
 --- error_log
 Invalid data length after decoding from base64
 
+--- response_headers
+content-type: application/json
+
 === TEST HTTP_GET_5: GET returns correct CORS response headers with module errors
 #################################################################################
 # Verify that when a 401 is received the SPA can read details due to CORS headers
@@ -143,6 +155,7 @@ $data;
 --- error_code: 401
 
 --- response_headers
+content-type: application/json
 access-control-allow-origin: https://www.example.com
 access-control-allow-credentials: true
 
@@ -178,7 +191,7 @@ $data;
 --- error_code: 200
 
 --- response_headers eval
-"authorization: Bearer " . $main::at_opaque
+"authorization: Bearer " . $main::at_opaque;
 
 === TEST HTTP_GET_7: GET with a valid request and CORS enabled returns the correct CORS response headers
 #######################################################################
