@@ -318,4 +318,4 @@ authorization: bearer xxx
 No AT cookie was found in the incoming request
 
 --- response_body_like chomp
-{"code":"unauthorized", "message":"Access denied due to missing or invalid credentials"}
+{"code":"unauthorized","message":"Access denied due to missing or invalid credentials"}

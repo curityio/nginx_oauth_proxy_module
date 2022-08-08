@@ -51,7 +51,7 @@ GET /t
 The cookie_name_prefix configuration directive was not provided
 
 --- response_body_like chomp
-{"code":"server_error", "message":"Problem encountered processing the request"}
+{"code":"server_error","message":"Problem encountered processing the request"}
 
 === TEST CONFIG_3: NGINX quits when no encryption key is configured for a location
 ##################################################################

@@ -261,62 +261,62 @@ static ngx_int_t write_error_response(ngx_http_request_t *request, ngx_int_t sta
 {
     ngx_str_t code;
     ngx_str_t message;
-    u_char jsonErrorData[256];
+    u_char json_error_data[256];
     ngx_chain_t output;
     ngx_buf_t *body = NULL;
     const char *errorFormat = NULL;
     size_t errorLen = 0;
 
     add_cors_response_headers(request, module_location_config, 1);
-    if (request->method != NGX_HTTP_HEAD)
+    if (request->method == NGX_HTTP_HEAD)
     {
-        body = ngx_calloc_buf(request->pool);
-        if (body == NULL)
+        return status;
+    }
+
+    body = ngx_calloc_buf(request->pool);
+    if (body == NULL)
+    {
+        ngx_log_error(NGX_LOG_WARN, request->connection->log, 0, "OAuth proxy failed to allocate memory for error body");
+        return NGX_HTTP_INTERNAL_SERVER_ERROR;
+    }
+    else
+    {
+        /* The error interface supports only two responses, though more error codes will be added in futrure if needed by SPAs */
+        if (status == NGX_HTTP_INTERNAL_SERVER_ERROR)
         {
-            ngx_log_error(NGX_LOG_WARN, request->connection->log, 0, "OAuth proxy failed to allocate memory for error body");
-            return NGX_HTTP_INTERNAL_SERVER_ERROR;
+            ngx_str_set(&code, "server_error");
+            ngx_str_set(&message, "Problem encountered processing the request");
         }
         else
         {
-            /* The error interface supports only two responses, though more error codes will be added in futrure if needed by SPAs */
-            if (status == NGX_HTTP_INTERNAL_SERVER_ERROR)
-            {
-                ngx_str_set(&code, "server_error");
-                ngx_str_set(&message, "Problem encountered processing the request");
-            }
-            else
-            {
-                ngx_str_set(&code, "unauthorized");
-                ngx_str_set(&message, "Access denied due to missing or invalid credentials");
-            }
-
-            /* The string length calculation replaces the two '%V' markers with their actual values */
-            errorFormat = "{\"code\":\"%V\", \"message\":\"%V\"}";
-            errorLen = ngx_strlen(errorFormat) + code.len + message.len - 4;
-            ngx_snprintf(jsonErrorData, sizeof(jsonErrorData) - 1, errorFormat, &code, &message);
-            jsonErrorData[errorLen] = 0;
-
-            request->headers_out.status = status;
-            request->headers_out.content_length_n = errorLen;
-
-            /* http://nginx.org/en/docs/dev/development_guide.html#http_response_body */
-            ngx_str_set(&request->headers_out.content_type, "application/json");
-            ngx_http_send_header(request);
-
-            body->pos = jsonErrorData;
-            body->last = jsonErrorData + errorLen;
-            body->memory = 1;
-            body->last_buf = 1;
-            body->last_in_chain = 1;
-            output.buf = body;
-            output.next = NULL;
-
-            /* When setting a body ourself we must return the result of the filter */
-            return ngx_http_output_filter(request, &output);
+            ngx_str_set(&code, "unauthorized");
+            ngx_str_set(&message, "Access denied due to missing or invalid credentials");
         }
-    }
 
-    return status;
+        /* The string length calculation replaces the two '%V' markers with their actual values */
+        errorFormat = "{\"code\":\"%V\",\"message\":\"%V\"}";
+        errorLen = ngx_strlen(errorFormat) + code.len + message.len - 4;
+        ngx_snprintf(json_error_data, sizeof(json_error_data) - 1, errorFormat, &code, &message);
+        json_error_data[errorLen] = 0;
+
+        request->headers_out.status = status;
+        request->headers_out.content_length_n = errorLen;
+
+        /* http://nginx.org/en/docs/dev/development_guide.html#http_response_body */
+        ngx_str_set(&request->headers_out.content_type, "application/json");
+        ngx_http_send_header(request);
+
+        body->pos = json_error_data;
+        body->last = json_error_data + errorLen;
+        body->memory = 1;
+        body->last_buf = 1;
+        body->last_in_chain = 1;
+        output.buf = body;
+        output.next = NULL;
+
+        /* When setting a body ourself we must return the result of the filter */
+        return ngx_http_output_filter(request, &output);
+    }
 }
 
 
