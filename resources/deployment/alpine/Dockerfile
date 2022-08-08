@@ -2,5 +2,6 @@
 # Alpine has an up to date NGINX image so use that
 #
 
-FROM nginx:1.21.3-alpine
+ARG NGINX_VERSION
+FROM nginx:$NGINX_VERSION-alpine
 RUN apk add --no-cache valgrind

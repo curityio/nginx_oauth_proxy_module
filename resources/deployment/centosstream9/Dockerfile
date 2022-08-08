@@ -4,11 +4,12 @@
 # http://nginx.org/en/linux_packages.html#CentOS
 #
 
-FROM quay.io/centos/centos:stream8
+FROM quay.io/centos/centos:stream9
+ARG NGINX_VERSION
 
 RUN yum install -y yum-utils
 COPY centos7/nginx.repo /etc/yum.repos.d/nginx.repo
 RUN yum-config-manager --enable nginx-mainline
 
 # 'yum list available nginx --showduplicates' shows versions available
-RUN yum install -y nginx-1:1.21.3-1.el8.ngx.x86_64 valgrind
+RUN yum install -y nginx-1:$NGINX_VERSION-1.el9.ngx.x86_64 valgrind

@@ -6,73 +6,86 @@
 
 cd "$(dirname "${BASH_SOURCE[0]}")"
 
+#
+# Control deployment via environment variables
+#
+if [ "$DISTRO" == '' ]; then
+  DISTRO='alpine'
+fi
+if [ "$NGINX_VERSION" == '' ]; then
+  NGINX_VERSION='1.21.6'
+fi
+echo "Deploying for $DISTRO with NGINX version $NGINX_VERSION ..."
+
+#
+# Generate a cookie encryption key for the deployment
+#
 export ENCRYPTION_KEY=$(openssl rand 32 | xxd -p -c 64)
 echo -n $ENCRYPTION_KEY > encryption.key
 
 #
 # Validate input to ensure that we have a supported Linux distribution
 #
-DISTRO=$1
 case $DISTRO in
 
   'ubuntu18')
-    MODULE_FILE='ubuntu.18.04.ngx_curity_http_oauth_proxy_module_1.21.3.so'
+    MODULE_FILE="ubuntu.18.04.ngx_curity_http_oauth_proxy_module_$NGINX_VERSION.so"
     MODULE_FOLDER='/usr/lib/nginx/modules'
     NGINX_PATH='/usr/sbin/nginx'
     CONF_PATH='/etc/nginx/nginx.conf'
     ;;
   
   'ubuntu20')
-    MODULE_FILE='ubuntu.20.04.ngx_curity_http_oauth_proxy_module_1.21.3.so'
+    MODULE_FILE="ubuntu.20.04.ngx_curity_http_oauth_proxy_module_$NGINX_VERSION.so"
+    MODULE_FOLDER='/usr/lib/nginx/modules'
+    NGINX_PATH='/usr/sbin/nginx'
+    CONF_PATH='/etc/nginx/nginx.conf'
+    ;;
+
+  'ubuntu22')
+    MODULE_FILE="ubuntu.22.04.ngx_curity_http_oauth_proxy_module_$NGINX_VERSION.so"
     MODULE_FOLDER='/usr/lib/nginx/modules'
     NGINX_PATH='/usr/sbin/nginx'
     CONF_PATH='/etc/nginx/nginx.conf'
     ;;
 
   'centos7')
-    MODULE_FILE='centos.7.ngx_curity_http_oauth_proxy_module_1.21.3.so'
+    MODULE_FILE='centos.7.ngx_curity_http_oauth_proxy_module_$NGINX_VERSION.so'
     MODULE_FOLDER='/etc/nginx/modules'
     NGINX_PATH='/usr/sbin/nginx'
     CONF_PATH='/etc/nginx/nginx.conf'
     ;;
 
-  'centos8')
-    MODULE_FILE='centos.8.ngx_curity_http_oauth_proxy_module_1.21.3.so'
+  'centosstream9')
+    MODULE_FILE="centos.stream.9.ngx_curity_http_oauth_proxy_module_$NGINX_VERSION.so"
     MODULE_FOLDER='/etc/nginx/modules'
-    NGINX_PATH='/usr/sbin/nginx'
-    CONF_PATH='/etc/nginx/nginx.conf'
-    ;;
-
-  'debian9')
-    MODULE_FILE='debian.stretch.ngx_curity_http_oauth_proxy_module_1.19.5.so'
-    MODULE_FOLDER='/usr/lib/nginx/modules'
     NGINX_PATH='/usr/sbin/nginx'
     CONF_PATH='/etc/nginx/nginx.conf'
     ;;
 
   'debian10')
-    MODULE_FILE='debian.buster.ngx_curity_http_oauth_proxy_module_1.21.3.so'
+    MODULE_FILE="debian.buster.ngx_curity_http_oauth_proxy_module_$NGINX_VERSION.so"
     MODULE_FOLDER='/usr/lib/nginx/modules'
     NGINX_PATH='/usr/sbin/nginx'
     CONF_PATH='/etc/nginx/nginx.conf'
     ;;
 
-  'amazon')
-    MODULE_FILE='amzn.ngx_curity_http_oauth_proxy_module_1.21.3.so'
-    MODULE_FOLDER='/usr/local/nginx/modules'
-    NGINX_PATH='/usr/local/nginx/sbin/nginx'
-    CONF_PATH='/usr/local/nginx/conf/nginx.conf'
+  'debian11')
+    MODULE_FILE="debian.bullseye.ngx_curity_http_oauth_proxy_module_$NGINX_VERSION.so"
+    MODULE_FOLDER='/usr/lib/nginx/modules'
+    NGINX_PATH='/usr/sbin/nginx'
+    CONF_PATH='/etc/nginx/nginx.conf'
     ;;
 
   'amazon2')
-    MODULE_FILE='amzn2.ngx_curity_http_oauth_proxy_module_1.21.3.so'
+    MODULE_FILE="amzn2.ngx_curity_http_oauth_proxy_module_$NGINX_VERSION.so"
     MODULE_FOLDER='/etc/nginx/modules'
     NGINX_PATH='/usr/sbin/nginx'
     CONF_PATH='/etc/nginx/nginx.conf'
     ;;
 
   'alpine')
-    MODULE_FILE='alpine.ngx_curity_http_oauth_proxy_module_1.21.3.so'
+    MODULE_FILE="alpine.ngx_curity_http_oauth_proxy_module_$NGINX_VERSION.so"
     MODULE_FOLDER='/usr/lib/nginx/modules'
     NGINX_PATH='/usr/sbin/nginx'
     CONF_PATH='/etc/nginx/nginx.conf'
@@ -80,8 +93,19 @@ case $DISTRO in
   
 esac
 
+#
+# Check for a valid distro
+#
 if [ "$MODULE_FILE" == '' ]; then
   echo 'Please enter a supported Linux distribution as a command line argument'
+  exit
+fi
+
+#
+# Check that the image has been built
+#
+if [ ! -f "../../build/${MODULE_FILE}" ]; then
+  echo "The OAuth Proxy plugin for $DISTRO version $NGINX_VERSION has not been built"
   exit
 fi
 
@@ -89,7 +113,7 @@ fi
 # Build the Docker image
 #
 echo 'Building the NGINX and valgrind Docker image ...'
-docker build --no-cache -f "$DISTRO/Dockerfile" -t "nginx_$DISTRO":v1 .
+docker build --no-cache -f "$DISTRO/Dockerfile" --build-arg NGINX_VERSION="$NGINX_VERSION" -t "nginx_$DISTRO:$NGINX_VERSION" .
 if [ $? -ne 0 ]; then
   echo "Problem encountered building the NGINX $DISTRO docker image"
   exit 1
@@ -113,6 +137,7 @@ echo "$NGINX_CONF_DATA" > ./nginx.conf
 #
 echo 'Deploying the NGINX and valgrind Docker image ...'
 export DISTRO
+export NGINX_VERSION
 export MODULE_FILE
 export MODULE_FOLDER
 export NGINX_PATH

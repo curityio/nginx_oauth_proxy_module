@@ -4,6 +4,7 @@
 #
 
 FROM ubuntu:18.04
+ARG NGINX_VERSION
 
 RUN apt update
 RUN apt install -y curl gnupg2 ca-certificates lsb-release ubuntu-keyring
@@ -17,5 +18,5 @@ http://nginx.org/packages/mainline/ubuntu `lsb_release -cs` nginx" \
 
 # 'apt list -a nginx' shows versions available
 RUN apt update
-RUN apt install -y nginx=1.21.3-1~bionic valgrind
+RUN apt install -y nginx=$NGINX_VERSION-1~bionic valgrind
 

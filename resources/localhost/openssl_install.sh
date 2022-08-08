@@ -10,7 +10,7 @@ cd ../..
 #
 # Get the code
 #
-curl -O -L https://github.com/openssl/openssl/archive/refs/tags/OpenSSL_1_1_1m.tar.gz
+curl -O -L https://github.com/openssl/openssl/archive/refs/tags/OpenSSL_1_1_1p.tar.gz
 if [ $? -ne 0 ]; then
   echo 'Problem encountered downloading OpenSSL source code'
   exit 1
@@ -19,8 +19,8 @@ fi
 #
 # Unzip it
 #
-rm -rf openssl-OpenSSL_1_1_1m
-tar xzvf OpenSSL_1_1_1m.tar.gz
+rm -rf openssl-OpenSSL_1_1_1p
+tar xzvf OpenSSL_1_1_1p.tar.gz
 if [ $? -ne 0 ]; then
   echo 'Problem encountered unzipping OpenSSL archive'
   exit 1
@@ -29,7 +29,7 @@ fi
 #
 # Configure it
 #
-cd openssl-OpenSSL_1_1_1m
+cd openssl-OpenSSL_1_1_1p
 ./config
 if [ $? -ne 0 ]; then
   echo 'Problem encountered configuring OpenSSL'
