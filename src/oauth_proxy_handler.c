@@ -264,8 +264,8 @@ static ngx_int_t write_error_response(ngx_http_request_t *request, ngx_int_t sta
     u_char json_error_data[256];
     ngx_chain_t output;
     ngx_buf_t *body = NULL;
-    const char *errorFormat = NULL;
-    size_t errorLen = 0;
+    const char *error_format = NULL;
+    size_t error_len = 0;
 
     add_cors_response_headers(request, module_location_config, 1);
     if (request->method == NGX_HTTP_HEAD)
@@ -294,28 +294,29 @@ static ngx_int_t write_error_response(ngx_http_request_t *request, ngx_int_t sta
         }
 
         /* The string length calculation replaces the two '%V' markers with their actual values */
-        errorFormat = "{\"code\":\"%V\",\"message\":\"%V\"}";
-        errorLen = ngx_strlen(errorFormat) + code.len + message.len - 4;
-        ngx_snprintf(json_error_data, sizeof(json_error_data) - 1, errorFormat, &code, &message);
-        json_error_data[errorLen] = 0;
+        error_format = "{\"code\":\"%V\",\"message\":\"%V\"}";
+        error_len = ngx_strlen(error_format) + code.len + message.len - 4;
+        ngx_snprintf(json_error_data, sizeof(json_error_data) - 1, error_format, &code, &message);
+        json_error_data[error_len] = 0;
 
         request->headers_out.status = status;
-        request->headers_out.content_length_n = errorLen;
+        request->headers_out.content_length_n = error_len;
 
         /* http://nginx.org/en/docs/dev/development_guide.html#http_response_body */
         ngx_str_set(&request->headers_out.content_type, "application/json");
         ngx_http_send_header(request);
 
         body->pos = json_error_data;
-        body->last = json_error_data + errorLen;
+        body->last = json_error_data + error_len;
         body->memory = 1;
         body->last_buf = 1;
         body->last_in_chain = 1;
         output.buf = body;
         output.next = NULL;
 
-        /* When setting a body ourself we must return the result of the filter */
-        return ngx_http_output_filter(request, &output);
+        /* Return an error result to prevent a 'header already sent' warning in logs */
+        ngx_http_output_filter(request, &output);
+        return NGX_ERROR;
     }
 }
 
