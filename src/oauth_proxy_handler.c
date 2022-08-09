@@ -259,6 +259,7 @@ static ngx_int_t write_options_response(ngx_http_request_t *request, oauth_proxy
  */
 static ngx_int_t write_error_response(ngx_http_request_t *request, ngx_int_t status, oauth_proxy_configuration_t *module_location_config)
 {
+    ngx_int_t rc;
     ngx_str_t code;
     ngx_str_t message;
     u_char json_error_data[256];
@@ -281,7 +282,6 @@ static ngx_int_t write_error_response(ngx_http_request_t *request, ngx_int_t sta
     }
     else
     {
-        /* The error interface supports only two responses, though more error codes will be added in futrure if needed by SPAs */
         if (status == NGX_HTTP_INTERNAL_SERVER_ERROR)
         {
             ngx_str_set(&code, "server_error");
@@ -301,10 +301,12 @@ static ngx_int_t write_error_response(ngx_http_request_t *request, ngx_int_t sta
 
         request->headers_out.status = status;
         request->headers_out.content_length_n = error_len;
-
-        /* http://nginx.org/en/docs/dev/development_guide.html#http_response_body */
         ngx_str_set(&request->headers_out.content_type, "application/json");
-        ngx_http_send_header(request);
+
+        rc = ngx_http_send_header(request);
+        if (rc == NGX_ERROR || rc > NGX_OK || request->header_only) {
+            return rc;
+        }
 
         body->pos = json_error_data;
         body->last = json_error_data + error_len;
@@ -314,9 +316,11 @@ static ngx_int_t write_error_response(ngx_http_request_t *request, ngx_int_t sta
         output.buf = body;
         output.next = NULL;
 
-        /* Return an error result to prevent a 'header already sent' warning in logs */
-        ngx_http_output_filter(request, &output);
-        return NGX_ERROR;
+        /* Return an error result, which also requires finalize_request to be called, to prevent a 'header already sent' warning in logs
+           https://forum.nginx.org/read.php?29,280514,280521#msg-280521 */
+        rc = ngx_http_output_filter(request, &output);
+        ngx_http_finalize_request(request, rc);
+        return NGX_DONE;
     }
 }
 
