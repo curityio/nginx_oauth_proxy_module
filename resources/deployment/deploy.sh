@@ -97,16 +97,16 @@ esac
 # Check for a valid distro
 #
 if [ "$MODULE_FILE" == '' ]; then
-  echo 'Please enter a supported Linux distribution as a command line argument'
-  exit
+  >&2 echo 'Please enter a supported Linux distribution as a command line argument'
+  exit 1
 fi
 
 #
 # Check that the image has been built
 #
 if [ ! -f "../../build/${MODULE_FILE}" ]; then
-  echo "The OAuth Proxy plugin for $DISTRO version $NGINX_VERSION has not been built"
-  exit
+  >&2 echo "The OAuth Proxy plugin for $DISTRO version $NGINX_VERSION has not been built"
+  exit 1
 fi
 
 #
@@ -115,7 +115,7 @@ fi
 echo 'Building the NGINX and valgrind Docker image ...'
 docker build --no-cache -f "$DISTRO/Dockerfile" --build-arg NGINX_VERSION="$NGINX_VERSION" -t "nginx_$DISTRO:$NGINX_VERSION" .
 if [ $? -ne 0 ]; then
-  echo "Problem encountered building the NGINX $DISTRO docker image"
+  >&2 echo "Problem encountered building the NGINX $DISTRO docker image"
   exit 1
 fi
 

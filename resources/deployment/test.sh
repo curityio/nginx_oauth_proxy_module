@@ -40,20 +40,20 @@ HTTP_STATUS=$(curl -i -s -X OPTIONS "$API_URL" \
 -H "origin: https://malicious-site.com" \
 -o $RESPONSE_FILE -w '%{http_code}')
 if [ "$HTTP_STATUS" != '204' ]; then
-  echo "*** OPTIONS request failed, status: $HTTP_STATUS"
-  exit
+  >&2 echo "*** OPTIONS request failed, status: $HTTP_STATUS"
+  exit 1
 fi
 
 ORIGIN=$(getHeaderValue 'access-control-allow-origin')
 if [ "$ORIGIN" != '' ]; then
-  echo '*** The CORS access-control-allow-origin response header was granted incorrectly'
-  exit
+  >&2 echo '*** The CORS access-control-allow-origin response header was granted incorrectly'
+  exit 1
 fi
 
 CREDENTIALS=$(getHeaderValue 'access-control-allow-credentials')
 if [ "$CREDENTIALS" != '' ]; then
-  echo '*** The CORS access-control-allow-credentials response header was granted incorrectly'
-  exit
+  >&2 echo '*** The CORS access-control-allow-credentials response header was granted incorrectly'
+  exit 1
 fi
 echo '1. OPTIONS request successfully denied access to an untrusted web origin'
 
@@ -66,44 +66,44 @@ HTTP_STATUS=$(curl -i -s -X OPTIONS "$API_URL" \
 -H "access-control-request-headers: x-example-csrf" \
 -o $RESPONSE_FILE -w '%{http_code}')
 if [ "$HTTP_STATUS" != '204' ]; then
-  echo "*** OPTIONS request failed, status: $HTTP_STATUS"
-  exit
+  >&2 echo "*** OPTIONS request failed, status: $HTTP_STATUS"
+  exit 1
 fi
 
 ORIGIN=$(getHeaderValue 'access-control-allow-origin')
 if [ "$ORIGIN" != "$WEB_ORIGIN" ]; then
-  echo '*** The CORS access-control-allow-origin response header was not set correctly'
-  exit
+  >&2 echo '*** The CORS access-control-allow-origin response header was not set correctly'
+  exit 1
 fi
 
 CREDENTIALS=$(getHeaderValue 'access-control-allow-credentials')
 if [ "$CREDENTIALS" != 'true' ]; then
-  echo '*** The CORS access-control-allow-credentials response header was not set correctly'
-  exit
+  >&2 echo '*** The CORS access-control-allow-credentials response header was not set correctly'
+  exit 1
 fi
 
 VARY=$(getHeaderValue 'vary')
 if [ "$VARY" != 'origin,access-control-request-headers' ]; then
-  echo '*** The CORS vary response header was not set correctly'
-  exit
+  >&2 echo '*** The CORS vary response header was not set correctly'
+  exit 1
 fi
 
 METHODS=$(getHeaderValue 'access-control-allow-methods')
 if [ "$METHODS" != 'OPTIONS,HEAD,GET,POST,PUT,PATCH,DELETE' ]; then
-  echo '*** The CORS access-control-allow-methods response header was not set correctly'
-  exit
+  >&2 echo '*** The CORS access-control-allow-methods response header was not set correctly'
+  exit 1
 fi
 
 HEADERS=$(getHeaderValue 'access-control-allow-headers')
 if [ "$HEADERS" != 'x-example-csrf' ]; then
-  echo '*** The CORS access-control-allow-headers response header was not set correctly'
-  exit
+  >&2 echo '*** The CORS access-control-allow-headers response header was not set correctly'
+  exit 1
 fi
 
 MAXAGE=$(getHeaderValue 'access-control-max-age')
 if [ "$MAXAGE" != '86400' ]; then
-  echo '*** The CORS access-control-max-age response header was not set correctly'
-  exit
+  >&2 echo '*** The CORS access-control-max-age response header was not set correctly'
+  exit 1
 fi
 echo '2. OPTIONS request returned all correct CORS headers for a valid web origin'
 
@@ -116,19 +116,19 @@ HTTP_STATUS=$(curl -i -s -X GET "$API_URL" \
 -H "cookie: example-at=$ENCRYPTED_ACCESS_TOKEN" \
  -o $RESPONSE_FILE -w '%{http_code}')
 if [ "$HTTP_STATUS" != '401' ]; then
-  echo "*** GET request failed, status: $HTTP_STATUS"
-  exit
+  >&2 echo "*** GET request failed, status: $HTTP_STATUS"
+  exit 1
 fi
 ORIGIN=$(getHeaderValue 'access-control-allow-origin')
 if [ "$ORIGIN" != '' ]; then
-  echo '*** The CORS access-control-allow-origin response header was granted incorrectly'
-  exit
+  >&2 echo '*** The CORS access-control-allow-origin response header was granted incorrectly'
+  exit 1
 fi
 
 CREDENTIALS=$(getHeaderValue 'access-control-allow-credentials')
 if [ "$CREDENTIALS" != '' ]; then
-  echo '*** The CORS access-control-allow-credentials response header was granted incorrectly'
-  exit
+  >&2 echo '*** The CORS access-control-allow-credentials response header was granted incorrectly'
+  exit 1
 fi
 echo '3. GET request successfully denied access to an untrusted web origin'
 
@@ -141,26 +141,26 @@ HTTP_STATUS=$(curl -i -s -X GET "$API_URL" \
 -H "cookie: example-at=$ENCRYPTED_ACCESS_TOKEN" \
 -o $RESPONSE_FILE -w '%{http_code}')
 if [ "$HTTP_STATUS" != '200' ]; then
-  echo "*** GET request failed, status: $HTTP_STATUS"
-  exit
+  >&2 echo "*** GET request failed, status: $HTTP_STATUS"
+  exit 1
 fi
 
 ORIGIN=$(getHeaderValue 'access-control-allow-origin')
 if [ "$ORIGIN" != "$WEB_ORIGIN" ]; then
-  echo '*** The CORS access-control-allow-origin response header was not set correctly'
-  exit
+  >&2 echo '*** The CORS access-control-allow-origin response header was not set correctly'
+  exit 1
 fi
 
 CREDENTIALS=$(getHeaderValue 'access-control-allow-credentials')
 if [ "$CREDENTIALS" != 'true' ]; then
-  echo '*** The CORS access-control-allow-credentials response header was not set correctly'
-  exit
+  >&2 echo '*** The CORS access-control-allow-credentials response header was not set correctly'
+  exit 1
 fi
 
 VARY=$(getHeaderValue 'vary')
 if [ "$VARY" != 'origin' ]; then
-  echo '*** The CORS vary response header was not set correctly'
-  exit
+  >&2 echo '*** The CORS vary response header was not set correctly'
+  exit 1
 fi
 echo '4. GET request returned all correct CORS headers for a valid web origin'
 
@@ -172,13 +172,13 @@ HTTP_STATUS=$(curl -i -s -X POST "$API_URL" \
 -H "origin: $WEB_ORIGIN" \
 -o $RESPONSE_FILE -w '%{http_code}')
 if [ "$HTTP_STATUS" != '401' ]; then
-  echo '*** Request with no credential did not result in the expected error'
-  exit
+  >&2 echo '*** Request with no credential did not result in the expected error'
+  exit 1
 fi
 ORIGIN=$(getHeaderValue 'Access-Control-Allow-Origin')
 if [ "$ORIGIN" != "$WEB_ORIGIN" ]; then
-  echo '*** CORS headers do not allow the SPA to read the error response'
-  exit
+  >&2 echo '*** CORS headers do not allow the SPA to read the error response'
+  exit 1
 fi
 echo '5. CORS error responses returned to the SPA have the correct CORS headers'
 
@@ -189,8 +189,8 @@ echo '6. Testing POST with no credential ...'
 HTTP_STATUS=$(curl -i -s -X POST "$API_URL" \
 -o $RESPONSE_FILE -w '%{http_code}')
 if [ "$HTTP_STATUS" != '401' ]; then
-  echo '*** POST with no credential did not result in the expected error'
-  exit
+  >&2 echo '*** POST with no credential did not result in the expected error'
+  exit 1
 fi
 echo '6. POST with no credential failed with the expected error'
 JSON=$(tail -n 1 $RESPONSE_FILE)
@@ -204,8 +204,8 @@ HTTP_STATUS=$(curl -i -s -X POST "$API_URL" \
 -H "Authorization: Bearer $ACCESS_TOKEN" \
 -o $RESPONSE_FILE -w '%{http_code}')
 if [ "$HTTP_STATUS" != '200' ]; then
-  echo "*** POST from mobile client failed, status: $HTTP_STATUS"
-  exit
+  >&2 echo "*** POST from mobile client failed, status: $HTTP_STATUS"
+  exit 1
 fi
 echo '7. POST from mobile client was successfully routed to the API'
 JSON=$(tail -n 1 $RESPONSE_FILE)
@@ -220,8 +220,8 @@ HTTP_STATUS=$(curl -i -s -X GET "$API_URL" \
 -H "cookie: example-at=$ENCRYPTED_ACCESS_TOKEN" \
 -o $RESPONSE_FILE -w '%{http_code}')
 if [ "$HTTP_STATUS" != '200' ]; then
-  echo "*** GET with a valid encrypted cookie failed, status: $HTTP_STATUS"
-  exit
+  >&2 echo "*** GET with a valid encrypted cookie failed, status: $HTTP_STATUS"
+  exit 1
 fi
 echo '8. GET with a valid encrypted cookie was successfully routed to the API'
 JSON=$(tail -n 1 $RESPONSE_FILE)
@@ -236,8 +236,8 @@ HTTP_STATUS=$(curl -i -s -X POST "$API_URL" \
 -H "cookie: example-at=$ENCRYPTED_ACCESS_TOKEN" \
 -o $RESPONSE_FILE -w '%{http_code}')
 if [ "$HTTP_STATUS" != '401' ]; then
-  echo '*** POST with a missing CSRF cookie did not result in the expected error'
-  exit
+  >&2 echo '*** POST with a missing CSRF cookie did not result in the expected error'
+  exit 1
 fi
 echo '9. POST with a missing CSRF cookie was successfully rejected'
 JSON=$(tail -n 1 $RESPONSE_FILE)
@@ -253,8 +253,8 @@ HTTP_STATUS=$(curl -i -s -X POST "$API_URL" \
 -H "cookie: example-csrf=$ENCRYPTED_CSRF_TOKEN" \
 -o $RESPONSE_FILE -w '%{http_code}')
 if [ "$HTTP_STATUS" != '401' ]; then
-  echo '*** POST with a missing CSRF header did not result in the expected error'
-  exit
+  >&2 echo '*** POST with a missing CSRF header did not result in the expected error'
+  exit 1
 fi
 echo '10. POST with a missing CSRF header was successfully rejected'
 JSON=$(tail -n 1 $RESPONSE_FILE)
@@ -271,8 +271,8 @@ HTTP_STATUS=$(curl -i -s -X POST "$API_URL" \
 -H "x-example-csrf: x$CSRF_TOKEN" \
 -o $RESPONSE_FILE -w '%{http_code}')
 if [ "$HTTP_STATUS" != '401' ]; then
-  echo '*** POST with an incorrect CSRF header did not result in the expected error'
-  exit
+  >&2 echo '*** POST with an incorrect CSRF header did not result in the expected error'
+  exit 1
 fi
 echo '11. POST with an incorrect CSRF header was successfully rejected'
 JSON=$(tail -n 1 $RESPONSE_FILE)
@@ -289,8 +289,8 @@ HTTP_STATUS=$(curl -i -s -X POST "$API_URL" \
 -H "x-example-csrf: $CSRF_TOKEN" \
 -o $RESPONSE_FILE -w '%{http_code}')
 if [ "$HTTP_STATUS" != '200' ]; then
-  echo '*** POST with correct CSRF cookie and header did not succeed'
-  exit
+  >&2 echo '*** POST with correct CSRF cookie and header did not succeed'
+  exit 1
 fi
 echo '12. POST with correct CSRF cookie and header was successfully routed to the API'
 JSON=$(tail -n 1 $RESPONSE_FILE)
@@ -305,8 +305,8 @@ HTTP_STATUS=$(curl -i -s -X GET "$API_URL" \
 -H "cookie: example-at=" \
 -o $RESPONSE_FILE -w '%{http_code}')
 if [ "$HTTP_STATUS" != '401' ]; then
-  echo '*** GET with malformed access token cookie did not result in the expected error'
-  exit
+  >&2 echo '*** GET with malformed access token cookie did not result in the expected error'
+  exit 1
 fi
 echo '13. GET with malformed access token cookie was successfully rejected'
 JSON=$(tail -n 1 $RESPONSE_FILE)
