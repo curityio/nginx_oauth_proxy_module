@@ -4,6 +4,7 @@
 #
 
 FROM debian:buster
+ARG NGINX_VERSION
 
 RUN apt update
 RUN apt install -y curl gnupg2 ca-certificates lsb-release debian-archive-keyring
@@ -17,4 +18,4 @@ http://nginx.org/packages/mainline/debian `lsb_release -cs` nginx" \
 
 # 'apt list -a nginx' shows versions available
 RUN apt update
-RUN apt install -y nginx=1.21.3-1~buster valgrind
+RUN apt install -y nginx=$NGINX_VERSION-1~buster valgrind

@@ -6,7 +6,7 @@ version: '3.8'
 services:
 
   custom_nginx:
-    image: nginx_${DISTRO}:v1
+    image: nginx_${DISTRO}:${NGINX_VERSION}
     ports:
     - 8081:8081
     volumes:

@@ -3,7 +3,7 @@
 # http://nginx.org/en/linux_packages.html#Ubuntu
 #
 
-FROM ubuntu:20.04
+FROM ubuntu:22.04
 ARG NGINX_VERSION
 
 RUN apt update
@@ -19,4 +19,4 @@ http://nginx.org/packages/mainline/ubuntu `lsb_release -cs` nginx" \
 # 'apt list -a nginx' shows versions available
 RUN apt update
 RUN apt list -a nginx
-RUN apt install -y nginx=$NGINX_VERSION-1~focal valgrind
+RUN apt install -y nginx=$NGINX_VERSION-1~jammy valgrind
