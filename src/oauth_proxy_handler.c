@@ -22,6 +22,7 @@
 #include "oauth_proxy.h"
 
 /* Forward declarations of implementation functions */
+static ngx_flag_t is_data_changing_command(ngx_http_request_t *request);
 static ngx_str_t *get_header(ngx_http_request_t *request, const char *name);
 static ngx_int_t verify_web_origin(const oauth_proxy_configuration_t *config, const ngx_str_t *web_origin);
 static ngx_int_t apply_csrf_checks(ngx_http_request_t *request, const oauth_proxy_configuration_t *config, const ngx_str_t *web_origin);
@@ -72,27 +73,27 @@ ngx_int_t oauth_proxy_handler_main(ngx_http_request_t *request)
     }
 
     /* Verify the web origin, which is sent by all modern browsers */
-    web_origin = get_header(request, "origin");
-    if (web_origin == NULL)
-    {
-        ret_code = NGX_HTTP_UNAUTHORIZED;
-        ngx_log_error(NGX_LOG_WARN, request->connection->log, 0, "The request did not have an origin header");
-        return write_error_response(request, ret_code, module_location_config);
-    }
-
-    ret_code = verify_web_origin(module_location_config, web_origin);
-    if (ret_code != NGX_OK)
-    {
-        ret_code = NGX_HTTP_UNAUTHORIZED;
-        ngx_log_error(NGX_LOG_WARN, request->connection->log, 0, "The request was from an untrusted web origin");
-        return write_error_response(request, ret_code, module_location_config);
+    if (module_location_config->cors_enabled || is_data_changing_command(request))
+    {   
+        web_origin = get_header(request, "origin");
+        if (web_origin == NULL)
+        {
+            ret_code = NGX_HTTP_UNAUTHORIZED;
+            ngx_log_error(NGX_LOG_WARN, request->connection->log, 0, "The request did not have an origin header");
+            return write_error_response(request, ret_code, module_location_config);
+        }
+    
+        ret_code = verify_web_origin(module_location_config, web_origin);
+        if (ret_code != NGX_OK)
+        {
+            ret_code = NGX_HTTP_UNAUTHORIZED;
+            ngx_log_error(NGX_LOG_WARN, request->connection->log, 0, "The request was from an untrusted web origin");
+            return write_error_response(request, ret_code, module_location_config);
+        }
     }
 
     /* For data changing commands, apply double submit cookie checks in line with OWASP best practices */
-    if (request->method == NGX_HTTP_POST   ||
-        request->method == NGX_HTTP_PUT    ||
-        request->method == NGX_HTTP_PATCH  ||
-        request->method == NGX_HTTP_DELETE)
+    if (is_data_changing_command(request))
     {
         ret_code = apply_csrf_checks(request, module_location_config, web_origin);
         if (ret_code != NGX_OK)
@@ -131,6 +132,17 @@ ngx_int_t oauth_proxy_handler_main(ngx_http_request_t *request)
     }
 
     return NGX_OK;
+}
+
+/*
+ * CORS and CSRF checks work differently for this type of command
+ */
+static ngx_flag_t is_data_changing_command(ngx_http_request_t *request)
+{
+    return request->method == NGX_HTTP_POST   ||
+           request->method == NGX_HTTP_PUT    ||
+           request->method == NGX_HTTP_PATCH  ||
+           request->method == NGX_HTTP_DELETE ? 1 : 0;
 }
 
 /*
