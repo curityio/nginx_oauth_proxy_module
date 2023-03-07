@@ -6,7 +6,7 @@
 
 cd "$(dirname "${BASH_SOURCE[0]}")"
 
-NGINX_VERSION=${NGINX_VERSION:-1.21.6}
+NGINX_VERSION=${NGINX_VERSION:-1.23.2}
 NGINX_TARBALL=nginx-${NGINX_VERSION}.tar.gz
 
 if [[ ! -r $NGINX_TARBALL ]]; then
