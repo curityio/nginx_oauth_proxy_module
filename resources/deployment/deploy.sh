@@ -13,7 +13,7 @@ if [ "$DISTRO" == '' ]; then
   DISTRO='alpine'
 fi
 if [ "$NGINX_VERSION" == '' ]; then
-  NGINX_VERSION='1.23.2'
+  NGINX_VERSION='1.25.1'
 fi
 echo "Deploying for $DISTRO with NGINX version $NGINX_VERSION ..."
 
@@ -77,8 +77,22 @@ case $DISTRO in
     CONF_PATH='/etc/nginx/nginx.conf'
     ;;
 
+  'debian12')
+    MODULE_FILE="debian.bookworm.ngx_curity_http_oauth_proxy_module_$NGINX_VERSION.so"
+    MODULE_FOLDER='/usr/lib/nginx/modules'
+    NGINX_PATH='/usr/sbin/nginx'
+    CONF_PATH='/etc/nginx/nginx.conf'
+    ;;
+
   'amazon2')
     MODULE_FILE="amzn2.ngx_curity_http_oauth_proxy_module_$NGINX_VERSION.so"
+    MODULE_FOLDER='/etc/nginx/modules'
+    NGINX_PATH='/usr/sbin/nginx'
+    CONF_PATH='/etc/nginx/nginx.conf'
+    ;;
+
+  'amazon2023')
+    MODULE_FILE="amzn2023.ngx_curity_http_oauth_proxy_module_$NGINX_VERSION.so"
     MODULE_FOLDER='/etc/nginx/modules'
     NGINX_PATH='/usr/sbin/nginx'
     CONF_PATH='/etc/nginx/nginx.conf'
