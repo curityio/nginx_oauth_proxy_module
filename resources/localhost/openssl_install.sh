@@ -6,11 +6,12 @@
 
 cd "$(dirname "${BASH_SOURCE[0]}")"
 cd ../..
+OPENSSL_VERSION='openssl-3.1.2'
 
 #
 # Get the code
 #
-curl -O -L https://github.com/openssl/openssl/archive/refs/tags/OpenSSL_1_1_1t.tar.gz
+curl -O -L https://github.com/openssl/openssl/releases/download/$OPENSSL_VERSION/$OPENSSL_VERSION.tar.gz
 if [ $? -ne 0 ]; then
   >&2 echo 'Problem encountered downloading OpenSSL source code'
   exit 1
@@ -19,8 +20,8 @@ fi
 #
 # Unzip it
 #
-rm -rf openssl-OpenSSL_1_1_1t
-tar xzvf OpenSSL_1_1_1t.tar.gz
+rm -rf $OPENSSL_VERSION 2>/dev/null
+tar xzvf $OPENSSL_VERSION.tar.gz
 if [ $? -ne 0 ]; then
   >&2 echo 'Problem encountered unzipping OpenSSL archive'
   exit 1
@@ -29,7 +30,7 @@ fi
 #
 # Configure it
 #
-cd openssl-OpenSSL_1_1_1t
+cd $OPENSSL_VERSION
 ./config
 if [ $? -ne 0 ]; then
   >&2 echo 'Problem encountered configuring OpenSSL'
