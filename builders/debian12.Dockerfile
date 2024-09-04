@@ -1,7 +1,7 @@
 FROM debian:bookworm
 
 RUN apt update && apt install -y \
-    wget build-essential git tree software-properties-common dirmngr apt-transport-https ufw libssl-dev libpcre2-dev zlib1g-dev
+    build-essential git tree software-properties-common dirmngr apt-transport-https ufw libssl-dev libpcre2-dev zlib1g-dev
 
 COPY configure /tmp
 COPY config /tmp
