@@ -62,7 +62,13 @@ fi
 docker build --no-cache -t nginx-module-builder \
   --build-arg NGINX_VERSION="$NGINX_VERSION" \
   -f builders/$LINUX_DISTRO.Dockerfile .
+if [ $? -ne 0 ]; then
+  echo "Docker build problem encountered for OS $LINUX_DISTRO and NGINX $NGINX_VERSION"
+  exit 1
+fi
 
+mkdir -p build
+LIBRARY_PREFIX=$(getLibraryPrefix)
 docker run --name nginx-modules nginx-module-builder
 docker cp nginx-modules:/tmp/nginx-$NGINX_VERSION/objs/ngx_curity_http_oauth_proxy_module.so ./build/$LIBRARY_PREFIX.ngx_curity_http_oauth_proxy_module_$NGINX_VERSION.so
 docker rm nginx-modules
