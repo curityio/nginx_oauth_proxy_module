@@ -6,7 +6,7 @@
 
 cd "$(dirname "${BASH_SOURCE[0]}")"
 cd ../..
-OPENSSL_VERSION='openssl-3.1.2'
+OPENSSL_VERSION='openssl-3.3.2'
 
 #
 # Get the code
