@@ -13,7 +13,7 @@ if [ "$DISTRO" == '' ]; then
   DISTRO='alpine'
 fi
 if [ "$NGINX_VERSION" == '' ]; then
-  NGINX_VERSION='1.25.1'
+  NGINX_VERSION='1.25.5'
 fi
 echo "Deploying for $DISTRO with NGINX version $NGINX_VERSION ..."
 
@@ -28,43 +28,8 @@ echo -n $ENCRYPTION_KEY > encryption.key
 #
 case $DISTRO in
 
-  'ubuntu18')
-    MODULE_FILE="ubuntu.18.04.ngx_curity_http_oauth_proxy_module_$NGINX_VERSION.so"
-    MODULE_FOLDER='/usr/lib/nginx/modules'
-    NGINX_PATH='/usr/sbin/nginx'
-    CONF_PATH='/etc/nginx/nginx.conf'
-    ;;
-  
-  'ubuntu20')
-    MODULE_FILE="ubuntu.20.04.ngx_curity_http_oauth_proxy_module_$NGINX_VERSION.so"
-    MODULE_FOLDER='/usr/lib/nginx/modules'
-    NGINX_PATH='/usr/sbin/nginx'
-    CONF_PATH='/etc/nginx/nginx.conf'
-    ;;
-
-  'ubuntu22')
-    MODULE_FILE="ubuntu.22.04.ngx_curity_http_oauth_proxy_module_$NGINX_VERSION.so"
-    MODULE_FOLDER='/usr/lib/nginx/modules'
-    NGINX_PATH='/usr/sbin/nginx'
-    CONF_PATH='/etc/nginx/nginx.conf'
-    ;;
-
-  'centos7')
-    MODULE_FILE='centos.7.ngx_curity_http_oauth_proxy_module_$NGINX_VERSION.so'
-    MODULE_FOLDER='/etc/nginx/modules'
-    NGINX_PATH='/usr/sbin/nginx'
-    CONF_PATH='/etc/nginx/nginx.conf'
-    ;;
-
-  'centosstream9')
-    MODULE_FILE="centos.stream.9.ngx_curity_http_oauth_proxy_module_$NGINX_VERSION.so"
-    MODULE_FOLDER='/etc/nginx/modules'
-    NGINX_PATH='/usr/sbin/nginx'
-    CONF_PATH='/etc/nginx/nginx.conf'
-    ;;
-
-  'debian10')
-    MODULE_FILE="debian.buster.ngx_curity_http_oauth_proxy_module_$NGINX_VERSION.so"
+  'alpine')
+    MODULE_FILE="alpine.ngx_curity_http_oauth_proxy_module_$NGINX_VERSION.so"
     MODULE_FOLDER='/usr/lib/nginx/modules'
     NGINX_PATH='/usr/sbin/nginx'
     CONF_PATH='/etc/nginx/nginx.conf'
@@ -84,6 +49,27 @@ case $DISTRO in
     CONF_PATH='/etc/nginx/nginx.conf'
     ;;
 
+  'ubuntu20')
+    MODULE_FILE="ubuntu.20.04.ngx_curity_http_oauth_proxy_module_$NGINX_VERSION.so"
+    MODULE_FOLDER='/usr/lib/nginx/modules'
+    NGINX_PATH='/usr/sbin/nginx'
+    CONF_PATH='/etc/nginx/nginx.conf'
+    ;;
+
+  'ubuntu22')
+    MODULE_FILE="ubuntu.22.04.ngx_curity_http_oauth_proxy_module_$NGINX_VERSION.so"
+    MODULE_FOLDER='/usr/lib/nginx/modules'
+    NGINX_PATH='/usr/sbin/nginx'
+    CONF_PATH='/etc/nginx/nginx.conf'
+    ;;
+
+  'ubuntu24')
+    MODULE_FILE="ubuntu.24.04.ngx_curity_http_oauth_proxy_module_$NGINX_VERSION.so"
+    MODULE_FOLDER='/usr/lib/nginx/modules'
+    NGINX_PATH='/usr/sbin/nginx'
+    CONF_PATH='/etc/nginx/nginx.conf'
+    ;;
+
   'amazon2')
     MODULE_FILE="amzn2.ngx_curity_http_oauth_proxy_module_$NGINX_VERSION.so"
     MODULE_FOLDER='/etc/nginx/modules'
@@ -98,13 +84,13 @@ case $DISTRO in
     CONF_PATH='/etc/nginx/nginx.conf'
     ;;
 
-  'alpine')
-    MODULE_FILE="alpine.ngx_curity_http_oauth_proxy_module_$NGINX_VERSION.so"
-    MODULE_FOLDER='/usr/lib/nginx/modules'
+  'centosstream9')
+    MODULE_FILE="centos.stream.9.ngx_curity_http_oauth_proxy_module_$NGINX_VERSION.so"
+    MODULE_FOLDER='/etc/nginx/modules'
     NGINX_PATH='/usr/sbin/nginx'
     CONF_PATH='/etc/nginx/nginx.conf'
     ;;
-  
+
 esac
 
 #

@@ -63,10 +63,11 @@ nginx-*.tar.gz*
 /nginx-*
 OpenSSL*.tar.gz*
 openssl-*
-t/servroot
+testing/t/servroot
+/testing/integration/nginx.conf
 .build.info
 build
-response.txt
 encryption.key
-/resources/deployment/nginx.conf
 valgrind*
+response.txt
+log.txt
