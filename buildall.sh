@@ -34,7 +34,7 @@ do
   do
     if [ "$(isValidBuild $LINUX_DISTRO $NGINX_VERSION)" == 'true' ]; then
       
-      echo "Building the NGINX $NGINX_VERSION phantom token module for $LINUX_DISTRO ..."
+      echo "Building the NGINX $NGINX_VERSION OAuth proxy module for $LINUX_DISTRO ..."
       export NGINX_VERSION=$NGINX_VERSION
       export LINUX_DISTRO=$LINUX_DISTRO
       ./build.sh 1>>./log.txt 2>&1
