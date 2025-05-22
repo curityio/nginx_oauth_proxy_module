@@ -13,7 +13,7 @@ if [ "$DISTRO" == '' ]; then
   DISTRO='alpine'
 fi
 if [ "$NGINX_VERSION" == '' ]; then
-  NGINX_VERSION='1.25.5'
+  NGINX_VERSION='1.27.4'
 fi
 echo "Deploying for $DISTRO with NGINX version $NGINX_VERSION ..."
 
