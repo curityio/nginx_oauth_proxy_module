@@ -16,9 +16,9 @@ function isValidBuild() {
     local LINUX_DISTRO_PARAM=$1
     local NGINX_VERSION_PARAM=$2
 
-    if [ "$LINUX_DISTRO_PARAM" == 'ubuntu24' ] && [[ '1.25.5' > "$NGINX_VERSION_PARAM" ]]; then
+    if [ "$LINUX_DISTRO_PARAM" == 'ubuntu24' ] && [[ "$NGINX_VERSION_PARAM" < '1.25.5' ]]; then
       echo 'false'
-    elif [ "$LINUX_DISTRO_PARAM" == 'centosstream9' ] && [[ '1.27.2' > "$NGINX_VERSION_PARAM" ]]; then
+    elif [ "$LINUX_DISTRO_PARAM" == 'centosstream9' ] && [[ "$NGINX_VERSION_PARAM" > '1.25.5'  ]]; then
       echo 'false'
     else
       echo 'true'
