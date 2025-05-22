@@ -269,14 +269,14 @@ The HTTP status code is usually sufficient, and the error code can inform the SP
 
 ## Compatibility
 
-This module has been tested for the Linux NGINX distributions from the [Deployment Resources](/resources/deployment).\
-It requires the [NGINX HTTP SSL module](http://nginx.org/en/docs/http/ngx_http_ssl_module.html) to be enabled, so that OpenSSL libraries are available.
+This module has been tested for the Linux NGINX distributions from the [Deployment Resources](/resources/deployment). It requires the [NGINX HTTP SSL module](http://nginx.org/en/docs/http/ngx_http_ssl_module.html) to be enabled, so that OpenSSL libraries are available.
  
-### Releases
+The binary releases align with the 24 month supported release cycle of [NGINX Plus](https://docs.nginx.com/nginx/releases/) to keep the NGINX secure environment up to date. The module's code has also run to a production level with many previous NGINX releases.
+
+### Pre-Built Releases
 
 Pre-built binaries of this module are provided for the following versions of NGINX.\
 Download the .so file for your platform and deploy it to the `/usr/lib/nginx/modules` folder of your NGINX servers.
-
 
 |                                    | NGINX 1.27.4 / NGINX Plus R34 | NGINX 1.27.2 / NGINX Plus R33 | NGINX 1.25.5 / NGINX Plus R32 | NGINX 1.25.3 / NGINX Plus R31 | NGINX 1.25.1 / NGINX Plus R30 |
 | -----------------------------------|:-----------------------------:|:-----------------------------:|:-----------------------------:|:------------------------------:|:-----------------------------:|
@@ -290,9 +290,12 @@ Download the .so file for your platform and deploy it to the `/usr/lib/nginx/mod
 | Amazon Linux 2023                  | [⇓](https://github.com/curityio/nginx_oauth_proxy_module/releases/download/1.6.0/amzn2023.ngx_curity_http_oauth_proxy_module_1.27.4.so)           | [⇓](https://github.com/curityio/nginx_oauth_proxy_module/releases/download/1.6.0/amzn2023.ngx_curity_http_oauth_proxy_module_1.27.2.so)           | [⇓](https://github.com/curityio/nginx_oauth_proxy_module/releases/download/1.6.0/amzn2023.ngx_curity_http_oauth_proxy_module_1.25.5.so)           | [⇓](https://github.com/curityio/nginx_oauth_proxy_module/releases/download/1.6.0/amzn2023.ngx_curity_http_oauth_proxy_module_1.25.3.so)           | [⇓](https://github.com/curityio/nginx_oauth_proxy_module/releases/download/1.6.0/amzn2023.ngx_curity_http_oauth_proxy_module_1.25.1.so)           |
 | CentOS Stream 9.0+                 | x | x | [⇓](https://github.com/curityio/nginx_oauth_proxy_module/releases/download/1.6.0/centos.stream.9.ngx_curity_http_oauth_proxy_module_1.25.5.so) | [⇓](https://github.com/curityio/nginx_oauth_proxy_module/releases/download/1.6.0/centos.stream.9.ngx_curity_http_oauth_proxy_module_1.25.3.so)| [⇓](https://github.com/curityio/nginx_oauth_proxy_module/releases/download/1.6.0/centos.stream.9.ngx_curity_http_oauth_proxy_module_1.25.1.so)|
 
-## Development Setup
+## Building From Source
 
-If you wish to customize this module by building from source, see the [Development Wiki](https://github.com/curityio/nginx_oauth_proxy_module/wiki) for instructions.
+To build the latest code against older NGINX versions or Linux distributions, follow the instructions in the [Development Wiki](https://github.com/curityio/nginx_oauth_proxy_module/wiki).
+
+- [Build the Module](https://github.com/curityio/nginx_oauth_proxy_module/wiki/3.-Builds)
+- [Deploy the Module](https://github.com/curityio/nginx_oauth_proxy_module/wiki/4.-Testing-Deployment)
 
 ## Licensing
 
